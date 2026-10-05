@@ -44,7 +44,7 @@ Vercel uses `pnpm build`, publishes `dist`, serves the app over HTTPS, and redir
 5. Follow the three-step placement tutorial.
 6. Enter each fish weight. The maximum accepted value is **200 kg**.
 7. Select an available camera, align the sample, and capture the image.
-8. Review the actual captured image and run the local demo analysis.
+8. Review the captured image and send it to the configured Raspberry Pi inference service.
 9. Review or override the result, then print the grading receipt.
 
 Each selected sample keeps its own captured image, fish association, weight, grade, confidence, expert decision, and receipt.
@@ -79,7 +79,7 @@ After changing the service worker, refresh once so the browser can activate the 
 
 ## Admin dashboard
 
-Choose **Admin** and enter the prototype PIN:
+Choose **Admin** and enter the station PIN:
 
 ```text
 1234
@@ -108,9 +108,10 @@ src/main.tsx            React entry point and service-worker registration
 vite.config.ts          Vite development server configuration
 ```
 
-## Prototype notes
+## Integration notes
 
 - Camera capture uses the real browser camera stream.
 - Captured evidence is kept in memory for the active grading session.
-- The grading model, database sync, and dedicated printer service remain simulated.
-- Admin configuration uses browser-local storage and is not shared between devices.
+- Raspberry Pi inference requires the edge service described in `ARCHITECTURE.md`.
+- Supabase PostgreSQL and Convex synchronization require deployed services and environment configuration.
+- Until those services are connected, station records and audit events remain browser-local.
