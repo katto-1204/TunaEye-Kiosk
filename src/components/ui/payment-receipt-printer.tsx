@@ -187,6 +187,12 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
   }, [shouldReduceMotion, printDuration, onPrintStart, onPrintComplete]);
 
   useEffect(() => {
+    if (controlledStatus === 'printing') {
+      startPrinting();
+    }
+  }, [controlledStatus, startPrinting]);
+
+  useEffect(() => {
     if (autoPrint && !shouldReduceMotion) {
       const delay = setTimeout(() => {
         startPrinting();
@@ -408,9 +414,13 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
                 <span>{formattedDate}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="opacity-60">PAYMENT:</span>
-                <span className="flex items-center gap-1">
-                  <CreditCard className="w-2.5 h-2.5 opacity-70" />
+                <span className="opacity-60">
+                  {paymentMethod?.toLowerCase().includes('inspector') ? 'INSPECTOR:' : 'PAYMENT:'}
+                </span>
+                <span className="flex items-center gap-1 font-medium">
+                  {!paymentMethod?.toLowerCase().includes('inspector') && (
+                    <CreditCard className="w-2.5 h-2.5 opacity-70 shrink-0" />
+                  )}
                   <span>{paymentMethod}</span>
                 </span>
               </div>
@@ -420,7 +430,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
             <div className="py-3 border-b border-dashed border-current/25 space-y-2">
               <div className="flex justify-between text-[9px] font-bold opacity-60 uppercase">
                 <span>ITEM</span>
-                <span>PRICE</span>
+                <span>{receiptItems?.[0]?.price && String(receiptItems[0].price).includes('kg') ? 'WEIGHT' : 'PRICE'}</span>
               </div>
 
               {receiptItems.map((itm, idx) => (
@@ -431,7 +441,9 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
                       {itm.name}
                     </span>
                     <span className="font-semibold shrink-0">
-                      {typeof itm.price === 'number' ? `${currency}${itm.price.toFixed(2)}` : itm.price}
+                      {typeof itm.price === 'number'
+                        ? (currency ? `${currency}${itm.price.toFixed(2)}` : `${itm.price.toFixed(2)}`)
+                        : itm.price}
                     </span>
                   </div>
                   {itm.description && (
@@ -463,8 +475,10 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
               )}
               <div className="flex justify-between items-baseline text-xs font-bold pt-1 border-t border-current/15">
                 <span>TOTAL:</span>
-                <span className="text-sm">
-                  {typeof total === 'number' ? `${currency}${total.toFixed(2)}` : total}
+                <span className="text-sm font-bold">
+                  {typeof total === 'number'
+                    ? (currency ? `${currency}${total.toFixed(2)}` : `${total.toFixed(2)}`)
+                    : total}
                 </span>
               </div>
             </div>
