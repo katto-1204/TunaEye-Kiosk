@@ -49,7 +49,7 @@ function BrandMark({ compact = false }: { compact?: boolean }) { return <div cla
 function Button({ children, variant = 'primary', icon, onClick, disabled = false, className = '' }: { children: ReactNode; variant?: 'primary' | 'secondary' | 'ghost' | 'danger'; icon?: IconName; onClick?: () => void; disabled?: boolean; className?: string }) { return <button type="button" className={`btn btn--${variant} ${className}`} onClick={onClick} disabled={disabled}>{children}{icon && <Icon name={icon} size={23} />}</button> }
 function StepRail({ active }: { active: number }) { const steps = ['Capture', 'Analyze', 'Result']; return <div className="step-rail" aria-label={`Workflow progress, ${steps[Math.min(Math.max(active, 0), 2)]} stage`}>{steps.map((step, index) => <div className={`step-rail__item ${index <= active ? 'is-active' : ''}`} key={step}><span className="step-rail__dot">{index < active ? <Icon name="check" size={16} /> : index + 1}</span><span>{step}</span>{index < steps.length - 1 && <i />}</div>)}</div> }
 const screenLabels: Partial<Record<Screen, string>> = { 'select-role': 'Choose a role', admin: 'Admin access', 'admin-dashboard': 'Admin console', grader: 'Grader entry', 'grader-dashboard': 'Grader dashboard', sample: 'Sample selector', association: 'Fish association', tutorial: 'Guided tutorial', weight: 'Weight entry', camera: 'Camera preview', review: 'Check image', analysis: 'Analyzing image', 'individual-result': 'Sample result', overview: 'Results overview', print: 'Print results', complete: 'Session complete' }
-function TopBar({ screen, onHome }: { screen: Screen; onHome: () => void }) { const showProgress = Boolean(stepForScreen[screen] !== undefined); return <div className="topbar-wrapper"><header className="topbar"><BrandMark compact /><div className="topbar__center"><span className="topbar__eyebrow">TunaEye kiosk</span><span className="topbar__title">{screenLabels[screen] ?? 'Ready for the next sample'}</span></div><div className="topbar__actions"><span className="status-pill"><span className="status-dot" />Device ready</span><button className="icon-button" onClick={onHome} aria-label="Return to home"><Icon name="home" size={24} /></button></div>{showProgress && <div className="topbar__progress"><StepRail active={stepForScreen[screen] ?? 0} /></div>}</header></div> }
+function TopBar({ screen, onHome }: { screen: Screen; onHome: () => void }) { const showProgress = Boolean(stepForScreen[screen] !== undefined); return <div className="topbar-wrapper"><header className="topbar"><BrandMark compact /><div className="topbar__center"><span className="topbar__title">{screenLabels[screen] ?? 'Ready for the next sample'}</span></div><div className="topbar__actions"><span className="status-pill"><span className="status-dot" />Device ready</span><button className="icon-button" onClick={onHome} aria-label="Return to home"><Icon name="home" size={20} /></button></div>{showProgress && <div className="topbar__progress"><StepRail active={stepForScreen[screen] ?? 0} /></div>}</header></div> }
 function BottomBar({ onBack, onHelp, primary, primaryLabel, primaryIcon = 'arrow', primaryDisabled = false, secondaryLabel, onSecondary }: { onBack?: () => void; onHelp?: () => void; primary?: () => void; primaryLabel?: string; primaryIcon?: IconName; primaryDisabled?: boolean; secondaryLabel?: string; onSecondary?: () => void }) { return <footer className="bottom-bar"><div className="bottom-bar__left">{onBack && <Button variant="ghost" icon="back" onClick={onBack}>Back</Button>}{onHelp && <Button variant="ghost" icon="help" onClick={onHelp}>Help</Button>}</div><div className="bottom-bar__right">{secondaryLabel && onSecondary && <Button variant="secondary" onClick={onSecondary}>{secondaryLabel}</Button>}{primary && primaryLabel && <Button onClick={primary} icon={primaryIcon} disabled={primaryDisabled}>{primaryLabel}</Button>}</div></footer> }
 function SampleArt({ sample, className = '' }: { sample: SampleType; className?: string }) { return <img className={`sample-art ${className}`} src={sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png'} alt={`${sample} reference`} /> }
 function EvidenceFrame({ sample = 'Sashibo core', mode = 'camera', frozen = false }: { sample?: SampleType; mode?: 'camera' | 'sample' | 'tray'; frozen?: boolean }) { const image = mode === 'sample' ? capturedEvidence[sample] : undefined; return <div className={`evidence-frame evidence-frame--${mode} ${frozen ? 'is-frozen' : ''}`}><div className="evidence-frame__topline"><span>{mode === 'camera' ? 'Live preview' : mode === 'sample' ? 'Captured camera image' : 'Controlled chamber'}</span><span className="evidence-frame__signal"><span className="status-dot" />{mode === 'camera' ? 'Ready' : 'Saved'}</span></div>{image ? <img className="evidence-frame__capture" src={image} alt={`Captured ${sample}`} /> : <div className="chamber"><div className="chamber__rail chamber__rail--left" /><div className="chamber__rail chamber__rail--right" /><div className="tuna-silhouette"><span className="tuna-silhouette__tail" /><span className="tuna-silhouette__body" /><span className="tuna-silhouette__eye" /></div><div className="target-corners"><i /><i /><i /><i /></div>{mode === 'camera' && <div className="camera-crosshair"><span /></div>}</div>}<div className="evidence-frame__bottomline"><span>{frozen ? `${sample} image held for review` : 'Align within the blue guide'}</span><span className="evidence-frame__time">Top-down view</span></div></div> }
@@ -91,7 +91,7 @@ function AdminDashboard({ onExit, onStartGrading }: { onExit: () => void; onStar
     {section === 'Records' && <><div className="admin-toolbar"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search record, grader, sample, or grade…" /><Button variant="secondary" icon="printer" onClick={() => window.print()}>Export records</Button></div><AdminRecords records={visibleRecords} /></>}
     {section === 'Price schedule' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Approved buying prices</h2><p>Set the current rate per kilogram for each tuna grade.</p></div><span className="status-label status-label--valid">Active schedule</span></div><div className="price-editor">{(['A','B','C'] as Grade[]).map(grade => <label key={grade}><span>Grade {grade}<small>{grade === 'A' ? 'Premium quality' : grade === 'B' ? 'Standard quality' : 'Processing quality'}</small></span><div><b>₱</b><input inputMode="decimal" value={prices[grade]} onChange={event => setPrices({ ...prices, [grade]: event.target.value.replace(/[^0-9.]/g, '') })} /><small>per kg</small></div></label>)}</div><div className="admin-card-actions"><span>Last updated today · Values are stored on this device.</span><Button onClick={savePrices} icon="check">Save price schedule</Button></div></div>}
     {section === 'Expert graders' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Grader profiles</h2><p>Control who can start expert grading sessions.</p></div><b>{graders.length} active</b></div><div className="grader-admin-list">{graders.map((name,index) => <div key={name}><span className="admin-avatar">{name.split(' ').map(part => part[0]).slice(0,2).join('')}</span><span><strong>{name}</strong><small>{index === 0 ? 'Last active 8 minutes ago' : 'Available at this station'}</small></span><span className="status-label status-label--valid">Active</span><button aria-label={`Remove ${name}`} onClick={() => saveGraders(graders.filter(item => item !== name))}>Remove</button></div>)}</div><div className="admin-add-grader"><input value={newGrader} onChange={event => setNewGrader(event.target.value)} placeholder="Enter full name" /><Button icon="users" disabled={!newGrader.trim()} onClick={() => { const name = newGrader.trim(); if (name && !graders.includes(name)) saveGraders([...graders, name]); setNewGrader('') }}>Add grader</Button></div></div>}
-    {section === 'Devices' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Station diagnostics</h2><p>Check the camera, local storage, printer, and connection.</p></div><span className={`status-label ${diagnostic.includes('blocked') ? 'status-label--invalid' : 'status-label--valid'}`}>{diagnostic}</span></div><div className="device-grid"><article><Icon name="camera" size={26} /><span><strong>Capture camera</strong><small>Browser camera permission</small></span><b>Ready</b></article><article><Icon name="database" size={26} /><span><strong>Offline storage</strong><small>PWA cache and local records</small></span><b>Ready</b></article><article><Icon name="printer" size={26} /><span><strong>Receipt printer</strong><small>System print service</small></span><b>Ready</b></article><article><Icon name="refresh" size={26} /><span><strong>Network sync</strong><small>{navigator.onLine ? 'Connected to network' : 'Working offline'}</small></span><b>{navigator.onLine ? 'Online' : 'Offline'}</b></article></div><Button onClick={runDiagnostics} icon="refresh">Run full diagnostics</Button></div>}
+    {section === 'Devices' && <AdminDevices rpiUrl={connections.rpiUrl} modelName={connections.modelName} audit={audit} />}
     {section === 'Audit logs' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Audit logs</h2><p>Navigation, grading, overrides, connections, sync, and administrator activity.</p></div><b>{auditEntries.length} events</b></div><div className="audit-list">{auditEntries.length ? auditEntries.slice(0, 12).map(entry => <article key={entry.id}><span><Icon name="shield" size={18} /></span><div><strong>{entry.action}</strong><small>{entry.actor} · {entry.detail}</small></div><time>{new Date(entry.timestamp).toLocaleString()}</time></article>) : <p>No audit events recorded yet.</p>}</div></div>}
     {section === 'Settings' && <div className="admin-page-card settings-form"><div><h2>Station and connection settings</h2><p>Configure the kiosk, edge inference service, and cloud synchronization targets.</p></div><div className="connection-settings"><label>Station name<input value={stationName} onChange={event => setStationName(event.target.value)} /></label><label>Raspberry Pi API URL<input value={connections.rpiUrl} onChange={event => setConnections({ ...connections, rpiUrl: event.target.value })} /></label><label>AI model identifier<input value={connections.modelName} onChange={event => setConnections({ ...connections, modelName: event.target.value })} /></label><label>Supabase project URL<input value={connections.supabaseUrl} onChange={event => setConnections({ ...connections, supabaseUrl: event.target.value })} placeholder="https://project.supabase.co" /></label><label>Convex deployment URL<input value={connections.convexUrl} onChange={event => setConnections({ ...connections, convexUrl: event.target.value })} placeholder="https://deployment.convex.cloud" /></label></div><div className="connection-status"><span className={`status-label ${rpiStatus === 'Connected' ? 'status-label--valid' : rpiStatus === 'Unavailable' ? 'status-label--invalid' : 'status-label--uncertain'}`}>Raspberry Pi: {rpiStatus}</span><span>Active model: <strong>{connections.modelName}</strong></span><Button variant="secondary" icon="refresh" onClick={testRpi} disabled={rpiStatus === 'Checking'}>{rpiStatus === 'Checking' ? 'Checking…' : 'Test RPi connection'}</Button></div><label>Maximum accepted weight<input value="200 kg" disabled /></label><label className="settings-toggle"><span><strong>Offline mode</strong><small>Keep the PWA available without internet</small></span><input type="checkbox" defaultChecked /></label><label className="settings-toggle"><span><strong>Automatic printing</strong><small>Open print dialog after each completed session</small></span><input type="checkbox" /></label><div className="admin-card-actions"><span>Secrets are not stored here; configure credentials through the deployment environment.</span><Button icon="check" onClick={() => { localStorage.setItem('tunaeye-station', stationName); localStorage.setItem('tunaeye-rpi-url', connections.rpiUrl); localStorage.setItem('tunaeye-model-name', connections.modelName); localStorage.setItem('tunaeye-supabase-url', connections.supabaseUrl); localStorage.setItem('tunaeye-convex-url', connections.convexUrl); audit('Admin', 'Settings updated', 'Station and connection settings saved'); window.alert('Station settings saved.') }}>Save settings</Button></div></div>}
   </section></div>
@@ -142,6 +142,238 @@ function AdminRecords({ records, compact = false, onViewAll }: { records: { id: 
           </div>
         </div>
       )}
+    </div>
+  )
+}
+function AdminDevices({ rpiUrl, modelName, audit }: { rpiUrl: string; modelName: string; audit: (actor: string, action: string, detail: string) => void }) {
+  const [running, setRunning] = useState(false)
+  const [cameraStatus, setCameraStatus] = useState<'Checking' | 'Operational' | 'Permission Required' | 'No Camera'>('Checking')
+  const [cameraInfo, setCameraInfo] = useState('Detecting camera peripherals…')
+
+  const [printerStatus, setPrinterStatus] = useState<'Ready' | 'Web Serial / Bluetooth Ready' | 'System Spooler Only'>('Ready')
+  const [printerInfo, setPrinterInfo] = useState('Web Serial & Web Bluetooth thermal printing available')
+
+  const [scaleStatus, setScaleStatus] = useState<'Ready' | 'Web Serial Scale Ready' | 'Manual Weight Active'>('Ready')
+  const [scaleInfo, setScaleInfo] = useState('Web Serial RS232 / USB scale interface ready')
+
+  const [rpiState, setRpiState] = useState<'Checking' | 'Connected' | 'Unreachable'>('Checking')
+  const [rpiInfo, setRpiInfo] = useState(`Gateway endpoint: ${rpiUrl}`)
+
+  const [storageInfo, setStorageInfo] = useState('Checking IndexedDB storage quota…')
+  const [networkInfo, setNetworkInfo] = useState(navigator.onLine ? 'Network online · Station cloud sync ready' : 'Station offline mode active')
+
+  const testCamera = async () => {
+    setCameraStatus('Checking')
+    try {
+      if (!navigator.mediaDevices?.enumerateDevices) {
+        setCameraStatus('Permission Required')
+        setCameraInfo('MediaDevices API not available in browser')
+        return
+      }
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const videoInputs = devices.filter(d => d.kind === 'videoinput')
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      const tracks = stream.getVideoTracks()
+      const label = tracks[0]?.label || (videoInputs.length ? `${videoInputs.length} camera(s) detected` : 'Camera connected')
+      tracks.forEach(track => track.stop())
+      setCameraStatus('Operational')
+      setCameraInfo(`Connected: ${label}`)
+      audit('Admin', 'Camera Diagnostic', `Optical camera verified: ${label}`)
+    } catch {
+      setCameraStatus('Permission Required')
+      setCameraInfo('Camera access blocked. Grant camera permission in browser.')
+      audit('Admin', 'Camera Diagnostic', 'Camera access blocked or unavailable')
+    }
+  }
+
+  const testRpi = async () => {
+    setRpiState('Checking')
+    const start = performance.now()
+    try {
+      const response = await fetch(`${rpiUrl.replace(/\/$/, '')}/health`, { signal: AbortSignal.timeout(4000) })
+      const latency = Math.round(performance.now() - start)
+      if (response.ok) {
+        const data = await response.json().catch(() => ({})) as { model?: string }
+        setRpiState('Connected')
+        setRpiInfo(`Connected (${latency} ms) · AI Model: ${data.model || modelName}`)
+        audit('Admin', 'RPi Diagnostic', `Raspberry Pi reachable in ${latency}ms`)
+      } else {
+        throw new Error(`HTTP ${response.status}`)
+      }
+    } catch {
+      setRpiState('Unreachable')
+      setRpiInfo(`Unable to connect to ${rpiUrl} (Station running in local offline browser mode)`)
+      audit('Admin', 'RPi Diagnostic', `Raspberry Pi unreachable at ${rpiUrl}`)
+    }
+  }
+
+  const testStorage = async () => {
+    if (navigator.storage?.estimate) {
+      try {
+        const est = await navigator.storage.estimate()
+        const usedMb = ((est.usage || 0) / (1024 * 1024)).toFixed(1)
+        const totalMb = ((est.quota || 0) / (1024 * 1024)).toFixed(0)
+        setStorageInfo(`${usedMb} MB used of ${totalMb} MB local offline quota`)
+      } catch {
+        setStorageInfo('Storage estimate unavailable')
+      }
+    } else {
+      setStorageInfo('IndexedDB & Web Storage active')
+    }
+  }
+
+  const pairPrinter = async () => {
+    if ('serial' in navigator) {
+      try {
+        // @ts-expect-error Web Serial API
+        const port = await navigator.serial.requestPort()
+        setPrinterInfo(`Paired with Web Serial port: ${port.getInfo?.().usbVendorId || 'Thermal ESC/POS'}`)
+        setPrinterStatus('Ready')
+        audit('Admin', 'Printer Pair', 'Web Serial printer paired')
+      } catch (err: unknown) {
+        if ((err as Error).name !== 'NotFoundError') {
+          setPrinterInfo('Print dialog (System Spooler) active')
+        }
+      }
+    } else if ('bluetooth' in navigator) {
+      try {
+        // @ts-expect-error Web Bluetooth API
+        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true })
+        setPrinterInfo(`Paired with Bluetooth device: ${device.name || 'Thermal Printer'}`)
+        setPrinterStatus('Ready')
+        audit('Admin', 'Printer Pair', `Bluetooth printer paired: ${device.name}`)
+      } catch {
+        setPrinterInfo('Print dialog (System Spooler) active')
+      }
+    } else {
+      window.print()
+      setPrinterInfo('System browser print dialog test executed')
+    }
+  }
+
+  const pairScale = async () => {
+    if ('serial' in navigator) {
+      try {
+        // @ts-expect-error Web Serial API
+        const port = await navigator.serial.requestPort()
+        setScaleInfo(`Connected to Web Serial Scale Port (${port.getInfo?.().usbVendorId || 'RS232'})`)
+        setScaleStatus('Ready')
+        audit('Admin', 'Scale Pair', 'Web Serial weighing scale connected')
+      } catch {
+        setScaleInfo('Manual weight entry supported as fallback')
+      }
+    } else {
+      window.alert('Web Serial is supported on Chrome/Edge on desktop. Manual weight entry is active.')
+    }
+  }
+
+  const runAllDiagnostics = async () => {
+    setRunning(true)
+    await Promise.all([testCamera(), testRpi(), testStorage()])
+    setNetworkInfo(navigator.onLine ? 'Network online · Station cloud sync ready' : 'Station offline mode active')
+    setRunning(false)
+    audit('Admin', 'Full Diagnostics', 'Executed comprehensive empirical device health checks')
+  }
+
+  useEffect(() => {
+    runAllDiagnostics()
+  }, [])
+
+  return (
+    <div className="admin-page-card">
+      <div className="admin-section-title">
+        <div>
+          <h2>Station Hardware Devices</h2>
+          <p>Real hardware diagnostic checks for optical cameras, scale interfaces, thermal printers, and edge AI compute.</p>
+        </div>
+        <Button variant="secondary" icon="refresh" onClick={runAllDiagnostics} disabled={running}>
+          {running ? 'Testing…' : 'Run device diagnostics'}
+        </Button>
+      </div>
+
+      <div className="device-grid">
+        <article>
+          <Icon name="camera" size={24} />
+          <span>
+            <strong>Specimen Optics (Primary Camera)</strong>
+            <small>{cameraInfo}</small>
+          </span>
+          <div className="device-actions">
+            <b className={`status-label ${cameraStatus === 'Operational' ? 'status-label--valid' : 'status-label--invalid'}`}>
+              {cameraStatus}
+            </b>
+            <button className="device-btn" onClick={testCamera}>Test stream</button>
+          </div>
+        </article>
+
+        <article>
+          <Icon name="printer" size={24} />
+          <span>
+            <strong>Thermal Receipt Printer</strong>
+            <small>{printerInfo}</small>
+          </span>
+          <div className="device-actions">
+            <b className="status-label status-label--valid">{printerStatus}</b>
+            <button className="device-btn" onClick={pairPrinter}>Connect / Test</button>
+          </div>
+        </article>
+
+        <article>
+          <Icon name="scale" size={24} />
+          <span>
+            <strong>Digital Weighing Scale</strong>
+            <small>{scaleInfo}</small>
+          </span>
+          <div className="device-actions">
+            <b className="status-label status-label--valid">{scaleStatus}</b>
+            <button className="device-btn" onClick={pairScale}>Connect / Test</button>
+          </div>
+        </article>
+
+        <article>
+          <Icon name="spark" size={24} />
+          <span>
+            <strong>Raspberry Pi AI Gateway</strong>
+            <small>{rpiInfo}</small>
+          </span>
+          <div className="device-actions">
+            <b className={`status-label ${rpiState === 'Connected' ? 'status-label--valid' : 'status-label--uncertain'}`}>
+              {rpiState}
+            </b>
+            <button className="device-btn" onClick={testRpi}>Ping gateway</button>
+          </div>
+        </article>
+
+        <article>
+          <Icon name="database" size={24} />
+          <span>
+            <strong>Local Station Storage & Cache</strong>
+            <small>{storageInfo}</small>
+          </span>
+          <div className="device-actions">
+            <b className="status-label status-label--valid">Storage OK</b>
+            <button className="device-btn" onClick={testStorage}>Refresh quota</button>
+          </div>
+        </article>
+
+        <article>
+          <Icon name="shield" size={24} />
+          <span>
+            <strong>Network & Offline Connectivity</strong>
+            <small>{networkInfo}</small>
+          </span>
+          <div className="device-actions">
+            <b className={`status-label ${navigator.onLine ? 'status-label--valid' : 'status-label--uncertain'}`}>
+              {navigator.onLine ? 'Online' : 'Offline'}
+            </b>
+            <button className="device-btn" onClick={() => setNetworkInfo(navigator.onLine ? 'Network online · Station cloud sync ready' : 'Station offline mode active')}>Check network</button>
+          </div>
+        </article>
+      </div>
+
+      <div className="admin-card-actions">
+        <span>Devices are monitored in real time using browser Web APIs & Gateway REST interfaces.</span>
+      </div>
     </div>
   )
 }

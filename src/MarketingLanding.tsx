@@ -43,9 +43,9 @@ function NavDropdown({ item, page, onNavigate }: { item: typeof pages[number]; p
     return () => document.removeEventListener('mousedown', close)
   }, [])
   return (
-    <div className="site-nav-dropdown" ref={ref}>
+    <div className={`site-nav-dropdown ${open ? 'is-open' : ''}`} ref={ref}>
       <button
-        className={item.children?.some(c => c.id === page) ? 'is-active' : ''}
+        className={`site-nav-dropdown__toggle ${item.children?.some(c => c.id === page) ? 'is-active' : ''}`}
         onClick={() => setOpen(v => !v)}
       >
         {item.label} <span className="dropdown-chevron" aria-hidden="true">▾</span>
@@ -68,21 +68,26 @@ function ChangelogModal({ onClose }: { onClose: () => void }) {
     <div className="modal-backdrop changelog-backdrop" role="dialog" aria-modal="true" aria-label="Changelog" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="changelog-modal">
         <div className="changelog-modal__header">
-          <div>
-            <span className="site-kicker">What's New</span>
-            <h2>Changelog</h2>
+          <div className="changelog-modal__title-group">
+            <span className="changelog-kicker">What's New</span>
+            <h2>Version History</h2>
           </div>
-          <button className="changelog-close" aria-label="Close changelog" onClick={onClose}>×</button>
+          <button className="changelog-close-btn" aria-label="Close changelog" onClick={onClose}>&times;</button>
         </div>
         <div className="changelog-modal__body">
           {changelog.map(release => (
             <div key={release.version} className="changelog-entry">
               <div className="changelog-entry__head">
-                <strong>{release.version}</strong>
-                <span>{release.date}</span>
+                <span className="changelog-version-badge">{release.version}</span>
+                <span className="changelog-date">{release.date}</span>
               </div>
-              <ul>
-                {release.items.map(item => <li key={item}>{item}</li>)}
+              <ul className="changelog-list">
+                {release.items.map(item => (
+                  <li key={item}>
+                    <span className="changelog-bullet" />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           ))}
@@ -129,6 +134,9 @@ export default function MarketingLanding({
                 </button>
               )
             )}
+            <button className="site-nav__changelog-btn" onClick={() => setChangelogOpen(true)}>
+              <span className="changelog-spark">✨</span> Changelog
+            </button>
           </nav>
           <button className="site-nav__cta" onClick={onInstall}>
             Install kiosk app
@@ -172,6 +180,12 @@ export default function MarketingLanding({
         <small>© 2026 TunaEye Systems. All rights reserved.</small>
       </footer>
 
+      <button className="fixed-changelog-trigger" onClick={() => setChangelogOpen(true)} title="View Changelog">
+        <span className="version-pill">v0.9.0</span>
+        <span>What's new</span>
+        <span className="sparkle-icon">✨</span>
+      </button>
+
       {changelogOpen && <ChangelogModal onClose={() => setChangelogOpen(false)} />}
     </div>
   )
@@ -210,7 +224,6 @@ function Home({
       <section className="site-hero">
         <div className="site-hero__mesh" />
         <div className="site-hero__copy">
-          <span className="site-kicker">Evidence-First Yellowfin Tuna Grading</span>
           <h1>
             Clear evidence.<br />
             <em>Confident decisions.</em>
