@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('uninstalled visitors see the public landing after loading and can scroll', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByText('Preparing TunaEye')).toBeVisible()
+  await expect(page.locator('.pdial')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Clear evidence/i }).first()).toBeVisible({ timeout: 5000 })
   await expect(page.getByRole('button', { name: 'Install kiosk app' })).toBeVisible()
   

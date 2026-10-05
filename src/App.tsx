@@ -67,10 +67,7 @@ function LoadingScreen() {
   }, [])
   return (
     <div className="brand-loading">
-      <BrandMark />
-      <KiloThermalDial value={percent} min={0} max={100} size={280} theme="light" hint={false} unit="%" />
-      <strong>Preparing TunaEye · {percent}%</strong>
-      <small>{percent < 100 ? `Connecting edge grading workflow (${percent}%)` : 'Grading workflow ready'}</small>
+      <KiloThermalDial value={percent} min={0} max={100} size={300} theme="light" hint={false} unit="%" />
     </div>
   )
 }

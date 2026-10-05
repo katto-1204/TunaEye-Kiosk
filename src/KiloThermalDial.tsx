@@ -26,7 +26,7 @@ const NEEDLE_TOP = CY - R - 16
 const NEEDLE_LEN = 100
 const SVGNS = 'http://www.w3.org/2000/svg'
 
-const categoryFor = (v: number) => (v < 20 ? 'Light Cut' : v < 35 ? 'Medium Tuna' : v < 65 ? 'Standard Grade' : 'Jumbo Tuna')
+const categoryFor = (v: number, unit?: string) => (unit === '%' ? 'LOADING' : v < 20 ? 'Light Cut' : v < 35 ? 'Medium Tuna' : v < 65 ? 'Standard Grade' : 'Jumbo Tuna')
 
 const stops = [0, 25, 50, 75, 120]
 const c1 = transform(stops, ['#0284c7', '#0284c7', '#2563eb', '#d97706', '#dc2626'])
@@ -222,7 +222,7 @@ export default function KiloThermalDial({
         const dir = shownInt === null ? 0 : Math.sign(r - shownInt)
         shownInt = r
         setDigits(r, dir)
-        const name = categoryFor(r)
+        const name = categoryFor(r, unit)
         setCategory(name)
         card.setAttribute('aria-valuenow', String(r))
         card.setAttribute('aria-valuetext', `${r} kilograms, ${name}`)
@@ -262,7 +262,7 @@ export default function KiloThermalDial({
       target = clamp(Math.round(v))
       if (target !== reported) {
         reported = target
-        onChangeRef.current?.(target, categoryFor(target))
+        onChangeRef.current?.(target, categoryFor(target, unit))
       }
     }
     setTargetFnRef.current = setTarget
@@ -384,7 +384,7 @@ export default function KiloThermalDial({
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={defaultValue}
-          aria-valuetext={`${defaultValue} kg, ${categoryFor(defaultValue)}`}
+          aria-valuetext={`${defaultValue} ${unit}, ${categoryFor(defaultValue, unit)}`}
         >
           <div className="pdial__clip">
             <div ref={washRef} className="pdial__wash" />
