@@ -361,7 +361,37 @@ html:has(.site-shell),body:has(.site-shell),#root:has(.site-shell),html:has(.app
 .screen-stack--overview { width: 100% !important; max-width: 1100px !important; margin: 0 auto !important; padding: clamp(16px, 3vw, 32px) !important; }
 .overview-cards { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important; gap: 20px !important; width: 100% !important; }
 .overview-card { width: 100% !important; background: #ffffff !important; border-radius: 24px !important; border: 1px solid #e2e8f0 !important; padding: 22px !important; box-shadow: 0 10px 30px rgba(15,23,42,0.06) !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; }
-.receipt-container-v2 { width: 100%; max-width: 380px; margin: 0 auto; }
+/* === PaymentReceiptPrinter container — constrained so it never overlaps BottomBar === */
+.receipt-container-v2 {
+  width: 360px;
+  max-width: 360px;
+  flex-shrink: 0;
+  align-self: start;
+  /* clip overflow so animated receipt extrusion stays inside the grid cell */
+  max-height: 640px;
+  overflow: hidden;
+}
+
+/* Map old .receipt grid slot rules to the new container so media-query overrides apply */
+.screen-stack--print .receipt-container-v2 {
+  width: 100%;
+  max-width: 360px;
+}
+/* Portrait layout: stack receipt below copy, centred */
+@media (orientation: portrait) and (min-width: 681px) {
+  .screen-stack--print .receipt-container-v2 {
+    justify-self: center;
+    width: min(360px, 100%);
+  }
+}
+/* Mobile: limit height so receipt doesn't eat the BottomBar */
+@media (max-width: 680px) {
+  .receipt-container-v2 {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 43vh !important;
+  }
+}
 @media (max-width: 768px) {
   .weight-layout-grid { flex-direction: column; align-items: center; }
   .numpad-container { width: 100%; max-width: 320px; }

@@ -930,28 +930,28 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
         <div className="receipt-container-v2">
           <PaymentReceiptPrinter
             key={`${sample}-${printIndex}`}
-            status={printing ? 'printing' : isCompleted ? 'completed' : undefined}
+            status={printing ? 'printing' : isCompleted ? 'completed' : 'idle'}
             merchant="TunaEye Kiosk"
             merchantSubtext="Certified Quality Inspection"
             orderNumber={`#TE-${String(14 + printIndex).padStart(3, '0')}`}
             date={new Date()}
-            statusTitle="Grading Complete"
-            statusSubtitle={`Receipt issued for ${sample}`}
+            showStatusCard={false}
+            showActions={false}
             items={[
               {
                 name: `${sample} (${result?.fishId ?? 'Fish 1'})`,
                 price: result?.weight ? `${result.weight} kg` : '1.0 kg',
                 quantity: 1,
                 tag: result?.overrideGrade ? 'Expert Override' : 'AI Graded',
-                description: `Confidence: ${result?.originalConfidence ?? 96}%`,
+                description: `Confidence: ${result?.originalConfidence ?? 96}%${result?.overrideGrade ? ' · Manual override' : ''}`,
               },
             ]}
             total={`Grade ${grade ?? 'A'}`}
             currency=""
             paymentMethod={`Inspector: ${graderName || 'Station Operator'}`}
             message="Thank you for using TunaEye Kiosk!"
-            autoPrint={true}
-            showActions={true}
+            autoPrint={false}
+            paperTheme="cream"
           />
         </div>
       </div>
