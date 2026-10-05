@@ -59,8 +59,8 @@ export const sampleOrder: SampleType[] = ['Sashibo core', 'Tail cut']
 export const initialSession: Session = {
   screen: 'welcome',
   role: null,
-  graderName: '',
-  rememberName: false,
+  graderName: typeof window !== 'undefined' ? (localStorage.getItem('tunaeye-grader-name') ?? 'Maria Santos') : 'Maria Santos',
+  rememberName: true,
   selectedSamples: ['Sashibo core'],
   sameFish: null,
   fishWeights: {},

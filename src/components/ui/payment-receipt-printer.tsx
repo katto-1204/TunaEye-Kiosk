@@ -240,7 +240,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
           initial={shouldReduceMotion ? false : { opacity: 0, y: -10, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={defaultSpringSnappy}
-          className="w-full mb-3 p-3 rounded-xl bg-[#0E0E0E] border border-[#1F1F1F] flex items-center justify-between shadow-md"
+          className="no-print w-full mb-3 p-3 rounded-xl bg-[#0E0E0E] border border-[#1F1F1F] flex items-center justify-between shadow-md"
           aria-live="polite"
         >
           <div className="flex items-center gap-2.5 min-w-0">
@@ -288,7 +288,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
             ease: 'easeInOut',
           }}
           className={cn(
-            'w-full z-20 relative rounded-2xl bg-gradient-to-b from-[#141414] via-[#0E0E0E] to-[#0B0B0B] border border-[#1F1F1F] p-3.5 shadow-[0_12px_28px_rgba(0,0,0,0.6)]',
+            'no-print w-full z-20 relative rounded-2xl bg-gradient-to-b from-[#141414] via-[#0E0E0E] to-[#0B0B0B] border border-[#1F1F1F] p-3.5 shadow-[0_12px_28px_rgba(0,0,0,0.6)]',
             printerClassName
           )}
         >
@@ -358,14 +358,14 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
               ease: [0.16, 1, 0.3, 1],
             }}
             className={cn(
-              'w-[92%] relative rounded-b-md px-5 pt-5 pb-6 border font-mono text-left transition-colors',
+              'printable-receipt w-[92%] relative rounded-b-md px-5 pt-5 pb-6 border font-mono text-left transition-colors',
               paperThemeStyles[paperTheme],
               receiptClassName
             )}
           >
             {/* Top Serrated Edge (if enabled) */}
             {showCutEffect && (
-              <div className="absolute top-0 inset-x-0 h-1.5 overflow-hidden flex -translate-y-full">
+              <div className="no-print absolute top-0 inset-x-0 h-1.5 overflow-hidden flex -translate-y-full">
                 <svg
                   className={cn(
                     'w-full h-1.5',
@@ -383,8 +383,8 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
             )}
 
             {/* Side Perforation Ticket Notches */}
-            <div className="absolute -left-2 top-28 w-3.5 h-3.5 rounded-full bg-[#050505] border-r border-[#1F1F1F]" />
-            <div className="absolute -right-2 top-28 w-3.5 h-3.5 rounded-full bg-[#050505] border-l border-[#1F1F1F]" />
+            <div className="no-print absolute -left-2 top-28 w-3.5 h-3.5 rounded-full bg-[#050505] border-r border-[#1F1F1F]" />
+            <div className="no-print absolute -right-2 top-28 w-3.5 h-3.5 rounded-full bg-[#050505] border-l border-[#1F1F1F]" />
 
             {/* Header: Merchant & Star Icon */}
             <div className="text-center pb-3 border-b border-dashed border-current/25">
@@ -533,7 +533,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
 
             {/* Bottom Serrated Edge (if enabled) */}
             {showCutEffect && (
-              <div className="absolute bottom-0 inset-x-0 h-1.5 overflow-hidden flex translate-y-full">
+              <div className="no-print absolute bottom-0 inset-x-0 h-1.5 overflow-hidden flex translate-y-full">
                 <svg
                   className={cn(
                     'w-full h-1.5',
@@ -559,7 +559,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
           initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={defaultSpringSnappy}
-          className="mt-3 flex items-center justify-center gap-2 w-full"
+          className="no-print mt-3 flex items-center justify-center gap-2 w-full"
         >
           <button
             type="button"
