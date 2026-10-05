@@ -61,23 +61,27 @@ export default function KiloThermalDial({
   }, [theme])
 
   useEffect(() => {
-    const root = rootRef.current!
-    const card = cardRef.current!
-    const dial = svgRef.current!
-    const ticksG = ticksRef.current!
-    const needle = needleRef.current!
-    const wash = washRef.current!
-    const bloom = bloomRef.current!
-    const halo = haloRef.current!
-    const categoryEl = categoryRef.current!
-    const leadDigit = leadRef.current!
-    const mainDigit = mainRef.current!
+    if (!rootRef.current || !cardRef.current || !svgRef.current || !ticksRef.current || !needleRef.current || !washRef.current || !bloomRef.current || !haloRef.current || !categoryRef.current || !leadRef.current || !mainRef.current) {
+      return
+    }
+
+    const root = rootRef.current
+    const card = cardRef.current
+    const dial = svgRef.current
+    const ticksG = ticksRef.current
+    const needle = needleRef.current
+    const wash = washRef.current
+    const bloom = bloomRef.current
+    const halo = haloRef.current
+    const categoryEl = categoryRef.current
+    const leadDigit = leadRef.current
+    const mainDigit = mainRef.current
     const hintEl = hintRef.current
 
     const MIN = min
     const MAX = max
     const START = Math.min(MAX, Math.max(MIN, defaultValue))
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduce = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false
     let alive = true
     const cleanups: (() => void)[] = []
 
@@ -101,12 +105,17 @@ export default function KiloThermalDial({
     }
 
     let shownInt: number | null = null
-    function roll(el: HTMLElement, ch: string, dir: number) {
+    function roll(el: HTMLElement | null, ch: string, dir: number) {
+      if (!el) return
       if (el.textContent === ch) return
       el.textContent = ch
       if (reduce || !dir) return
-      animate(el, { y: [dir * 22, 0] }, { type: 'spring', stiffness: 600, damping: 34 })
-      animate(el, { opacity: [0.35, 1], filter: ['blur(5px)', 'blur(0px)'] }, { duration: 0.24, ease: 'easeOut' })
+      try {
+        animate(el, { y: [dir * 22, 0] }, { type: 'spring', stiffness: 600, damping: 34 })
+        animate(el, { opacity: [0.35, 1], filter: ['blur(5px)', 'blur(0px)'] }, { duration: 0.24, ease: 'easeOut' })
+      } catch {
+        el.style.opacity = '1'
+      }
     }
     function setDigits(n: number, dir: number) {
       const s = String(Math.abs(n))
@@ -119,25 +128,34 @@ export default function KiloThermalDial({
     let categoryTimer: ReturnType<typeof setTimeout> | undefined
     const OUT_MS = 160
     function letters(word: string) {
+      if (!categoryEl) return []
       categoryEl.replaceChildren(
         ...[...word].map(ch => Object.assign(document.createElement('span'), { textContent: ch }))
       )
-      return categoryEl.querySelectorAll('span')
+      return Array.from(categoryEl.querySelectorAll('span'))
     }
     function lettersIn(word: string) {
       const fresh = letters(word)
-      if (reduce) return
-      animate(fresh, { y: [14, 0], scale: [0.9, 1] }, { type: 'spring', stiffness: 420, damping: 26, delay: stagger(0.03) })
-      animate(fresh, { opacity: [0, 1], filter: ['blur(8px)', 'blur(0px)'] }, { duration: 0.35, delay: stagger(0.03), ease: 'easeOut' })
+      if (reduce || !fresh.length) return
+      try {
+        animate(fresh, { y: [14, 0], scale: [0.9, 1] }, { type: 'spring', stiffness: 420, damping: 26, delay: stagger(0.03) })
+        animate(fresh, { opacity: [0, 1], filter: ['blur(8px)', 'blur(0px)'] }, { duration: 0.35, delay: stagger(0.03), ease: 'easeOut' })
+      } catch {
+        fresh.forEach(s => { s.style.opacity = '1' })
+      }
     }
     function setCategory(name: string) {
-      if (name === categoryName) return
+      if (!categoryEl || name === categoryName) return
       const first = categoryName === null
       categoryName = name
       clearTimeout(categoryTimer)
       if (first || reduce) return lettersIn(name)
-      const old = categoryEl.querySelectorAll('span')
-      animate(old, { y: -10, opacity: 0, filter: 'blur(6px)' }, { duration: OUT_MS / 1000, delay: stagger(0.015), ease: 'easeIn' })
+      const old = Array.from(categoryEl.querySelectorAll('span'))
+      try {
+        if (old.length) {
+          animate(old, { y: -10, opacity: 0, filter: 'blur(6px)' }, { duration: OUT_MS / 1000, delay: stagger(0.015), ease: 'easeIn' })
+        }
+      } catch {}
       categoryTimer = setTimeout(() => {
         if (alive && categoryName === name) lettersIn(name)
       }, OUT_MS + old.length * 15)
@@ -243,16 +261,30 @@ export default function KiloThermalDial({
       last = performance.now()
       raf = requestAnimationFrame(tick)
       if (reduce) {
-        card.style.opacity = '1'
+        if (card) card.style.opacity = '1'
         if (hintEl) hintEl.style.opacity = '1'
         return
       }
-      animate(card, { scale: [0.88, 1], y: [36, 0] }, { type: 'spring', stiffness: 140, damping: 18 })
-      animate(card, { opacity: [0, 1], filter: ['blur(18px)', 'blur(0px)'] }, { duration: 0.65, ease: 'easeOut' })
-      animate(ticks.map(t => t.el), { opacity: [0, 1] }, { duration: 0.3, delay: stagger(0.006, { startDelay: 0.2, from: 'center' }) })
-      animate(needle, { opacity: [0, 1] }, { duration: 0.4, delay: 0.45 })
-      animate(glowIn, 1, { duration: 1.4, delay: 0.3, ease: 'easeOut' })
-      if (hintEl) animate(hintEl, { opacity: [0, 1], y: [6, 0] }, { duration: 0.6, delay: 1.4, ease: 'easeOut' })
+      try {
+        if (card) {
+          animate(card, { scale: [0.88, 1], y: [36, 0] }, { type: 'spring', stiffness: 140, damping: 18 })
+          animate(card, { opacity: [0, 1], filter: ['blur(18px)', 'blur(0px)'] }, { duration: 0.65, ease: 'easeOut' })
+        }
+        if (ticks.length) {
+          animate(ticks.map(t => t.el), { opacity: [0, 1] }, { duration: 0.3, delay: stagger(0.006, { startDelay: 0.2, from: 'center' }) })
+        }
+        if (needle) {
+          animate(needle, { opacity: [0, 1] }, { duration: 0.4, delay: 0.45 })
+        }
+        if (glowIn) {
+          animate(glowIn, 1, { duration: 1.4, delay: 0.3, ease: 'easeOut' })
+        }
+        if (hintEl) {
+          animate(hintEl, { opacity: [0, 1], y: [6, 0] }, { duration: 0.6, delay: 1.4, ease: 'easeOut' })
+        }
+      } catch {
+        if (card) card.style.opacity = '1'
+      }
       introTimer = setTimeout(() => {
         if (alive) target = START
       }, 380)
