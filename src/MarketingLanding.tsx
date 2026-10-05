@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { TunaEyeHeroLogo } from './components/TunaEyeHeroLogo'
 
 export type MarketingPage = 'home' | 'features' | 'about' | 'team' | 'faq' | 'terms' | 'privacy'
 
@@ -21,6 +22,183 @@ const changelog = [
   { version: 'v0.6.0', date: 'Jul 2026', items: ['5000K CRI 98+ lighting chamber design', 'Sashibo core and tail cut grading criteria', 'Grade A/B/C classification model training'] },
 ]
 
+/* ─── SVG icon library ─────────────────────────────────────────────────── */
+function IconBrain() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="15" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.15"/>
+      <path d="M11 10c0-2 1.5-3 3-3s3 1 3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M8 14c-1.5 0-2.5 1-2.5 2.5S6.5 19 8 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M24 14c1.5 0 2.5 1 2.5 2.5S25.5 19 24 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M11 10c-3 0-5 2-5 4.5 0 1.5.6 2.8 1.5 3.5.9.7 2 1 3 1h1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M14 10c1 0 2 .4 2.5 1M17 10c3 0 5 2 5 4.5 0 1.5-.6 2.8-1.5 3.5-.9.7-2 1-3 1h-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M10 19v5M14 18v6M18 18v6M22 19v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M10 22h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function IconLight() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="13" r="5.5" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M16 4V2M16 24v2M4 13H2M30 13h-2M7.1 6.1 5.7 4.7M26.9 6.1l1.4-1.4M7.1 19.9 5.7 21.3M26.9 19.9l1.4 1.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M12 23h8M13 26h6M14 29h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function IconTablet() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect x="5" y="2" width="22" height="28" rx="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M5 24h22" stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="16" cy="27" r="1.2" fill="currentColor"/>
+      <rect x="9" y="6" width="14" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+      <path d="M11 13l2.5 2.5L16 13l2.5 2.5L21 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function IconScale() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M16 5v22M8 27h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M16 5l-8 12h16L16 5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+      <rect x="12" y="24" width="8" height="3" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M8 17c0 0 2-4 4-4M24 17c0 0-2-4-4-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.6"/>
+    </svg>
+  )
+}
+
+function IconMedal() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="19" r="9" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M12 3h8l-2 8h-4L12 3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+      <path d="M14 11l-3 3M18 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M13 19l1.5 1.5L19 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function IconArrowRight() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function IconFlow() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+/* ─── Workflow pictogram icons ──────────────────────────────────────────── */
+function PictoAuth() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <circle cx="18" cy="12" r="6" stroke="currentColor" strokeWidth="2"/>
+      <path d="M6 30c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="26" cy="10" r="4" fill="currentColor" opacity="0.15"/>
+      <path d="M24 10l1.5 1.5L28 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+function PictoCut() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <ellipse cx="18" cy="19" rx="12" ry="7" stroke="currentColor" strokeWidth="2"/>
+      <path d="M6 19c0-3.866 5.373-7 12-7s12 3.134 12 7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 2"/>
+      <path d="M18 12v14M10 16l16 6M10 22l16-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.5"/>
+      <circle cx="18" cy="19" r="3" fill="currentColor" opacity="0.2"/>
+    </svg>
+  )
+}
+function PictoWeigh() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <rect x="6" y="24" width="24" height="5" rx="2.5" stroke="currentColor" strokeWidth="2"/>
+      <path d="M18 7v17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M18 7l-9 11h18L18 7z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+      <path d="M11 20h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.4"/>
+    </svg>
+  )
+}
+function PictoChamber() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <rect x="5" y="9" width="26" height="20" rx="3" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="18" cy="19" r="5.5" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="18" cy="19" r="2" fill="currentColor" opacity="0.3"/>
+      <path d="M14 9V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="27" cy="13" r="1.5" fill="currentColor" opacity="0.5"/>
+    </svg>
+  )
+}
+function PictoInfer() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <rect x="8" y="8" width="20" height="20" rx="4" stroke="currentColor" strokeWidth="2"/>
+      <path d="M8 14h20M8 22h20M14 8v20M22 8v20" stroke="currentColor" strokeWidth="1.3" opacity="0.3"/>
+      <path d="M15 18l2 2 4-4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="28" cy="10" r="4" fill="#2769eb" opacity="0.9"/>
+      <path d="M27 10l.8.8L30 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+function PictoReceipt() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <rect x="9" y="4" width="18" height="24" rx="2" stroke="currentColor" strokeWidth="2"/>
+      <path d="M13 11h10M13 15h10M13 19h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.6"/>
+      <path d="M9 28l3-3 3 3 3-3 3 3 3-3 3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="28" cy="26" r="5" fill="#2eb67d" opacity="0.9"/>
+      <path d="M25.5 26l1.5 1.5L30 24.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+/* ─── Scroll animation hook ──────────────────────────────────────────────── */
+function useScrollReveal() {
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add('is-revealed')
+          obs.unobserve(el)
+        }
+      },
+      { threshold: 0.12 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return ref
+}
+
+/* Wrap any block element with scroll reveal */
+function Reveal({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useScrollReveal()
+  return (
+    <div
+      ref={ref as React.RefObject<HTMLDivElement>}
+      className={`scroll-reveal ${className}`}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+    >
+      {children}
+    </div>
+  )
+}
+
+/* ─── Logo / Arrow ───────────────────────────────────────────────────────── */
 function Logo() {
   return (
     <span className="site-logo">
@@ -31,7 +209,7 @@ function Logo() {
 }
 
 function Arrow() {
-  return <span aria-hidden="true">→</span>
+  return <IconArrowRight />
 }
 
 function NavDropdown({ item, page, onNavigate }: { item: typeof pages[number]; page: MarketingPage; onNavigate: (p: MarketingPage) => void }) {
@@ -239,25 +417,10 @@ function Home({
               Station Specs <Arrow />
             </button>
           </div>
-          <div className="site-trust">
-            <span>Sub-200ms Edge AI</span>
-            <span>Offline-Ready PWA</span><span>HACCP Traceable</span>
-            <span>10.1″ IP65 Tablets</span>
-            <span>Dual Cloud Sync</span>
-          </div>
         </div>
 
         <div className="site-hero__visual">
-          <div className="site-orbit site-orbit--one" />
-          <div className="site-orbit site-orbit--two" />
-          <img src="/assets/tunaEyeLoadingScreen.png" alt="TunaEye grading station interface" />
-          <aside>
-            <b>Station status</b>
-            <strong>
-              <i /> Station online & ready
-            </strong>
-            <small>Camera · RPi Edge · Scale · Thermal Printer</small>
-          </aside>
+          <TunaEyeHeroLogo />
         </div>
 
         <div className="site-hero__band">
@@ -265,347 +428,364 @@ function Home({
           <i />
           <span>02. Edge Neural Infer</span>
           <i />
-          <span>03. Review & Override</span>
+          <span>03. Review &amp; Override</span>
           <i />
-          <span>04. Receipt & Cloud Sync</span>
+          <span>04. Receipt &amp; Cloud Sync</span>
         </div>
       </section>
 
       {/* WHY TUNAEYE / VALUE PROP */}
-      <section className="site-story">
-        <div>
-          <span className="site-kicker">Why TunaEye Matters</span>
-          <h2>Every sample must tell one complete, tamper-proof story.</h2>
-        </div>
-        <div>
-          <p>
-            Yellowfin tuna trading depends heavily on visual quality assessment. Without digital standardization, disagreements between vessel operators, buyers, and processors lead to renegotiations, delays, and lost value.
-          </p>
-          <p>
-            TunaEye locks every decision to a verified specimen, weight, grader identity, neural network confidence, and printed thermal receipt—ensuring complete accountability from receiving tray to final shipment.
-          </p>
-          <button className="site-text-link" onClick={() => onNavigate('about')}>
-            Read our engineering approach <Arrow />
-          </button>
-        </div>
-      </section>
+      <Reveal>
+        <section className="site-story">
+          <div>
+            <span className="site-kicker">Why TunaEye Matters</span>
+            <h2>Every sample must tell one complete, tamper-proof story.</h2>
+          </div>
+          <div>
+            <p>
+              Yellowfin tuna trading depends heavily on visual quality assessment. Without digital standardization, disagreements between vessel operators, buyers, and processors lead to renegotiations, delays, and lost value.
+            </p>
+            <p>
+              TunaEye locks every decision to a verified specimen, weight, grader identity, neural network confidence, and printed thermal receipt—ensuring complete accountability from receiving tray to final shipment.
+            </p>
+            <button className="site-text-link" onClick={() => onNavigate('about')}>
+              Read our engineering approach <Arrow />
+            </button>
+          </div>
+        </section>
+      </Reveal>
 
       {/* HARDWARE & CHAMBER INTEGRATION */}
-      <section className="site-hardware" id="hardware">
-        <header>
-          <span className="site-kicker">Station Architecture</span>
-          <h2>Rugged hardware engineered for the port floor.</h2>
-          <p>TunaEye connects off-the-shelf industrial components into a seamless, splash-resistant grading station.</p>
-        </header>
+      <Reveal>
+        <section className="site-hardware" id="hardware">
+          <header>
+            <span className="site-kicker">Station Architecture</span>
+            <h2>Rugged hardware engineered for the port floor.</h2>
+            <p>TunaEye connects off-the-shelf industrial components into a seamless, splash-resistant grading station.</p>
+          </header>
 
-        <div className="hardware-grid">
-          <article className="hardware-card">
-            <div className="hardware-card__icon">🧠</div>
-            <h3>Raspberry Pi 4/5 Edge Server</h3>
-            <p>Runs custom-trained ONNX neural models locally on station hardware, guaranteeing sub-200ms inference without requiring active internet connectivity.</p>
-            <ul>
-              <li>Sub-200ms inference latency</li>
-              <li>Local LAN health & diagnostics</li>
-              <li>Zero cloud dependency for grading</li>
-            </ul>
-          </article>
+          <div className="hardware-grid">
+            <Reveal delay={0}>
+              <article className="hardware-card hardware-card--minimal">
+                <div className="hardware-card__icon"><IconBrain /></div>
+                <h3>Raspberry Pi<br/>Edge Server</h3>
+                <div className="hw-pills">
+                  <span>&lt;200ms</span><span>LAN only</span><span>Offline AI</span>
+                </div>
+              </article>
+            </Reveal>
 
-          <article className="hardware-card">
-            <div className="hardware-card__icon">💡</div>
-            <h3>5000K CRI 98+ Diffuse Chamber</h3>
-            <p>Standardized LED lighting environment eliminates glare, ambient shadows, and color temperature drift for consistent image capture across stations.</p>
-            <ul>
-              <li>5000K daylight-balanced illumination</li>
-              <li>Dual optical rail alignment guides</li>
-              <li>Consistent color calibration</li>
-            </ul>
-          </article>
+            <Reveal delay={80}>
+              <article className="hardware-card hardware-card--minimal">
+                <div className="hardware-card__icon"><IconLight /></div>
+                <h3>5000K CRI 98+<br/>Diffuse Chamber</h3>
+                <div className="hw-pills">
+                  <span>Daylight</span><span>Anti-glare</span><span>Calibrated</span>
+                </div>
+              </article>
+            </Reveal>
 
-          <article className="hardware-card">
-            <div className="hardware-card__icon">📱</div>
-            <h3>10.1″ IP65 Sealed Touch Tablet</h3>
-            <p>High-brightness screen built for harsh seafood port environments, splash resistance, and seamless operation with gloved hands.</p>
-            <ul>
-              <li>Responsive 16:10 kiosk layout</li>
-              <li>Standalone PWA application shell</li>
-              <li>Full offline IndexedDB storage</li>
-            </ul>
-          </article>
+            <Reveal delay={160}>
+              <article className="hardware-card hardware-card--minimal">
+                <div className="hardware-card__icon"><IconTablet /></div>
+                <h3>10.1″ IP65<br/>Touch Tablet</h3>
+                <div className="hw-pills">
+                  <span>Splash-safe</span><span>PWA</span><span>Offline</span>
+                </div>
+              </article>
+            </Reveal>
 
-          <article className="hardware-card">
-            <div className="hardware-card__icon">⚖️</div>
-            <h3>Scale & Thermal Receipt Printer</h3>
-            <p>Automated Bluetooth digital scale integration up to 200kg with instant 80mm thermal receipt printing for physical specimen tags.</p>
-            <ul>
-              <li>Max 200kg weight capture</li>
-              <li>80mm thermal receipt layout</li>
-              <li>QR code specimen verification</li>
-            </ul>
-          </article>
-        </div>
-      </section>
+            <Reveal delay={240}>
+              <article className="hardware-card hardware-card--minimal">
+                <div className="hardware-card__icon"><IconScale /></div>
+                <h3>Scale &amp;<br/>Thermal Printer</h3>
+                <div className="hw-pills">
+                  <span>200kg max</span><span>80mm</span><span>QR code</span>
+                </div>
+              </article>
+            </Reveal>
+          </div>
+        </section>
+      </Reveal>
 
       {/* TUNA GRADING CRITERIA BREAKDOWN */}
-      <section className="site-criteria">
-        <div className="site-criteria__intro">
-          <span className="site-kicker">Anatomical Grading Criteria</span>
-          <h2>Standardized quality metrics for Sashibo & Tail Cut samples.</h2>
-          <p>TunaEye evaluates the primary anatomical sample cuts used in commercial yellowfin sashimi grading.</p>
-        </div>
+      <Reveal>
+        <section className="site-criteria">
+          <div className="site-criteria__intro">
+            <span className="site-kicker">Anatomical Grading Criteria</span>
+            <h2>Standardized quality metrics for Sashibo &amp; Tail Cut samples.</h2>
+            <p>TunaEye evaluates the primary anatomical sample cuts used in commercial yellowfin sashimi grading.</p>
+          </div>
 
-        <div className="criteria-tabs">
-          <button
-            className={selectedCut === 'sashibo' ? 'is-active' : ''}
-            onClick={() => setSelectedCut('sashibo')}
-          >
-            Sashibo Core Sample Analysis
-          </button>
-          <button
-            className={selectedCut === 'tail' ? 'is-active' : ''}
-            onClick={() => setSelectedCut('tail')}
-          >
-            Tail Cut Cross-Section Analysis
-          </button>
-        </div>
+          <div className="criteria-tabs">
+            <button
+              className={selectedCut === 'sashibo' ? 'is-active' : ''}
+              onClick={() => setSelectedCut('sashibo')}
+            >
+              Sashibo Core Sample Analysis
+            </button>
+            <button
+              className={selectedCut === 'tail' ? 'is-active' : ''}
+              onClick={() => setSelectedCut('tail')}
+            >
+              Tail Cut Cross-Section Analysis
+            </button>
+          </div>
 
-        <div className="criteria-content">
-          {selectedCut === 'sashibo' ? (
-            <div className="criteria-panel">
-              <div className="criteria-panel__text">
-                <h3>Sashibo Core Evaluation Metrics</h3>
-                <p>Extracted using a specialized sashibo probe from the core flesh near the dorsal fin, this sample provides a direct look into internal muscle quality.</p>
-                <div className="criteria-list">
-                  <div>
-                    <strong>Flesh Translucency & Oil Content</strong>
-                    <p>Measures light transmission and lipid dispersion across the core specimen, indicating high fat content prized in Grade A sashimi.</p>
-                  </div>
-                  <div>
-                    <strong>Myoglobin Color Saturation</strong>
-                    <p>Detects deep cherry-red hue versus brown oxidation or darkening caused by post-capture stress or thermal spike.</p>
-                  </div>
-                  <div>
-                    <strong>Core Structural Integrity</strong>
-                    <p>Ensures the core sample retains firmness without gaping, mushiness, or parasitic muscle breakdown.</p>
+          <div className="criteria-content">
+            {selectedCut === 'sashibo' ? (
+              <div className="criteria-panel">
+                <div className="criteria-panel__text">
+                  <h3>Sashibo Core Evaluation Metrics</h3>
+                  <p>Extracted using a specialized sashibo probe from the core flesh near the dorsal fin, this sample provides a direct look into internal muscle quality.</p>
+                  <div className="criteria-list">
+                    <div>
+                      <strong>Flesh Translucency &amp; Oil Content</strong>
+                      <p>Measures light transmission and lipid dispersion across the core specimen, indicating high fat content prized in Grade A sashimi.</p>
+                    </div>
+                    <div>
+                      <strong>Myoglobin Color Saturation</strong>
+                      <p>Detects deep cherry-red hue versus brown oxidation or darkening caused by post-capture stress or thermal spike.</p>
+                    </div>
+                    <div>
+                      <strong>Core Structural Integrity</strong>
+                      <p>Ensures the core sample retains firmness without gaping, mushiness, or parasitic muscle breakdown.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="criteria-panel__image">
-                <img src="/assets/sashiboCoreFull.png" alt="Sashibo core sample breakdown" />
-                <span>Center-Cut Core Evidence</span>
-              </div>
-            </div>
-          ) : (
-            <div className="criteria-panel">
-              <div className="criteria-panel__text">
-                <h3>Tail Cut Cross-Section Metrics</h3>
-                <p>Harvested at the caudal peduncle, the tail cut exposes the muscle cross-section for rapid visual assessment of firmness and muscle density.</p>
-                <div className="criteria-list">
-                  <div>
-                    <strong>Muscle Grain Density & Tightness</strong>
-                    <p>Evaluates muscle fiber compactness. Tight, dense grain indicates strong muscle retention and superior shelf life.</p>
-                  </div>
-                  <div>
-                    <strong>Oxidation & Color Saturation</strong>
-                    <p>Detects edge browning and metmyoglobin formation along the outer fat ring and central muscle mass.</p>
-                  </div>
-                  <div>
-                    <strong>Drip Loss & Surface Moisture</strong>
-                    <p>Quantifies excessive surface water exudation resulting from cellular rupture during improper chilling.</p>
-                  </div>
+                <div className="criteria-panel__image">
+                  <img src="/assets/sashiboCoreFull.png" alt="Sashibo core sample breakdown" />
+                  <span>Center-Cut Core Evidence</span>
                 </div>
               </div>
-              <div className="criteria-panel__image">
-                <img src="/assets/tailCutFull.png" alt="Tail cut sample breakdown" />
-                <span>Caudal Peduncle Cross-Section</span>
+            ) : (
+              <div className="criteria-panel">
+                <div className="criteria-panel__text">
+                  <h3>Tail Cut Cross-Section Metrics</h3>
+                  <p>Harvested at the caudal peduncle, the tail cut exposes the muscle cross-section for rapid visual assessment of firmness and muscle density.</p>
+                  <div className="criteria-list">
+                    <div>
+                      <strong>Muscle Grain Density &amp; Tightness</strong>
+                      <p>Evaluates muscle fiber compactness. Tight, dense grain indicates strong muscle retention and superior shelf life.</p>
+                    </div>
+                    <div>
+                      <strong>Oxidation &amp; Color Saturation</strong>
+                      <p>Detects edge browning and metmyoglobin formation along the outer fat ring and central muscle mass.</p>
+                    </div>
+                    <div>
+                      <strong>Drip Loss &amp; Surface Moisture</strong>
+                      <p>Quantifies excessive surface water exudation resulting from cellular rupture during improper chilling.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="criteria-panel__image">
+                  <img src="/assets/tailCutFull.png" alt="Tail cut sample breakdown" />
+                  <span>Caudal Peduncle Cross-Section</span>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* GRADE CLASSIFICATION SCALE */}
-        <div className="grade-scale-grid">
-          <div className="grade-card grade-card--a">
-            <span className="grade-badge">Grade A</span>
-            <h4>Export Sashimi Grade</h4>
-            <p>Deep translucent red, high fat content, zero oxidation, firm core texture. Highest commercial value.</p>
+          {/* GRADE CLASSIFICATION SCALE */}
+          <div className="grade-scale-grid">
+            <Reveal delay={0}><div className="grade-card grade-card--a">
+              <span className="grade-badge">Grade A</span>
+              <h4>Export Sashimi Grade</h4>
+              <p>Deep translucent red, high fat content, zero oxidation, firm core texture. Highest commercial value.</p>
+            </div></Reveal>
+            <Reveal delay={80}><div className="grade-card grade-card--bplus">
+              <span className="grade-badge">Grade B+</span>
+              <h4>Premium Fresh Grade</h4>
+              <p>Strong red color saturation, slight fat dispersion, firm muscle grain. Excellent fresh market suitability.</p>
+            </div></Reveal>
+            <Reveal delay={160}><div className="grade-card grade-card--b">
+              <span className="grade-badge">Grade B</span>
+              <h4>Standard Fresh Grade</h4>
+              <p>Moderate red color, minor surface oxidation acceptable, suitable for domestic retail and grilling.</p>
+            </div></Reveal>
+            <Reveal delay={240}><div className="grade-card grade-card--c">
+              <span className="grade-badge">Grade C</span>
+              <h4>Processing / Canning Grade</h4>
+              <p>Dark/brown oxidation, soft texture or high drip loss. Allocated for cooked processing or canning.</p>
+            </div></Reveal>
           </div>
-          <div className="grade-card grade-card--bplus">
-            <span className="grade-badge">Grade B+</span>
-            <h4>Premium Fresh Grade</h4>
-            <p>Strong red color saturation, slight fat dispersion, firm muscle grain. Excellent fresh market suitability.</p>
-          </div>
-          <div className="grade-card grade-card--b">
-            <span className="grade-badge">Grade B</span>
-            <h4>Standard Fresh Grade</h4>
-            <p>Moderate red color, minor surface oxidation acceptable, suitable for domestic retail and grilling.</p>
-          </div>
-          <div className="grade-card grade-card--c">
-            <span className="grade-badge">Grade C</span>
-            <h4>Processing / Canning Grade</h4>
-            <p>Dark/brown oxidation, soft texture or high drip loss. Allocated for cooked processing or canning.</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      </Reveal>
 
       {/* END-TO-END WORKFLOW AT A GLANCE */}
-      <section className="site-workflow">
-        <header>
-          <span className="site-kicker">Step-by-Step Station Workflow</span>
-          <h2>From receiving tray to traceable digital record.</h2>
-        </header>
+      <Reveal>
+        <section className="site-workflow site-workflow--picto">
+          <header>
+            <span className="site-kicker">Station Workflow</span>
+            <h2>Six steps. One traceable record.</h2>
+          </header>
 
-        <div>
-          {[
-            ['01', 'Grader Auth', 'Grader selects profile or inputs PIN. All actions stay linked to grader identity.'],
-            ['02', 'Select Cut', 'Choose Sashibo Core, Tail Cut, or dual-sample same-fish association.'],
-            ['03', 'Weigh Fish', 'Integrated Bluetooth scale reads fish weight up to maximum 200 kg limit.'],
-            ['04', 'Chamber Place', 'Follow 3-step target alignment guide under 5000K diffuse illumination.'],
-            ['05', 'Edge Infer', 'Raspberry Pi runs model inference and returns grade + confidence score in <200ms.'],
-            ['06', 'Receipt & Sync', 'Print 80mm thermal tag and background-sync record to Supabase & Convex cloud.'],
-          ].map(([number, title, copy]) => (
-            <article key={number}>
-              <span>{number}</span>
-              <h3>{title}</h3>
-              <p>{copy}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+          <div className="picto-pipeline">
+            {([
+              ['01', 'Grader Auth',   <PictoAuth />],
+              ['02', 'Select Cut',    <PictoCut />],
+              ['03', 'Weigh Fish',    <PictoWeigh />],
+              ['04', 'Capture',       <PictoChamber />],
+              ['05', 'Edge AI',       <PictoInfer />],
+              ['06', 'Print & Sync',  <PictoReceipt />],
+            ] as [string, string, React.ReactNode][]).map(([num, label, icon], i) => (
+              <Reveal key={num} delay={i * 55}>
+                <div className="picto-step">
+                  <div className="picto-step__icon">{icon}</div>
+                  <span className="picto-step__num">{num}</span>
+                  <strong className="picto-step__label">{label}</strong>
+                </div>
+                {i < 5 && <div className="picto-connector" aria-hidden="true"><IconFlow /></div>}
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      </Reveal>
 
       {/* SAMPLE EVIDENCE SHOWCASE */}
-      <section className="site-showcase">
-        <div className="site-showcase__copy">
-          <span className="site-kicker">Traceable Evidence</span>
-          <h2>{showcaseItems[showcase].title}</h2>
-          <p>{showcaseItems[showcase].copy}</p>
-          <div>
-            <button
-              onClick={() => setShowcase(value => (value ? value - 1 : showcaseItems.length - 1))}
-              aria-label="Previous sample"
-            >
-              ←
-            </button>
-            <span>
-              {showcase + 1} / {showcaseItems.length}
-            </span>
-            <button
-              onClick={() => setShowcase(value => (value + 1) % showcaseItems.length)}
-              aria-label="Next sample"
-            >
-              →
-            </button>
+      <Reveal>
+        <section className="site-showcase">
+          <div className="site-showcase__copy">
+            <span className="site-kicker">Traceable Evidence</span>
+            <h2>{showcaseItems[showcase].title}</h2>
+            <p>{showcaseItems[showcase].copy}</p>
+            <div>
+              <button
+                onClick={() => setShowcase(value => (value ? value - 1 : showcaseItems.length - 1))}
+                aria-label="Previous sample"
+              >
+                ←
+              </button>
+              <span>
+                {showcase + 1} / {showcaseItems.length}
+              </span>
+              <button
+                onClick={() => setShowcase(value => (value + 1) % showcaseItems.length)}
+                aria-label="Next sample"
+              >
+                →
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="site-showcase__image">
-          <span>Captured sample evidence</span>
-          <img src={showcaseItems[showcase].image} alt={showcaseItems[showcase].title} />
-        </div>
-      </section>
+          <div className="site-showcase__image">
+            <span>Captured sample evidence</span>
+            <img src={showcaseItems[showcase].image} alt={showcaseItems[showcase].title} />
+          </div>
+        </section>
+      </Reveal>
 
       {/* STATION METRICS */}
-      <section className="site-metrics">
-        <article>
-          <strong>&lt; 200ms</strong>
-          <span>Edge inference speed</span>
-        </article>
-        <article>
-          <strong>200 kg</strong>
-          <span>Maximum fish weight cap</span>
-        </article>
-        <article>
-          <strong>1:1</strong>
-          <span>Fish-to-evidence traceability</span>
-        </article>
-        <article>
-          <strong>100%</strong>
-          <span>Offline kiosk availability</span>
-        </article>
-      </section>
+      <Reveal>
+        <section className="site-metrics">
+          <article>
+            <strong>&lt; 200ms</strong>
+            <span>Edge inference speed</span>
+          </article>
+          <article>
+            <strong>200 kg</strong>
+            <span>Maximum fish weight cap</span>
+          </article>
+          <article>
+            <strong>1:1</strong>
+            <span>Fish-to-evidence traceability</span>
+          </article>
+          <article>
+            <strong>100%</strong>
+            <span>Offline kiosk availability</span>
+          </article>
+        </section>
+      </Reveal>
 
       {/* DUAL CLOUD ARCHITECTURE */}
-      <section className="site-architecture">
-        <div>
-          <span className="site-kicker">Resilient Infrastructure</span>
-          <h2>Local edge speed. Cloud transparency.</h2>
-          <p>
-            The kiosk tablet handles operator interactions and offline IndexedDB queueing. The Raspberry Pi performs zero-latency AI inference on station LAN. Supabase PostgreSQL serves as the durable system of record, while Convex broadcasts live updates across all admin consoles.
-          </p>
-          <button className="site-text-link" onClick={() => onNavigate('features')}>
-            Explore full feature breakdown <Arrow />
-          </button>
-        </div>
-        <div className="architecture-flow">
-          <article>
-            <b>01</b>
-            <strong>Tablet Kiosk</strong>
-            <small>Capture, weigh & review</small>
-          </article>
-          <i>↔</i>
-          <article>
-            <b>02</b>
-            <strong>Raspberry Pi</strong>
-            <small>Edge AI model inference</small>
-          </article>
-          <i>↔</i>
-          <article>
-            <b>03</b>
-            <strong>Supabase + Convex</strong>
-            <small>Durable records & live sync</small>
-          </article>
-        </div>
-      </section>
+      <Reveal>
+        <section className="site-architecture">
+          <div>
+            <span className="site-kicker">Resilient Infrastructure</span>
+            <h2>Local edge speed. Cloud transparency.</h2>
+            <p>
+              The kiosk tablet handles operator interactions and offline IndexedDB queueing. The Raspberry Pi performs zero-latency AI inference on station LAN. Supabase PostgreSQL serves as the durable system of record, while Convex broadcasts live updates across all admin consoles.
+            </p>
+            <button className="site-text-link" onClick={() => onNavigate('features')}>
+              Explore full feature breakdown <Arrow />
+            </button>
+          </div>
+          <div className="architecture-flow">
+            <article>
+              <b>01</b>
+              <strong>Tablet Kiosk</strong>
+              <small>Capture, weigh &amp; review</small>
+            </article>
+            <i aria-hidden="true"><IconFlow /></i>
+            <article>
+              <b>02</b>
+              <strong>Raspberry Pi</strong>
+              <small>Edge AI model inference</small>
+            </article>
+            <i aria-hidden="true"><IconFlow /></i>
+            <article>
+              <b>03</b>
+              <strong>Supabase + Convex</strong>
+              <small>Durable records &amp; live sync</small>
+            </article>
+          </div>
+        </section>
+      </Reveal>
 
       {/* FAQ PREVIEW */}
-      <section className="site-faq-preview">
-        <header>
-          <span className="site-kicker">Deployment FAQ</span>
-          <h2>Frequently asked questions before deployment.</h2>
-        </header>
-        <div>
-          <details open>
-            <summary>Who uses the TunaEye station?</summary>
-            <p>
-              Fish ports, buying stations, commercial seafood processors, trained quality graders, and export inspection officers.
-            </p>
-          </details>
-          <details>
-            <summary>Does the kiosk work during internet outages?</summary>
-            <p>
-              Yes. The kiosk shell, camera capture, local weight entry, Raspberry Pi edge inference, thermal printing, and audit logging operate 100% offline. Cloud synchronization resumes automatically when connectivity is restored.
-            </p>
-          </details>
-          <details>
-            <summary>How are expert overrides handled and audited?</summary>
-            <p>
-              If a grader disagrees with the AI model confidence score, an expert override can be entered. Overrides require the Station Admin PIN and record the reason, preserving both the original AI output and the grader override for audit purposes.
-            </p>
-          </details>
-          <details>
-            <summary>Which cameras and scales are supported?</summary>
-            <p>
-              TunaEye supports device cameras, USB industrial cameras, and webcams via standard WebRTC, along with serial/Bluetooth digital weighing scales up to 200kg.
-            </p>
-          </details>
-        </div>
-        <button className="site-text-link" onClick={() => onNavigate('faq')}>
-          View all questions & answers <Arrow />
-        </button>
-      </section>
+      <Reveal>
+        <section className="site-faq-preview">
+          <header>
+            <span className="site-kicker">Deployment FAQ</span>
+            <h2>Frequently asked questions before deployment.</h2>
+          </header>
+          <div>
+            <details open>
+              <summary>Who uses the TunaEye station?</summary>
+              <p>
+                Fish ports, buying stations, commercial seafood processors, trained quality graders, and export inspection officers.
+              </p>
+            </details>
+            <details>
+              <summary>Does the kiosk work during internet outages?</summary>
+              <p>
+                Yes. The kiosk shell, camera capture, local weight entry, Raspberry Pi edge inference, thermal printing, and audit logging operate 100% offline. Cloud synchronization resumes automatically when connectivity is restored.
+              </p>
+            </details>
+            <details>
+              <summary>How are expert overrides handled and audited?</summary>
+              <p>
+                If a grader disagrees with the AI model confidence score, an expert override can be entered. Overrides require the Station Admin PIN and record the reason, preserving both the original AI output and the grader override for audit purposes.
+              </p>
+            </details>
+            <details>
+              <summary>Which cameras and scales are supported?</summary>
+              <p>
+                TunaEye supports device cameras, USB industrial cameras, and webcams via standard WebRTC, along with serial/Bluetooth digital weighing scales up to 200kg.
+              </p>
+            </details>
+          </div>
+          <button className="site-text-link" onClick={() => onNavigate('faq')}>
+            View all questions &amp; answers <Arrow />
+          </button>
+        </section>
+      </Reveal>
 
       {/* CALL TO ACTION */}
-      <section className="site-cta">
-        <span className="site-kicker">Ready for the Grading Floor?</span>
-        <h2>Turn every yellowfin tuna sample into clear, connected evidence.</h2>
-        <p>Start grading now or explore the full platform capabilities in your browser.</p>
-        <div className="site-actions">
-          <button className="site-button site-button--primary" onClick={onOpen}>
-            Start Grading <Arrow />
-          </button>
-          <button className="site-button" onClick={() => onNavigate('features')}>
-            Explore Features
-          </button>
-        </div>
-      </section>
+      <Reveal>
+        <section className="site-cta">
+          <span className="site-kicker">Ready for the Grading Floor?</span>
+          <h2>Turn every yellowfin tuna sample into clear, connected evidence.</h2>
+          <p>Start grading now or explore the full platform capabilities in your browser.</p>
+          <div className="site-actions">
+            <button className="site-button site-button--primary" onClick={onOpen}>
+              Start Grading <Arrow />
+            </button>
+            <button className="site-button" onClick={() => onNavigate('features')}>
+              Explore Features
+            </button>
+          </div>
+        </section>
+      </Reveal>
     </main>
   )
 }
@@ -623,28 +803,24 @@ function TeamPage({
       role: 'Project Lead & Full Stack Architect',
       initials: 'GA',
       bio: 'Leads system architecture, dual-cloud sync, PWA development, and port kiosk integrations.',
-      tags: ['System Architecture', 'React / PWA', 'Supabase & Convex'],
     },
     {
       name: 'Dr. Maria Santos',
       role: 'AI & Computer Vision Lead',
       initials: 'MS',
       bio: 'Spearheads deep learning models for tuna meat color classification, Sashibo analysis, and ONNX edge acceleration.',
-      tags: ['Computer Vision', 'PyTorch / ONNX', 'Edge AI'],
     },
     {
       name: 'Jason Tan',
       role: 'Hardware & Embedded Systems',
       initials: 'JT',
       bio: 'Designs camera enclosures, 5000K CRI 98+ lighting chambers, Raspberry Pi peripherals, and thermal printers.',
-      tags: ['Raspberry Pi', 'Optical Hardware', 'Thermal Printing'],
     },
     {
       name: 'Elena Rostova',
       role: 'Quality & Field Operations Specialist',
       initials: 'ER',
       bio: 'Bridges port grading practices with digital UI, ensuring compliance with international yellowfin export standards.',
-      tags: ['Tuna Grading Standards', 'Field Testing', 'UX for Ports'],
     },
   ]
 
@@ -679,18 +855,17 @@ function TeamPage({
           <p>Developers, engineers, and domain experts building TunaEye.</p>
         </div>
         <div className="team-cards">
-          {teamMembers.map(m => (
-            <div key={m.name} className="team-card">
-              <div className="team-card__avatar">{m.initials}</div>
-              <div className="team-card__info">
-                <h3>{m.name}</h3>
-                <span className="team-card__role">{m.role}</span>
-                <p>{m.bio}</p>
-                <div className="team-card__tags">
-                  {m.tags.map(t => <span key={t}>{t}</span>)}
+          {teamMembers.map((m, i) => (
+            <Reveal key={m.name} delay={i * 70}>
+              <div className="team-card">
+                <div className="team-card__avatar">{m.initials}</div>
+                <div className="team-card__info">
+                  <h3>{m.name}</h3>
+                  <span className="team-card__role">{m.role}</span>
+                  <p>{m.bio}</p>
                 </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -701,15 +876,17 @@ function TeamPage({
           <p>Guidance from industry veterans and academic leaders in fisheries and computer vision.</p>
         </div>
         <div className="adviser-cards">
-          {advisers.map(a => (
-            <div key={a.name} className="adviser-card">
-              <div className="adviser-card__icon">🏅</div>
-              <div>
-                <h3>{a.name}</h3>
-                <span className="adviser-card__title">{a.title} • {a.affiliation}</span>
-                <p>{a.expertise}</p>
+          {advisers.map((a, i) => (
+            <Reveal key={a.name} delay={i * 80}>
+              <div className="adviser-card">
+                <div className="adviser-card__icon"><IconMedal /></div>
+                <div>
+                  <h3>{a.name}</h3>
+                  <span className="adviser-card__title">{a.title} • {a.affiliation}</span>
+                  <p>{a.expertise}</p>
+                </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -729,6 +906,80 @@ function TeamPage({
   )
 }
 
+/* ─── INNER PAGE — visual card layout ──────────────────────────────────── */
+const innerPageMeta: Record<
+  'features' | 'about' | 'faq' | 'terms' | 'privacy',
+  {
+    eyebrow: string
+    title: string
+    intro: string
+    cards: [string, string][]
+  }
+> = {
+  features: {
+    eyebrow: 'Platform Features',
+    title: 'Everything a connected tuna grading station needs.',
+    intro:
+      'TunaEye combines guided sample capture, edge neural inference, evidence review, protected expert decision overrides, thermal receipt printing, and dual-cloud synchronization.',
+    cards: [
+      ['Guided Kiosk Workflow', 'Large touch targets, high contrast, and responsive 16:10 tablet layouts built for wet port floors.'],
+      ['Multi-Camera Capture', 'Seamless switching between device, USB, and virtual station cameras with live optical alignment rails.'],
+      ['Raspberry Pi Edge Service', 'Sub-200ms local ONNX neural network inference with HTTP LAN health monitoring.'],
+      ['Protected Expert Overrides', 'Requires administrator PIN authorization while preserving original AI model confidence scores in immutable logs.'],
+      ['Dual-Cloud Records', 'Supabase PostgreSQL durable historical database combined with Convex real-time multi-station broadcast engine.'],
+      ['Comprehensive Audit Visibility', 'Complete event log tracking grader login, scale inputs, inference results, overrides, settings changes, and sync events.'],
+      ['Integrated Thermal Receipts', '80mm receipt generation with fish weight, grade, timestamp, QR verification code, and station ID.'],
+      ['Offline-First Architecture', 'PWA service-worker caching with local IndexedDB storage ensures 100% station uptime during network drops.'],
+    ],
+  },
+  about: {
+    eyebrow: 'About TunaEye',
+    title: 'Better evidence for better yellowfin tuna decisions.',
+    intro:
+      'TunaEye was engineered as a bridge between the physical craft of expert tuna grading and the transparency of connected digital records.',
+    cards: [
+      ['Our Purpose', 'Empower trained graders with standardized evidence without replacing human judgment or commercial expertise.'],
+      ['Our Method', 'Link every sample photo to its exact fish identity, weight, grader ID, AI inference score, override reason, and thermal receipt.'],
+      ['Our Standard', 'Make every grading transaction inspectable, printable, auditable, and synchronizable across seafood supply chains.'],
+    ],
+  },
+  faq: {
+    eyebrow: 'Frequently Asked Questions',
+    title: 'Answers for station operators and deployment teams.',
+    intro: 'Detailed breakdown of TunaEye hardware boundaries, offline mechanics, and security controls.',
+    cards: [
+      ['Can TunaEye replace a trained grader?', 'No. TunaEye is an evidence and standardization tool. Expert review and final approval remain with qualified human graders.'],
+      ['How does offline mode function?', 'The PWA and local IndexedDB store all sessions on the tablet. Inference runs on the local Pi LAN. Cloud sync uploads queued records once internet returns.'],
+      ['How are multiple cuts handled per fish?', 'Graders can link both Sashibo Core and Tail Cut samples to the same fish ID, tracking individual images, weights, and grades under one master record.'],
+      ['How is the tablet secured in kiosk mode?', 'The PWA manifest requests standalone fullscreen display. For full Android hardware button locking, managed kiosk / lock-task mode is recommended.'],
+      ['Where is data stored long term?', 'Locally on the tablet first, then stored durably in Supabase PostgreSQL with raw photo object storage and Convex real-time dashboard sync.'],
+      ['How are model updates deployed?', 'Station admins can check the Raspberry Pi health endpoint to inspect active model identifiers and update edge models without modifying the tablet kiosk.'],
+    ],
+  },
+  terms: {
+    eyebrow: 'Legal',
+    title: 'Terms of Service',
+    intro:
+      'TunaEye provides decision-support tools for commercial seafood assessment. Operators remain responsible for fish association, sample quality, regulatory compliance, and purchasing agreements.',
+    cards: [
+      ['Authorized Use', 'Use TunaEye only with authorized stations, devices, grader credentials, and standard operating procedures.'],
+      ['Human Responsibility', 'AI model output serves as decision support. Final commercial acceptance remains the sole responsibility of authorized personnel.'],
+      ['Operational Integrity', 'Users must not tamper with captured evidence, bypass PIN security controls, or falsify station records.'],
+    ],
+  },
+  privacy: {
+    eyebrow: 'Legal',
+    title: 'Privacy Policy',
+    intro:
+      'TunaEye processes grader identity, captured specimen photos, device metadata, grading decisions, and audit events strictly to operate and secure the service.',
+    cards: [
+      ['Data Purpose', 'Operate visual grading, station synchronization, system troubleshooting, audit logging, and commercial reporting.'],
+      ['Data Access & Retention', 'Station records and cloud backups are restricted to authorized organization personnel with defined retention schedules.'],
+      ['Image Security', 'Captured evidence photos are stored securely and associated exclusively with their corresponding station and fish IDs.'],
+    ],
+  },
+}
+
 function InnerPage({
   page,
   onNavigate,
@@ -738,106 +989,48 @@ function InnerPage({
   onNavigate: (page: MarketingPage) => void
   onOpen: () => void
 }) {
-  const content = {
-    features: {
-      eyebrow: 'Platform Features',
-      title: 'Everything a connected tuna grading station needs.',
-      intro:
-        'TunaEye combines guided sample capture, edge neural inference, evidence review, protected expert decision overrides, thermal receipt printing, and dual-cloud synchronization.',
-      cards: [
-        ['Guided Kiosk Workflow', 'Large touch targets, high contrast, and responsive 16:10 tablet layouts built for wet port floors.'],
-        ['Multi-Camera Capture', 'Seamless switching between device, USB, and virtual station cameras with live optical alignment rails.'],
-        ['Raspberry Pi Edge Service', 'Sub-200ms local ONNX neural network inference with HTTP LAN health monitoring.'],
-        ['Protected Expert Overrides', 'Requires administrator PIN authorization while preserving original AI model confidence scores in immutable logs.'],
-        ['Dual-Cloud Records', 'Supabase PostgreSQL durable historical database combined with Convex real-time multi-station broadcast engine.'],
-        ['Comprehensive Audit Visibility', 'Complete event log tracking grader login, scale inputs, inference results, overrides, settings changes, and sync events.'],
-        ['Integrated Thermal Receipts', '80mm receipt generation with fish weight, grade, timestamp, QR verification code, and station ID.'],
-        ['Offline-First Architecture', 'PWA service-worker caching with local IndexedDB storage ensures 100% station uptime during network drops.'],
-      ],
-    },
-    about: {
-      eyebrow: 'About TunaEye',
-      title: 'Better evidence for better yellowfin tuna decisions.',
-      intro:
-        'TunaEye was engineered as a bridge between the physical craft of expert tuna grading and the transparency of connected digital records.',
-      cards: [
-        ['Our Purpose', 'Empower trained graders with standardized evidence without replacing human judgment or commercial expertise.'],
-        ['Our Method', 'Link every sample photo to its exact fish identity, weight, grader ID, AI inference score, override reason, and thermal receipt.'],
-        ['Our Standard', 'Make every grading transaction inspectable, printable, auditable, and synchronizable across seafood supply chains.'],
-      ],
-    },
-    team: {
-      eyebrow: 'The TunaEye Team',
-      title: 'Built where fisheries, hardware, AI, and software meet.',
-      intro:
-        'Designing a reliable port grading station requires deep collaboration across seafood operations and engineering disciplines.',
-      cards: [
-        ['Fisheries & Port Operations', 'Defines real-world station workflows, specimen handling constraints, and grader usability requirements.'],
-        ['Edge AI & Hardware Engineering', 'Owns the Raspberry Pi edge engine, 5000K LED chamber, optical camera integration, and trained ONNX models.'],
-        ['Product & Web Engineering', 'Builds the touch kiosk PWA, Supabase PostgreSQL persistence, Convex sync layer, security PINs, and administrative console.'],
-      ],
-    },
-    faq: {
-      eyebrow: 'Frequently Asked Questions',
-      title: 'Answers for station operators and deployment teams.',
-      intro: 'Detailed breakdown of TunaEye hardware boundaries, offline mechanics, and security controls.',
-      cards: [
-        ['Can TunaEye replace a trained grader?', 'No. TunaEye is an evidence and standardization tool. Expert review and final approval remain with qualified human graders.'],
-        ['How does offline mode function?', 'The PWA and local IndexedDB store all sessions on the tablet. Inference runs on the local Pi LAN. Cloud sync uploads queued records once internet returns.'],
-        ['How are multiple cuts handled per fish?', 'Graders can link both Sashibo Core and Tail Cut samples to the same fish ID, tracking individual images, weights, and grades under one master record.'],
-        ['How is the tablet secured in kiosk mode?', 'The PWA manifest requests standalone fullscreen display. For full Android hardware button locking, managed kiosk / lock-task mode is recommended.'],
-        ['Where is data stored long term?', 'Locally on the tablet first, then stored durably in Supabase PostgreSQL with raw photo object storage and Convex real-time dashboard sync.'],
-        ['How are model updates deployed?', 'Station admins can check the Raspberry Pi health endpoint to inspect active model identifiers and update edge models without modifying the tablet kiosk.'],
-      ],
-    },
-    terms: {
-      eyebrow: 'Legal',
-      title: 'Terms of Service',
-      intro:
-        'TunaEye provides decision-support tools for commercial seafood assessment. Operators remain responsible for fish association, sample quality, regulatory compliance, and purchasing agreements.',
-      cards: [
-        ['Authorized Use', 'Use TunaEye only with authorized stations, devices, grader credentials, and standard operating procedures.'],
-        ['Human Responsibility', 'AI model output serves as decision support. Final commercial acceptance remains the sole responsibility of authorized personnel.'],
-        ['Operational Integrity', 'Users must not tamper with captured evidence, bypass PIN security controls, or falsify station records.'],
-      ],
-    },
-    privacy: {
-      eyebrow: 'Legal',
-      title: 'Privacy Policy',
-      intro:
-        'TunaEye processes grader identity, captured specimen photos, device metadata, grading decisions, and audit events strictly to operate and secure the service.',
-      cards: [
-        ['Data Purpose', 'Operate visual grading, station synchronization, system troubleshooting, audit logging, and commercial reporting.'],
-        ['Data Access & Retention', 'Station records and cloud backups are restricted to authorized organization personnel with defined retention schedules.'],
-        ['Image Security', 'Captured evidence photos are stored securely and associated exclusively with their corresponding station and fish IDs.'],
-      ],
-    },
-  }[page]
+  const content = innerPageMeta[page as keyof typeof innerPageMeta]
+  if (!content) return null
 
   return (
-    <main className="site-inner">
-      <header>
-        <span className="site-kicker">{content.eyebrow}</span>
-        <h1>{content.title}</h1>
-        <p>{content.intro}</p>
-      </header>
-      <section>
+    <main className="site-inner site-inner--visual">
+      <Reveal>
+        <header className="inner-hero">
+          <span className="site-kicker">{content.eyebrow}</span>
+          <h1>{content.title}</h1>
+          <p>{content.intro}</p>
+        </header>
+      </Reveal>
+
+      <section className="inner-cards">
         {content.cards.map(([title, copy], index) => (
-          <article key={title}>
-            <span>0{index + 1}</span>
-            <h2>{title}</h2>
-            <p>{copy}</p>
-          </article>
+          <Reveal key={title} delay={index * 60}>
+            <article className="inner-card">
+              <div className="inner-card__num">
+                <span>{String(index + 1).padStart(2, '0')}</span>
+              </div>
+              <div className="inner-card__body">
+                <h2>{title}</h2>
+                <p>{copy}</p>
+              </div>
+            </article>
+          </Reveal>
         ))}
       </section>
-      <aside>
-        <h2>Ready to see TunaEye in action?</h2>
-        <div className="site-actions">
-          <button className="site-button site-button--primary" onClick={onOpen}>
-            Start Grading <Arrow />
-          </button>
-        </div>
-      </aside>
+
+      <Reveal>
+        <aside className="inner-cta">
+          <h2>Ready to see TunaEye in action?</h2>
+          <div className="site-actions">
+            <button className="site-button site-button--primary" onClick={onOpen}>
+              Start Grading <Arrow />
+            </button>
+            <button className="site-button" onClick={() => onNavigate('home')}>
+              Back to Home
+            </button>
+          </div>
+        </aside>
+      </Reveal>
     </main>
   )
 }
