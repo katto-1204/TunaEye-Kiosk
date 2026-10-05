@@ -59,10 +59,17 @@ export default function KiloThermalDial({
 
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+  const setTargetFnRef = useRef<((v: number) => void) | null>(null)
   const glowK = useRef(theme === 'light' ? 0.5 : 1)
   useEffect(() => {
     glowK.current = theme === 'light' ? 0.5 : 1
   }, [theme])
+
+  useEffect(() => {
+    if (value !== undefined && setTargetFnRef.current) {
+      setTargetFnRef.current(value)
+    }
+  }, [value])
 
   useEffect(() => {
     if (!rootRef.current || !cardRef.current || !svgRef.current || !ticksRef.current || !needleRef.current || !washRef.current || !bloomRef.current || !haloRef.current || !categoryRef.current || !leadRef.current || !mainRef.current) {
@@ -258,6 +265,7 @@ export default function KiloThermalDial({
         onChangeRef.current?.(target, categoryFor(target))
       }
     }
+    setTargetFnRef.current = setTarget
 
     let introTimer: ReturnType<typeof setTimeout> | undefined
     function intro() {
@@ -351,9 +359,10 @@ export default function KiloThermalDial({
 
     return () => {
       alive = false
+      setTargetFnRef.current = null
       cleanups.forEach(fn => fn())
     }
-  }, [min, max, defaultValue, value])
+  }, [min, max])
 
   return (
     <div
