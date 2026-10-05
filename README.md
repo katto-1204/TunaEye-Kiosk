@@ -1,0 +1,104 @@
+# TunaEye Grading Kiosk
+
+TunaEye is a touch-friendly progressive web application for capturing and grading yellowfin tuna samples. It supports Sashibo core and tail-cut samples, real camera capture, per-fish weight tracking, expert review, result printing, offline use, and station administration.
+
+## Requirements
+
+- Node.js 20 or newer
+- npm or pnpm
+- Chrome, Edge, or another modern browser with camera and PWA support
+- HTTPS or `localhost` for camera access and PWA installation
+
+## Run locally
+
+```powershell
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+For a production build:
+
+```powershell
+npm run build
+npm run preview
+```
+
+## Grading workflow
+
+1. Start grading and select **Expert grader**.
+2. Enter or select the grader name.
+3. Select **Sashibo core**, **Tail cut**, or both cards.
+4. When both samples are selected, choose whether they belong to the same fish.
+5. Follow the three-step placement tutorial.
+6. Enter each fish weight. The maximum accepted value is **200 kg**.
+7. Select an available camera, align the sample, and capture the image.
+8. Review the actual captured image and run the local demo analysis.
+9. Review or override the result, then print the grading receipt.
+
+Each selected sample keeps its own captured image, fish association, weight, grade, confidence, expert decision, and receipt.
+
+## Camera access
+
+The capture screen requests browser camera permission and lists every camera exposed by the device, including front, rear, USB, and virtual cameras.
+
+If camera access is blocked:
+
+1. Open the browser's site permissions.
+2. Allow camera access for TunaEye.
+3. Reload the capture screen.
+
+Camera access normally fails on plain HTTP addresses other than `localhost`. Use HTTPS when opening the kiosk from another device on the network.
+
+## Install as a PWA
+
+Use **Install app** on the welcome screen. If the native prompt is unavailable, open the browser menu and choose **Install app** or **Add to Home Screen**.
+
+The PWA includes:
+
+- Standalone kiosk display
+- 192px and 512px install icons
+- Safe-area support for tablets and phones
+- Offline application-shell caching
+- Responsive layouts for portrait and landscape screens
+
+After changing the service worker, refresh once so the browser can activate the new cache version.
+
+## Admin dashboard
+
+Choose **Admin** and enter the prototype PIN:
+
+```text
+1234
+```
+
+The dashboard includes station analytics, grading records, price schedules, grader profiles, device diagnostics, and local station settings. Prototype configuration is stored in the current browser.
+
+## Expert review
+
+An uncertain result can be sent to **Expert review**. The grader selects the accepted grade and records a reason. TunaEye preserves the original model confidence while marking the final record as expert reviewed.
+
+## Printing receipts
+
+The print action opens the operating system print dialog and isolates an 80 mm thermal-receipt layout. Select the connected receipt printer or save the receipt as PDF.
+
+Browsers cannot silently print without user confirmation unless the device is configured with a managed kiosk-printing policy.
+
+## Project structure
+
+```text
+public/                 PWA manifest, service worker, icons, and tutorial assets
+src/App.tsx             Screens and application workflow
+src/kioskState.ts       Session state and reducer
+src/styles.css          Responsive kiosk, safe-area, and print styles
+src/main.tsx            React entry point and service-worker registration
+vite.config.ts          Vite development server configuration
+```
+
+## Prototype notes
+
+- Camera capture uses the real browser camera stream.
+- Captured evidence is kept in memory for the active grading session.
+- The grading model, database sync, and dedicated printer service remain simulated.
+- Admin configuration uses browser-local storage and is not shared between devices.
