@@ -222,7 +222,7 @@ function AdminRecords({ records, compact = false, onViewAll }: { records: { id: 
   const displayed = compact ? records.slice(0, 5) : records.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   return (
-    <div className="admin-table-card">
+    <div className={`admin-table-card ${compact ? 'admin-table-card--compact' : ''}`}>
       <div className="admin-section-title">
         <div>
           <h2>{compact ? 'Recent records' : 'Grading records'}</h2>
@@ -597,7 +597,7 @@ function GraderDashboard({ name, onStart, onLogout }: { name: string; onStart: (
           }
         </div>
       </div>
-      <BottomBar onBack={onLogout} primary={onStart} primaryLabel="Start grading" primaryIcon="arrow" />
+      <BottomBar onBack={onLogout} />
     </div>
   )
 }

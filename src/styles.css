@@ -303,6 +303,8 @@
 @font-face{font-family:'Open Runde';src:url('/fonts/OpenRunde-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
 @font-face{font-family:'Open Runde';src:url('/fonts/OpenRunde-Semibold.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
 @font-face{font-family:'Open Runde';src:url('/fonts/OpenRunde-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Open Runde Bold';src:url('/fonts/OpenRunde-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+body{font-family:'Open Runde',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 :root{font-family:'Open Runde',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#173b6c;background:#f5f7fa;font-synthesis:none;text-rendering:optimizeLegibility;--canvas:#f5f7fa;--surface:#fff;--navy:#173b6c;--ink:#142e50;--secondary:#536477;--muted:#8292a6;--border:#dee6ef;--line:#e9eff5;--blue:#2563eb;--blue-dark:#155fa8;--blue-soft:#eaf2ff;--cyan:#29a9e8;--green:#176b4b;--amber:#8a5900;--red:#9a3c29;--space-1:8px;--space-2:16px;--space-3:24px;--space-4:32px;--space-5:48px;--space-6:64px;--radius-card:24px;--radius-control:18px;--shadow:0 18px 50px rgba(28,70,117,.08);--shadow-soft:0 6px 20px rgba(28,70,117,.08)}
 *{box-sizing:border-box}html,body,#root{min-width:320px;min-height:100%;margin:0;scroll-behavior:smooth}body{min-height:100vh;background:radial-gradient(circle at 86% -10%,rgba(37,99,235,.08),transparent 32%),var(--canvas)}button,input{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed}button:focus-visible,input:focus-visible{outline:4px solid rgba(41,169,232,.35);outline-offset:3px}::selection{background:rgba(37,99,235,.18)}
 .app-shell{height:100vh;max-height:100vh;display:flex;flex-direction:column;overflow:hidden}.app-shell:has(.site-shell),.app-shell:has(.marketing-landing),.app-shell:has(.welcome-screen),.app-shell--landing{height:auto!important;min-height:100vh!important;max-height:none!important;overflow-y:auto!important}.app-main{flex:1;display:flex;flex-direction:column;min-height:calc(100vh - 102px)}.app-main--welcome{min-height:100vh!important;height:auto!important;overflow-y:visible!important}.topbar-wrapper{position:sticky;top:12px;z-index:100;width:100%;padding:0 clamp(16px,3vw,36px);pointer-events:none}.topbar{pointer-events:auto;max-width:1100px;margin:0 auto;height:60px;min-height:60px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 16px 0 20px;border-radius:9999px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.92);backdrop-filter:blur(20px) saturate(180%);box-shadow:0 12px 32px rgba(16,42,77,.08),0 2px 8px rgba(16,42,77,.03),inset 0 1px 0 rgba(255,255,255,.95);position:relative;z-index:2}.topbar__center{display:flex;align-items:center;justify-content:center}.topbar__title{color:var(--navy);font-weight:600;font-size:16px;letter-spacing:-.01em}.topbar__actions{display:flex;align-items:center;gap:12px}.status-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid #d2e0f2;background:#f4f8fe;border-radius:9999px;color:#274b78;font-size:13px;font-weight:500;white-space:nowrap}.icon-button{width:40px!important;height:40px!important;border:1px solid #d2e0f2!important;background:#ffffff!important;border-radius:9999px!important;color:var(--navy)!important;display:grid;place-items:center;transition:all .18s ease}.icon-button:hover{border-color:#2563eb!important;background:#eaf2ff!important;color:#2563eb!important;transform:scale(1.04)}.topbar__brand-link,.admin-sidebar__brand-link{all:unset;cursor:pointer;display:flex;align-items:center;border-radius:12px;transition:opacity .18s ease}.topbar__brand-link:hover,.admin-sidebar__brand-link:hover{opacity:.72}
@@ -415,6 +417,56 @@ html:has(.site-shell),body:has(.site-shell),#root:has(.site-shell),html:has(.app
 @media(max-width:520px){.role-actions--v2{grid-template-columns:1fr!important}.role-card-v2{min-height:140px}}
 @media(orientation:portrait) and (min-width:521px) and (max-width:900px){.role-actions--v2{grid-template-columns:1fr!important;max-width:420px!important}.role-card-v2{min-height:160px}}
 
+/* Keep the product typography and role entry compact on every kiosk viewport. */
+html,body,#root,button,input,select,textarea{font-family:'Open Runde',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important}
+h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-info-card__body strong,.admin-content__header h1,.admin-section-title h2,.btn--primary,.btn--hero{font-family:'Open Runde Bold','Open Runde',ui-sans-serif,system-ui,sans-serif!important;font-weight:700!important}
+.weight-input-display{padding-inline:clamp(30px,4vw,48px)!important}
+.weight-input-display input{padding-inline:4px!important}
+@media(max-width:680px){.weight-input-display{padding-inline:22px!important}}
+
+/* Compact result overview: use the card content instead of stretching empty space. */
+.screen-stack--overview{grid-template-rows:auto auto auto auto!important;align-content:center!important}
+.screen-stack--overview .overview-cards{height:auto!important;align-items:start!important}
+.screen-stack--overview .overview-card{height:auto!important;justify-content:flex-start!important}
+.screen-stack--overview .overview-card:only-child{display:grid!important;grid-template-columns:minmax(310px,.9fr) minmax(280px,1.1fr)!important;grid-template-areas:'summary stats' 'summary action';align-items:center!important;gap:18px 32px!important;width:min(100%,980px)!important;max-width:980px!important;margin-inline:auto!important;padding:24px!important}
+.screen-stack--overview .overview-card:only-child .overview-card__head{grid-area:summary;align-items:center!important}
+.screen-stack--overview .overview-card:only-child .result-sample-image{width:220px!important;height:150px!important;flex:none!important;border-radius:18px!important;background:#eaf0f7!important}
+.screen-stack--overview .overview-card:only-child .overview-card__stats{grid-area:stats;margin:0!important;padding:16px 0!important}
+.screen-stack--overview .overview-card:only-child>.btn{grid-area:action;justify-self:start!important;min-height:52px!important;padding-inline:18px!important}
+@media(max-width:820px){
+  .screen-stack--overview .overview-card:only-child{grid-template-columns:1fr!important;grid-template-areas:'summary' 'stats' 'action';gap:12px!important;padding:18px!important}
+  .screen-stack--overview .overview-card:only-child .result-sample-image{width:clamp(150px,32vw,220px)!important;height:clamp(100px,20vw,145px)!important}
+}
+.screen-stack--role-v2{grid-template-rows:auto auto auto!important;align-content:center!important;height:100%!important;padding-block:clamp(14px,2.5vh,24px)!important;gap:clamp(16px,2.5vh,24px)!important}
+.role-actions--v2{width:min(100%,720px)!important;max-width:720px!important;gap:18px!important}
+.role-card-v2{min-height:clamp(150px,23vh,205px)!important;padding:clamp(18px,2vw,24px)!important;gap:10px!important;border-radius:22px!important}
+.role-card-v2__icon{width:60px!important;height:60px!important;border-radius:18px!important}
+.role-card-v2 strong{font-size:clamp(22px,2.4vw,27px)!important}
+.role-card-v2 small{font-size:15px!important}
+.role-bottom--v2{width:min(100%,720px)!important;padding-top:12px!important}
+@media(orientation:portrait) and (min-width:521px) and (max-width:900px){.role-actions--v2{max-width:620px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.role-card-v2{min-height:170px!important}}
+
+/* Tablet grader dashboard: prioritize records and never crop table columns. */
+@media(min-width:681px){
+  .grader-bento.grader-bento-v2{grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr)!important;gap:clamp(14px,2vw,24px)!important}
+  .grader-dashboard{width:calc(100% - 32px)!important;max-width:1400px!important}
+}
+.admin-table-card--compact{min-width:0!important;overflow:hidden!important}
+.admin-table-card--compact .admin-table{min-width:0!important;width:100%!important}
+.admin-table-card--compact .admin-table>div{grid-template-columns:minmax(140px,1.35fr) minmax(105px,1fr) minmax(56px,.5fr) 38px minmax(72px,.65fr)!important;gap:8px!important}
+.admin-table-card--compact .admin-table>div>span:nth-child(2){display:none!important}
+.admin-table-card--compact .admin-table span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-table-card--compact .admin-table span small{overflow:hidden;text-overflow:ellipsis}
+@media(min-width:681px) and (max-width:1100px){
+  .grader-bento.grader-bento-v2{grid-template-columns:minmax(280px,.72fr) minmax(0,1.28fr)!important}
+  .grader-bento__hello-card{padding:20px!important}
+  .grader-hello__header h1{font-size:clamp(28px,3.6vw,38px)!important}
+  .grader-info-card{padding:11px!important;gap:9px!important}
+  .grader-info-card__icon{width:36px!important;height:36px!important}
+  .grader-info-card__body strong{font-size:22px!important}
+  .admin-table-card--compact{padding:14px!important}
+}
+
 /* === Height fix for compact topbar === */
 @media(min-width:681px){.app-main:not(.app-main--welcome):not(.app-main--complete):not(.app-main--admin-dashboard){height:calc(100dvh - 72px)}}
 @media(max-width:680px){.app-main:not(.app-main--welcome):not(.app-main--complete):not(.app-main--admin-dashboard){height:calc(100dvh - 68px)!important}.topbar--compact{height:44px;min-height:44px;padding:0 10px 0 14px}}
@@ -443,8 +495,8 @@ html:has(.site-shell),body:has(.site-shell),#root:has(.site-shell),html:has(.app
 .overview-card { width: 100% !important; background: #ffffff !important; border-radius: 24px !important; border: 1px solid #e2e8f0 !important; padding: 22px !important; box-shadow: 0 10px 30px rgba(15,23,42,0.06) !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; }
 /* === PaymentReceiptPrinter container — 58mm thermal printer proportion === */
 .receipt-container-v2 {
-  width: 310px;
-  max-width: 310px;
+  width: 305px;
+  max-width: 305px;
   flex-shrink: 0;
   align-self: center;
   margin: 0 auto;
@@ -453,13 +505,13 @@ html:has(.site-shell),body:has(.site-shell),#root:has(.site-shell),html:has(.app
 /* Map old .receipt grid slot rules to the new container so media-query overrides apply */
 .screen-stack--print .receipt-container-v2 {
   width: 100%;
-  max-width: 310px;
+  max-width: 305px;
 }
 /* Portrait layout: stack receipt below copy, centred */
 @media (orientation: portrait) and (min-width: 681px) {
   .screen-stack--print .receipt-container-v2 {
     justify-self: center;
-    width: min(310px, 100%);
+    width: min(305px, 100%);
   }
 }
 /* Mobile: limit height so receipt doesn't eat the BottomBar */
@@ -467,7 +519,7 @@ html:has(.site-shell),body:has(.site-shell),#root:has(.site-shell),html:has(.app
   .receipt-container-v2 {
     width: 100% !important;
     max-width: 100% !important;
-    max-height: 43vh !important;
+    max-height: calc(43vh - 5px) !important;
   }
 }
 @media (max-width: 768px) {

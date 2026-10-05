@@ -108,7 +108,7 @@ export interface PaymentReceiptPrinterProps {
 
 export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
   status: controlledStatus,
-  merchant = 'EasyUI Store',
+  merchant = 'TunaEye Kiosk',
   merchantSubtext = 'Official Component Registry',
   merchantLogo,
   orderNumber = '#4821',
@@ -549,7 +549,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
             {/* Friendly Message & EasyUI Stamp */}
             <div className="pt-2 text-center text-[9px] opacity-70">
               <p className="font-medium">{message}</p>
-              <p className="text-[8px] opacity-50 mt-0.5">AUTH #99824 · EASYUI ECOSYSTEM</p>
+              <p className="text-[8px] opacity-50 mt-0.5">AUTH #99824 · Tunaeye Ecosystem</p>
             </div>
 
             {/* Bottom Serrated Edge (if enabled) */}

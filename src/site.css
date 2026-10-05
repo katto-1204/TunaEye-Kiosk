@@ -1,4 +1,5 @@
 .site-shell {
+  font-family: 'Open Runde', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   min-height: 100dvh;
   height: auto;
   background: #f5f8fc;
@@ -1704,4 +1705,3 @@ header.inner-hero p {
     width: 80px;
   }
 }
-
