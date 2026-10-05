@@ -71,7 +71,7 @@
   border-radius: calc(var(--pdial-w) * 0.3);
   background: radial-gradient(130% 80% at 50% 0%, var(--pdial-card-top) 0%, var(--pdial-card-mid) 45%, var(--pdial-card-bot) 100%);
   box-shadow: var(--pdial-card-shadow);
-  opacity: 0;
+  opacity: 1;
   touch-action: none;
   cursor: grab;
   outline: none;
@@ -157,7 +157,7 @@
 .pdial__halo {
   position: absolute;
   border-radius: 50%;
-  opacity: 0;
+  opacity: 0.5;
   pointer-events: none;
 }
 
