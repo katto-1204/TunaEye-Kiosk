@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export type MarketingPage = 'home' | 'features' | 'about' | 'team' | 'faq' | 'terms' | 'privacy'
 
-const pages: { id: MarketingPage; label: string }[] = [
+const pages: { id: MarketingPage; label: string; children?: { id: MarketingPage; label: string }[] }[] = [
   { id: 'home', label: 'Home' },
   { id: 'features', label: 'Features' },
-  { id: 'about', label: 'About TunaEye' },
+  { id: 'about', label: 'About TunaEye', children: [
+    { id: 'about', label: 'About TunaEye' },
+    { id: 'terms', label: 'Terms & Conditions' },
+    { id: 'privacy', label: 'Privacy Policy' },
+  ]},
   { id: 'team', label: 'Team' },
   { id: 'faq', label: 'FAQ' },
+]
+
+const changelog = [
+  { version: 'v0.9.0', date: 'Oct 2026', items: ['Initial kiosk workflow with guided capture', 'Raspberry Pi edge inference integration', 'Dual-cloud sync (Supabase + Convex)', 'Admin dashboard with audit logging'] },
+  { version: 'v0.8.0', date: 'Sep 2026', items: ['Multi-camera support with live preview', 'Thermal receipt printing (80mm)', 'Expert override with PIN protection'] },
+  { version: 'v0.7.0', date: 'Aug 2026', items: ['Offline-first PWA architecture', 'Bluetooth weighing scale integration', 'Sample association (same-fish / different-fish)'] },
+  { version: 'v0.6.0', date: 'Jul 2026', items: ['5000K CRI 98+ lighting chamber design', 'Sashibo core and tail cut grading criteria', 'Grade A/B/C classification model training'] },
 ]
 
 function Logo() {
@@ -23,6 +34,64 @@ function Arrow() {
   return <span aria-hidden="true">→</span>
 }
 
+function NavDropdown({ item, page, onNavigate }: { item: typeof pages[number]; page: MarketingPage; onNavigate: (p: MarketingPage) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [])
+  return (
+    <div className="site-nav-dropdown" ref={ref}>
+      <button
+        className={item.children?.some(c => c.id === page) ? 'is-active' : ''}
+        onClick={() => setOpen(v => !v)}
+      >
+        {item.label} <span className="dropdown-chevron" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="site-nav-dropdown__menu">
+          {item.children?.map(child => (
+            <button key={child.id} className={page === child.id ? 'is-active' : ''} onClick={() => { onNavigate(child.id); setOpen(false) }}>
+              {child.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ChangelogModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="modal-backdrop changelog-backdrop" role="dialog" aria-modal="true" aria-label="Changelog" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="changelog-modal">
+        <div className="changelog-modal__header">
+          <div>
+            <span className="site-kicker">What's New</span>
+            <h2>Changelog</h2>
+          </div>
+          <button className="changelog-close" aria-label="Close changelog" onClick={onClose}>×</button>
+        </div>
+        <div className="changelog-modal__body">
+          {changelog.map(release => (
+            <div key={release.version} className="changelog-entry">
+              <div className="changelog-entry__head">
+                <strong>{release.version}</strong>
+                <span>{release.date}</span>
+              </div>
+              <ul>
+                {release.items.map(item => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MarketingLanding({
   page,
   onNavigate,
@@ -34,6 +103,8 @@ export default function MarketingLanding({
   onInstall: () => void
   onOpen: () => void
 }) {
+  const [changelogOpen, setChangelogOpen] = useState(false)
+
   const navigate = (next: MarketingPage) => {
     onNavigate(next)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -45,15 +116,19 @@ export default function MarketingLanding({
         <header className="site-nav">
           <Logo />
           <nav>
-            {pages.map(item => (
-              <button
-                key={item.id}
-                className={page === item.id ? 'is-active' : ''}
-                onClick={() => navigate(item.id)}
-              >
-                {item.label}
-              </button>
-            ))}
+            {pages.map(item =>
+              item.children ? (
+                <NavDropdown key={item.id} item={item} page={page} onNavigate={navigate} />
+              ) : (
+                <button
+                  key={item.id}
+                  className={page === item.id ? 'is-active' : ''}
+                  onClick={() => navigate(item.id)}
+                >
+                  {item.label}
+                </button>
+              )
+            )}
           </nav>
           <button className="site-nav__cta" onClick={onInstall}>
             Install kiosk app
@@ -62,7 +137,9 @@ export default function MarketingLanding({
       </div>
 
       {page === 'home' ? (
-        <Home onInstall={onInstall} onOpen={onOpen} onNavigate={navigate} />
+        <Home onInstall={onInstall} onOpen={onOpen} onNavigate={navigate} onChangelog={() => setChangelogOpen(true)} />
+      ) : page === 'team' ? (
+        <TeamPage onNavigate={navigate} onOpen={onOpen} />
       ) : (
         <InnerPage page={page} onNavigate={navigate} onOpen={onOpen} />
       )}
@@ -76,7 +153,7 @@ export default function MarketingLanding({
         </div>
         <div>
           <strong>Explore</strong>
-          {pages.map(item => (
+          {pages.filter(p => !p.children).map(item => (
             <button key={item.id} onClick={() => navigate(item.id)}>
               {item.label}
             </button>
@@ -94,6 +171,8 @@ export default function MarketingLanding({
         </div>
         <small>© 2026 TunaEye Systems. All rights reserved.</small>
       </footer>
+
+      {changelogOpen && <ChangelogModal onClose={() => setChangelogOpen(false)} />}
     </div>
   )
 }
@@ -102,10 +181,12 @@ function Home({
   onInstall,
   onOpen,
   onNavigate,
+  onChangelog,
 }: {
   onInstall: () => void
   onOpen: () => void
   onNavigate: (page: MarketingPage) => void
+  onChangelog: () => void
 }) {
   const [showcase, setShowcase] = useState(0)
   const [selectedCut, setSelectedCut] = useState<'sashibo' | 'tail'>('sashibo')
@@ -512,6 +593,125 @@ function Home({
           </button>
         </div>
       </section>
+    </main>
+  )
+}
+
+function TeamPage({
+  onNavigate,
+  onOpen,
+}: {
+  onNavigate: (page: MarketingPage) => void
+  onOpen: () => void
+}) {
+  const teamMembers = [
+    {
+      name: 'Gabriel Alarcon',
+      role: 'Project Lead & Full Stack Architect',
+      initials: 'GA',
+      bio: 'Leads system architecture, dual-cloud sync, PWA development, and port kiosk integrations.',
+      tags: ['System Architecture', 'React / PWA', 'Supabase & Convex'],
+    },
+    {
+      name: 'Dr. Maria Santos',
+      role: 'AI & Computer Vision Lead',
+      initials: 'MS',
+      bio: 'Spearheads deep learning models for tuna meat color classification, Sashibo analysis, and ONNX edge acceleration.',
+      tags: ['Computer Vision', 'PyTorch / ONNX', 'Edge AI'],
+    },
+    {
+      name: 'Jason Tan',
+      role: 'Hardware & Embedded Systems',
+      initials: 'JT',
+      bio: 'Designs camera enclosures, 5000K CRI 98+ lighting chambers, Raspberry Pi peripherals, and thermal printers.',
+      tags: ['Raspberry Pi', 'Optical Hardware', 'Thermal Printing'],
+    },
+    {
+      name: 'Elena Rostova',
+      role: 'Quality & Field Operations Specialist',
+      initials: 'ER',
+      bio: 'Bridges port grading practices with digital UI, ensuring compliance with international yellowfin export standards.',
+      tags: ['Tuna Grading Standards', 'Field Testing', 'UX for Ports'],
+    },
+  ]
+
+  const advisers = [
+    {
+      name: 'Capt. Fernando Cruz',
+      title: 'Senior Fisheries Adviser',
+      affiliation: 'Bureau of Fisheries & Aquatic Resources',
+      expertise: '30+ years in commercial tuna export, port operations, and quality inspection standards.',
+    },
+    {
+      name: 'Prof. Hiroshi Tanaka',
+      title: 'Technical & Research Adviser',
+      affiliation: 'Institute of Marine Robotics & AI',
+      expertise: 'Pioneer in non-destructive agricultural & seafood spectral quality measurement.',
+    },
+  ]
+
+  return (
+    <main className="site-inner team-page">
+      <header className="team-header">
+        <span className="site-kicker">The People Behind TunaEye</span>
+        <h1>Engineered for precision. Built for real ports.</h1>
+        <p>
+          Meet the multidisciplinary team of engineers, researchers, and fisheries experts dedicated to digitizing yellowfin tuna grading.
+        </p>
+      </header>
+
+      <section className="team-grid">
+        <div className="team-section-title">
+          <h2>Core Project Team</h2>
+          <p>Developers, engineers, and domain experts building TunaEye.</p>
+        </div>
+        <div className="team-cards">
+          {teamMembers.map(m => (
+            <div key={m.name} className="team-card">
+              <div className="team-card__avatar">{m.initials}</div>
+              <div className="team-card__info">
+                <h3>{m.name}</h3>
+                <span className="team-card__role">{m.role}</span>
+                <p>{m.bio}</p>
+                <div className="team-card__tags">
+                  {m.tags.map(t => <span key={t}>{t}</span>)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="advisers-section">
+        <div className="team-section-title">
+          <h2>Project Advisers</h2>
+          <p>Guidance from industry veterans and academic leaders in fisheries and computer vision.</p>
+        </div>
+        <div className="adviser-cards">
+          {advisers.map(a => (
+            <div key={a.name} className="adviser-card">
+              <div className="adviser-card__icon">🏅</div>
+              <div>
+                <h3>{a.name}</h3>
+                <span className="adviser-card__title">{a.title} • {a.affiliation}</span>
+                <p>{a.expertise}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <aside>
+        <h2>Want to partner or deploy TunaEye at your port?</h2>
+        <div className="site-actions">
+          <button className="site-button site-button--primary" onClick={onOpen}>
+            Start Grading <Arrow />
+          </button>
+          <button className="site-button site-button--secondary" onClick={() => onNavigate('faq')}>
+            Read FAQ
+          </button>
+        </div>
+      </aside>
     </main>
   )
 }

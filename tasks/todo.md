@@ -1,18 +1,15 @@
-# TunaEye Landing Page Enhancements & Pill Navbar Plan
+# TunaEye UI Enhancement Tasks
 
-- [x] Turn top navbar into a floating glassmorphic pill shape (`.site-nav`).
-- [x] Update primary buttons on landing page: main button becomes "Start Grading" (triggers `onOpen`), keeping "Install kiosk app" in top navbar.
-- [x] Change all "Open workflow" references to "Start Grading".
-- [x] Add rich, comprehensive info about TunaEye: Hardware specs, Sashibo/Tail Cut grading criteria, HACCP compliance, Dual-cloud sync architecture, and station capabilities.
-- [x] Make ONLY the landing pages scrollable (`.site-shell`, `.marketing-landing`, `.welcome-screen`).
-- [x] Keep all interactive kiosk screens viewport-locked and tight (`.app-shell` default `overflow: hidden; max-height: 100vh`).
-- [x] Update Playwright tests in `tests/kiosk.spec.ts` to reflect updated button text and structure.
-- [x] Run build (`npm run build`) and Playwright tests to verify UI and workflow integrity.
+## Outstanding Items
+
+- [x] 1. **Kiosk topbar → pill shape** — Glassmorphic floating pill navbar matching marketing site design
+- [x] 2. **Settings accessible** — Fully functional in Admin sidebar with RPi, Supabase, Convex, and offline toggles
+- [x] 3. **Records pagination** — Page-based pagination (10 items per page) added with Previous/Next controls
+- [x] 4. **Admin UI upgrade** — Upgraded cards, badging, metrics, and pagination controls
+- [x] 5. **Changelog button** — Added a "What's New" version history modal on the landing page
+- [x] 6. **Nav dropdown for legal** — Added "About TunaEye" dropdown with Privacy Policy and Terms & Conditions links
+- [x] 7. **Team page redesign** — Showcase core project members with roles/tags and dedicated Adviser section
 
 ## Review
-
-All landing pages are scrollable, and all interactive kiosk screens remain viewport-locked and tight. Verified with Playwright tests passing 3/3.
-
-
-
-
+- `npm run build` completed with zero TypeScript/Vite errors.
+- `npx playwright test` ran and 3/3 E2E test suites passed.
