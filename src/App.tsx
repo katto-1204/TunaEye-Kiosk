@@ -57,7 +57,23 @@ function TutorialModal({ onClose, title = 'Guided tutorial' }: { onClose: () => 
 function LegalModal({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () => void }) { const privacy = kind === 'privacy'; return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={privacy ? 'Privacy policy' : 'Terms and conditions'}><div className="modal-card legal-modal"><div className="modal-card__header"><div><span className="eyebrow">TunaEye</span><h2>{privacy ? 'Privacy policy' : 'Terms and conditions'}</h2></div><button className="icon-button" aria-label="Close" onClick={onClose}>×</button></div><p>{privacy ? 'TunaEye stores grading evidence, grader identity, device events, and audit records for operational traceability. Authorized administrators control retention and cloud synchronization through the configured services.' : 'TunaEye supports trained tuna graders and does not replace required regulatory, safety, or purchasing review. Operators remain responsible for confirming the sample, fish association, and final decision.'}</p><Button onClick={onClose}>Close</Button></div></div> }
 import KiloThermalDial from './KiloThermalDial'
 
-function LoadingScreen() { return <div className="brand-loading"><BrandMark /><KiloThermalDial defaultValue={45} size={280} theme="light" hint={false} /><strong>Preparing TunaEye</strong><small>Connecting the grading workflow</small></div> }
+function LoadingScreen() {
+  const [percent, setPercent] = useState(1)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPercent(c => (c >= 100 ? 100 : c + 1))
+    }, 22)
+    return () => clearInterval(timer)
+  }, [])
+  return (
+    <div className="brand-loading">
+      <BrandMark />
+      <KiloThermalDial value={percent} min={0} max={100} size={280} theme="light" hint={false} unit="%" />
+      <strong>Preparing TunaEye · {percent}%</strong>
+      <small>{percent < 100 ? `Connecting edge grading workflow (${percent}%)` : 'Grading workflow ready'}</small>
+    </div>
+  )
+}
  
 
 function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart: () => void; onInstall: () => void; onTutorial: () => void; installed: boolean }) { const [slide, setSlide] = useState(0); const touch = useRef(0); const cards = [{ icon: 'camera' as IconName, title: 'Capture with confidence', copy: 'Follow the guide and use the connected camera for consistent evidence.' }, { icon: 'spark' as IconName, title: 'Grade at the edge', copy: 'The Raspberry Pi model returns a grade and confidence to this kiosk.' }, { icon: 'database' as IconName, title: 'Keep every decision', copy: 'Results, overrides, receipts, sync state, and audit events stay linked.' }]; return <div className="welcome-screen"><div className="welcome-screen__ambient" /><div className="welcome-screen__brand"><BrandMark /><span className="ready-line"><span className="status-dot" />Kiosk ready · Offline capable</span></div><div className="welcome-screen__hero"><span className="eyebrow">Yellowfin tuna visual grading</span><h1>Clear evidence.<br /><em>Confident decisions.</em></h1><p>Place one sample at a time. TunaEye checks the image, records the result, and keeps the next step simple.</p><div className="onboarding-slider" onTouchStart={event => { touch.current = event.touches[0].clientX }} onTouchEnd={event => { const delta = event.changedTouches[0].clientX - touch.current; if (Math.abs(delta) > 40) setSlide(current => Math.max(0, Math.min(2, current + (delta < 0 ? 1 : -1)))) }}><div className="onboarding-track" style={{ transform: `translateX(-${slide * 100}%)` }}>{cards.map(card => <article key={card.title}><span><Icon name={card.icon} size={27} /></span><div><strong>{card.title}</strong><small>{card.copy}</small></div></article>)}</div><div className="onboarding-dots">{cards.map((card, index) => <button key={card.title} className={slide === index ? 'is-active' : ''} onClick={() => setSlide(index)} aria-label={`Show onboarding ${index + 1}`} />)}</div></div></div><div className="welcome-screen__cta"><div className="welcome-screen__actions"><Button className="btn--hero" onClick={onStart} icon="arrow">Start grading</Button>{!installed && <Button variant="secondary" onClick={onInstall} icon="home">Install app</Button>}</div><span>Expert grader station · Edge-connected kiosk</span></div><button className="tutorial-fab" onClick={onTutorial}><Icon name="tutorial" size={24} />Guided tutorial</button></div> }
@@ -420,7 +436,7 @@ function App() {
   const [installed, setInstalled] = useState(() => window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem('tunaeye-installed') === 'true')
   const [currentPathScreen] = useState<Screen>(() => screenForPath(window.location.pathname))
   const gradingSessionRef = useRef({ id: `TE-${Date.now()}`, timestamp: Date.now() })
-  useEffect(() => { const timeout = window.setTimeout(() => setBooting(false), 1100); return () => window.clearTimeout(timeout) }, [])
+  useEffect(() => { const timeout = window.setTimeout(() => setBooting(false), 2600); return () => window.clearTimeout(timeout) }, [])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
   useEffect(() => { if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen])
   const go = useCallback((screen: Screen) => { dispatch({ type: 'navigate', screen }); window.history.pushState({}, '', pathForScreen(screen)) }, [])

@@ -4,12 +4,14 @@ import { animate, mix, motionValue, stagger, transform } from 'motion/react'
 import './thermal-dial.css'
 
 export type KiloThermalDialProps = {
+  value?: number
   defaultValue?: number
   min?: number
   max?: number
   size?: number
   theme?: 'light' | 'dark'
   hint?: boolean
+  unit?: string
   onChange?: (value: number, category: string) => void
 }
 
@@ -32,12 +34,14 @@ const c2 = transform(stops, ['#38bdf8', '#38bdf8', '#3b82f6', '#f59e0b', '#ef444
 const c3 = transform(stops, ['#bae6fd', '#bae6fd', '#bfdbfe', '#fef08a', '#fecaca'])
 
 export default function KiloThermalDial({
+  value,
   defaultValue = 45,
   min = 0,
   max = 120,
   size = 320,
   theme = 'dark',
   hint = true,
+  unit = 'kg',
   onChange,
 }: KiloThermalDialProps) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -80,7 +84,7 @@ export default function KiloThermalDial({
 
     const MIN = min
     const MAX = max
-    const START = Math.min(MAX, Math.max(MIN, defaultValue))
+    const START = Math.min(MAX, Math.max(MIN, value !== undefined ? value : defaultValue))
     const reduce = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false
     let alive = true
     const cleanups: (() => void)[] = []
@@ -349,7 +353,7 @@ export default function KiloThermalDial({
       alive = false
       cleanups.forEach(fn => fn())
     }
-  }, [min, max, defaultValue])
+  }, [min, max, defaultValue, value])
 
   return (
     <div
@@ -401,7 +405,7 @@ export default function KiloThermalDial({
               </span>
               <span className="pdial__slot pdial__main">
                 <span ref={mainRef} />
-                <span className="pdial__kilo-unit">kg</span>
+                <span className="pdial__kilo-unit">{unit}</span>
               </span>
             </div>
           </div>
