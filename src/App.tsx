@@ -913,7 +913,7 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
     <div className="screen-stack screen-stack--print">
       <div className="print-layout">
         <div className="print-copy">
-          <span className="eyebrow">Print {printIndex + 1} of {samples.length} · Thermal Receipt</span>
+          <span className="eyebrow">Print {printIndex + 1} of {samples.length} · 58mm Thermal Receipt</span>
           <h1>{printed.length ? 'Print the next result.' : 'Print separate grading records.'}</h1>
           <p>Each copy keeps its sample type, associated fish, weight, grade, confidence, and any manual override.</p>
           <div className="print-queue">
@@ -930,13 +930,17 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
         <div className="receipt-container-v2">
           <PaymentReceiptPrinter
             key={`${sample}-${printIndex}`}
-            status={printing ? 'printing' : isCompleted ? 'completed' : 'idle'}
+            status={printing ? 'printing' : isCompleted ? 'completed' : undefined}
             merchant="TunaEye Kiosk"
             merchantSubtext="Certified Quality Inspection"
             orderNumber={`#TE-${String(14 + printIndex).padStart(3, '0')}`}
             date={new Date()}
-            showStatusCard={false}
+            showStatusCard={true}
+            statusTitle={isCompleted ? 'Thermal Slip Issued' : printing ? 'Printing Receipt…' : 'Grading Complete'}
+            statusSubtitle={isCompleted ? 'Inspection record printed' : printing ? 'Extruding 58mm thermal slip…' : '58mm thermal slip ready to print'}
             showActions={false}
+            printerModel="POS-58"
+            paperWidth="58mm"
             items={[
               {
                 name: `${sample} (${result?.fishId ?? 'Fish 1'})`,
@@ -950,12 +954,104 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
             currency=""
             paymentMethod={`Inspector: ${graderName || 'Station Operator'}`}
             message="Thank you for using TunaEye Kiosk!"
-            autoPrint={false}
+            autoPrint={true}
+            printDuration={1.8}
             paperTheme="cream"
           />
         </div>
       </div>
       <BottomBar onBack={onBack} secondaryLabel="Skip printing" onSecondary={onSkip} primary={onPrint} primaryLabel={printing ? 'Printing…' : `Print ${sample}`} primaryIcon="printer" primaryDisabled={printing} />
+
+      {/* 58mm Physical Thermal Printer Slip (Printed via window.print() on 58mm thermal roll) */}
+      <div className="thermal-print-slip" aria-hidden="true">
+        <div className="thermal-slip-header">
+          <div className="thermal-slip-logo">✦ TUNAEYE ✦</div>
+          <div className="thermal-slip-title">QUALITY INSPECTION SLIP</div>
+          <div className="thermal-slip-subtitle">58mm Thermal Grading Record</div>
+        </div>
+        <div className="thermal-slip-divider">================================</div>
+        <div className="thermal-slip-row">
+          <span>SLIP NO:</span>
+          <strong>#TE-{String(14 + printIndex).padStart(3, '0')}</strong>
+        </div>
+        <div className="thermal-slip-row">
+          <span>DATE:</span>
+          <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        </div>
+        <div className="thermal-slip-row">
+          <span>TIME:</span>
+          <span>{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+        </div>
+        <div className="thermal-slip-row">
+          <span>INSPECTOR:</span>
+          <span>{graderName || 'Station Operator'}</span>
+        </div>
+        <div className="thermal-slip-divider">--------------------------------</div>
+        <div className="thermal-slip-row thermal-slip-row--head">
+          <span>SPECIMEN</span>
+          <span>WEIGHT</span>
+        </div>
+        <div className="thermal-slip-row">
+          <span>{sample} ({result?.fishId ?? 'Fish 1'})</span>
+          <strong>{result?.weight ? `${result.weight} kg` : '1.0 kg'}</strong>
+        </div>
+        <div className="thermal-slip-detail">
+          Confidence: {result?.originalConfidence ?? 96}%{result?.overrideGrade ? ' (Override)' : ' (AI Graded)'}
+        </div>
+        <div className="thermal-slip-divider">================================</div>
+        <div className="thermal-slip-grade-box">
+          <div className="thermal-slip-grade-label">FINAL GRADE</div>
+          <div className="thermal-slip-grade-value">GRADE {grade ?? 'A'}</div>
+          <div className="thermal-slip-grade-sub">{result?.overrideGrade ? 'MANUAL OVERRIDE VERIFIED' : 'AI MODEL VERIFIED'}</div>
+        </div>
+        <div className="thermal-slip-divider">--------------------------------</div>
+        <div className="thermal-slip-barcode">
+          <svg viewBox="0 0 160 40" preserveAspectRatio="none" className="thermal-slip-barcode-svg">
+            <rect x="0" y="0" width="3" height="40" fill="#000" />
+            <rect x="5" y="0" width="1.5" height="40" fill="#000" />
+            <rect x="9" y="0" width="4" height="40" fill="#000" />
+            <rect x="15" y="0" width="2" height="40" fill="#000" />
+            <rect x="19" y="0" width="1" height="40" fill="#000" />
+            <rect x="22" y="0" width="3" height="40" fill="#000" />
+            <rect x="27" y="0" width="1.5" height="40" fill="#000" />
+            <rect x="31" y="0" width="5" height="40" fill="#000" />
+            <rect x="38" y="0" width="2" height="40" fill="#000" />
+            <rect x="42" y="0" width="1" height="40" fill="#000" />
+            <rect x="45" y="0" width="4" height="40" fill="#000" />
+            <rect x="51" y="0" width="2" height="40" fill="#000" />
+            <rect x="55" y="0" width="1.5" height="40" fill="#000" />
+            <rect x="58" y="0" width="3" height="40" fill="#000" />
+            <rect x="63" y="0" width="5" height="40" fill="#000" />
+            <rect x="70" y="0" width="1.5" height="40" fill="#000" />
+            <rect x="73" y="0" width="3" height="40" fill="#000" />
+            <rect x="78" y="0" width="2" height="40" fill="#000" />
+            <rect x="82" y="0" width="4" height="40" fill="#000" />
+            <rect x="88" y="0" width="1.5" height="40" fill="#000" />
+            <rect x="92" y="0" width="3" height="40" fill="#000" />
+            <rect x="97" y="0" width="1" height="40" fill="#000" />
+            <rect x="100" y="0" width="4" height="40" fill="#000" />
+            <rect x="106" y="0" width="2" height="40" fill="#000" />
+            <rect x="110" y="0" width="3" height="40" fill="#000" />
+            <rect x="115" y="0" width="1.5" height="40" fill="#000" />
+            <rect x="118" y="0" width="5" height="40" fill="#000" />
+            <rect x="125" y="0" width="2" height="40" fill="#000" />
+            <rect x="129" y="0" width="1" height="40" fill="#000" />
+            <rect x="132" y="0" width="4" height="40" fill="#000" />
+            <rect x="138" y="0" width="2" height="40" fill="#000" />
+            <rect x="142" y="0" width="1.5" height="40" fill="#000" />
+            <rect x="145" y="0" width="3" height="40" fill="#000" />
+            <rect x="150" y="0" width="2" height="40" fill="#000" />
+            <rect x="154" y="0" width="4" height="40" fill="#000" />
+            <rect x="159" y="0" width="1" height="40" fill="#000" />
+          </svg>
+          <div className="thermal-slip-barcode-text">* TE-{String(14 + printIndex).padStart(3, '0')} *</div>
+        </div>
+        <div className="thermal-slip-footer">
+          <div>AUTH #TE-99824 · ESC/POS 58MM</div>
+          <div>*** THANK YOU ***</div>
+        </div>
+        <div className="thermal-slip-feed-margin" />
+      </div>
     </div>
   )
 }

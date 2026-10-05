@@ -100,6 +100,10 @@ export interface PaymentReceiptPrinterProps {
   printerClassName?: string;
   /** Additional receipt paper CSS class names */
   receiptClassName?: string;
+  /** Printer model label (e.g. 'POS-58') */
+  printerModel?: string;
+  /** Thermal paper width (e.g. '58mm') */
+  paperWidth?: '58mm' | '80mm';
 }
 
 export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
@@ -127,6 +131,8 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
   showBarcode = true,
   showCutEffect = true,
   paperTheme = 'light',
+  printerModel = 'POS-58',
+  paperWidth = '58mm',
   onPrintStart,
   onPrintComplete,
   onReplay,
@@ -234,7 +240,8 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
   return (
     <div
       className={cn(
-        'w-full max-w-[360px] mx-auto flex flex-col items-center select-none font-sans',
+        'w-full mx-auto flex flex-col items-center select-none font-sans',
+        paperWidth === '58mm' ? 'max-w-[310px]' : 'max-w-[360px]',
         className
       )}
       role="region"
@@ -308,7 +315,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
                 <Printer className="w-3 h-3" />
               </div>
               <span className="text-[11px] font-mono font-medium text-[#FAFAFA] tracking-tight">
-                POS-8000
+                {printerModel || 'POS-58'}
               </span>
             </div>
 
@@ -421,7 +428,7 @@ export const PaymentReceiptPrinter: React.FC<PaymentReceiptPrinterProps> = ({
                   {!paymentMethod?.toLowerCase().includes('inspector') && (
                     <CreditCard className="w-2.5 h-2.5 opacity-70 shrink-0" />
                   )}
-                  <span>{paymentMethod}</span>
+                  <span>{paymentMethod ? paymentMethod.replace(/^Inspector:\s*/i, '') : 'Station Operator'}</span>
                 </span>
               </div>
             </div>

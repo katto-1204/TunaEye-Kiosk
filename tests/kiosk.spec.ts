@@ -172,3 +172,39 @@ test('completed grading session immediately syncs into grader and admin dashboar
   await expect(records.first()).toContainText('Sashibo core')
 })
 
+test('58mm thermal printer receipt preview and print layout', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('tunaeye-installed', 'true')
+    localStorage.setItem('tunaeye-grader-name', 'Maria Santos')
+  })
+  await page.goto('/kiosk/print')
+  await expect(page.getByRole('heading', { name: /Print separate grading records|Print the next result/i })).toBeVisible({ timeout: 5000 })
+
+  // Verify 58mm thermal receipt preview & POS-58 chassis indicator
+  const printerChassis = page.locator('.receipt-container-v2')
+  await expect(printerChassis).toBeVisible()
+  await expect(page.getByText('POS-58')).toBeVisible()
+
+  // Verify physical 58mm thermal slip exists in DOM with ESC/POS 58MM metadata
+  const thermalSlip = page.locator('.thermal-print-slip')
+  await expect(thermalSlip).toHaveCount(1)
+  await expect(thermalSlip).toContainText('TUNAEYE')
+  await expect(thermalSlip).toContainText('QUALITY INSPECTION SLIP')
+  await expect(thermalSlip).toContainText('ESC/POS 58MM')
+
+  // Verify print media emulation displays the physical 58mm slip cleanly
+  await page.emulateMedia({ media: 'print' })
+  await expect(thermalSlip).toBeVisible()
+
+  const slipStyle = await thermalSlip.evaluate((el) => {
+    const computed = window.getComputedStyle(el)
+    return {
+      display: computed.display,
+      visibility: computed.visibility,
+      position: computed.position
+    }
+  })
+  expect(slipStyle.visibility).toBe('visible')
+  expect(slipStyle.display).toBe('block')
+})
+
