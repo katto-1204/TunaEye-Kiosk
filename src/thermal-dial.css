@@ -8,8 +8,8 @@
   --pdial-c1: #2467bf;
   --pdial-c2: #38bdf8;
   --pdial-c3: #bfdbfe;
-  --pdial-font-head: var(--font-manrope, "Manrope"), system-ui, sans-serif;
-  --pdial-font-body: "Inter", system-ui, sans-serif;
+  --pdial-font-head: 'Open Runde', var(--font-manrope, "Manrope"), system-ui, sans-serif;
+  --pdial-font-body: 'Open Runde', "Inter", system-ui, sans-serif;
 
   /* dark theme reference */
   --pdial-card-top: #101c2e;

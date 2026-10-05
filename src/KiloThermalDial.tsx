@@ -26,7 +26,7 @@ const NEEDLE_TOP = CY - R - 16
 const NEEDLE_LEN = 100
 const SVGNS = 'http://www.w3.org/2000/svg'
 
-const categoryFor = (v: number, unit?: string) => (unit === '%' ? 'LOADING' : v < 20 ? 'Light Cut' : v < 35 ? 'Medium Tuna' : v < 65 ? 'Standard Grade' : 'Jumbo Tuna')
+const categoryFor = (v: number, unit?: string) => (unit === '%' ? 'TUNAEYE' : v < 20 ? 'Light Cut' : v < 35 ? 'Medium Tuna' : v < 65 ? 'Standard Grade' : 'Jumbo Tuna')
 
 const stops = [0, 25, 50, 75, 120]
 const c1 = transform(stops, ['#0284c7', '#0284c7', '#2563eb', '#d97706', '#dc2626'])
