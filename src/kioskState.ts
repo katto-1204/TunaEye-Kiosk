@@ -4,6 +4,7 @@ export type Screen =
   | 'admin'
   | 'admin-dashboard'
   | 'grader'
+  | 'grader-dashboard'
   | 'sample'
   | 'association'
   | 'tutorial'
@@ -94,6 +95,7 @@ export type Action =
   | { type: 'nextSample' }
   | { type: 'startPrinting' }
   | { type: 'printed'; sample: SampleType }
+  | { type: 'gradeAnother' }
   | { type: 'reset' }
 
 function fishForSample(sample: SampleType, sameFish: SameFish): string {
@@ -180,6 +182,8 @@ export function reducer(state: Session, action: Action): Session {
       return { ...state, printIndex: 0, printedSamples: [], screen: 'print' }
     case 'printed':
       return { ...state, printedSamples: [...state.printedSamples, action.sample], printIndex: state.printIndex + 1 }
+    case 'gradeAnother':
+      return { ...initialSession, screen: 'sample', role: 'expert', graderName: state.graderName, rememberName: state.rememberName }
     case 'reset':
       return { ...initialSession }
     default:

@@ -25,6 +25,16 @@ npm run build
 npm run preview
 ```
 
+## Deploy to Vercel
+
+Import this repository into Vercel or deploy it from the project folder:
+
+```powershell
+npx vercel
+```
+
+Vercel uses `pnpm build`, publishes `dist`, serves the app over HTTPS, and redirects client-side kiosk routes to `index.html` through `vercel.json`.
+
 ## Grading workflow
 
 1. Start grading and select **Expert grader**.
@@ -38,6 +48,8 @@ npm run preview
 9. Review or override the result, then print the grading receipt.
 
 Each selected sample keeps its own captured image, fish association, weight, grade, confidence, expert decision, and receipt.
+
+After two completed grading sessions by the same grader within 30 minutes, TunaEye skips the placement tutorial for the next grading run. **Grade another** keeps the current grader and returns directly to the sample selector.
 
 ## Camera access
 
@@ -73,11 +85,11 @@ Choose **Admin** and enter the prototype PIN:
 1234
 ```
 
-The dashboard includes station analytics, grading records, price schedules, grader profiles, device diagnostics, and local station settings. Prototype configuration is stored in the current browser.
+The dashboard includes station analytics, grading records, price schedules, grader profiles, device diagnostics, local station settings, and a **Start grading** action. Grader and admin dashboards read the same records stored in the current browser.
 
 ## Expert review
 
-An uncertain result can be sent to **Expert review**. The grader selects the accepted grade and records a reason. TunaEye preserves the original model confidence while marking the final record as expert reviewed.
+An uncertain result can be sent to **Expert review**. Manual overrides require the admin PIN before the grader can select the accepted grade and record a reason. TunaEye preserves the original model confidence while marking the final record as expert reviewed.
 
 ## Printing receipts
 
