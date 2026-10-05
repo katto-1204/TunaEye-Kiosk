@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { currentSample, fishIdForSample, initialSession, reducer, sampleOrder, weightForSample, type DemoOutcome, type Grade, type Role, type SampleResult, type SampleType, type Screen } from './kioskState'
 import ProductLanding, { type MarketingPage } from './MarketingLanding'
+import { PaymentReceiptPrinter } from './components/ui/payment-receipt-printer'
 
 const DEMO_ADMIN_PIN = '1234'
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
@@ -49,7 +50,7 @@ function BrandMark({ compact = false }: { compact?: boolean }) { return <div cla
 function Button({ children, variant = 'primary', icon, onClick, disabled = false, className = '' }: { children: ReactNode; variant?: 'primary' | 'secondary' | 'ghost' | 'danger'; icon?: IconName; onClick?: () => void; disabled?: boolean; className?: string }) { return <button type="button" className={`btn btn--${variant} ${className}`} onClick={onClick} disabled={disabled}>{children}{icon && <Icon name={icon} size={23} />}</button> }
 function StepRail({ active }: { active: number }) { const steps = ['Capture', 'Analyze', 'Result']; return <div className="step-rail" aria-label={`Workflow progress, ${steps[Math.min(Math.max(active, 0), 2)]} stage`}>{steps.map((step, index) => <div className={`step-rail__item ${index <= active ? 'is-active' : ''}`} key={step}><span className="step-rail__dot">{index < active ? <Icon name="check" size={16} /> : index + 1}</span><span>{step}</span>{index < steps.length - 1 && <i />}</div>)}</div> }
 const screenLabels: Partial<Record<Screen, string>> = { 'select-role': 'Choose a role', admin: 'Admin access', 'admin-dashboard': 'Admin console', grader: 'Grader entry', 'grader-dashboard': 'Grader dashboard', sample: 'Sample selector', association: 'Fish association', tutorial: 'Guided tutorial', weight: 'Weight entry', camera: 'Camera preview', review: 'Check image', analysis: 'Analyzing image', 'individual-result': 'Sample result', overview: 'Results overview', print: 'Print results', complete: 'Session complete' }
-function TopBar({ screen, onHome, onLanding }: { screen: Screen; onHome: () => void; onLanding?: () => void }) { const showProgress = Boolean(stepForScreen[screen] !== undefined); return <div className="topbar-wrapper"><header className="topbar"><button className="topbar__brand-link" onClick={onLanding ?? onHome} aria-label="Go to TunaEye home"><BrandMark compact /></button><div className="topbar__center"><span className="topbar__title">{screenLabels[screen] ?? 'Ready for the next sample'}</span></div><div className="topbar__actions"><span className="status-pill"><span className="status-dot" />Device ready</span><button className="icon-button" onClick={onHome} aria-label="Return to home"><Icon name="home" size={20} /></button></div>{showProgress && <div className="topbar__progress"><StepRail active={stepForScreen[screen] ?? 0} /></div>}</header></div> }
+function TopBar({ screen, onHome, onLanding }: { screen: Screen; onHome: () => void; onLanding?: () => void }) { const showProgress = Boolean(stepForScreen[screen] !== undefined); return <div className="topbar-wrapper"><header className="topbar topbar--compact"><button className="topbar__brand-link" onClick={onLanding ?? onHome} aria-label="Go to TunaEye home"><BrandMark compact /></button><div className="topbar__center">{showProgress && <StepRail active={stepForScreen[screen] ?? 0} />}</div><div className="topbar__actions"><span className="status-dot" /><button className="icon-button" onClick={onHome} aria-label="Return to home"><Icon name="home" size={18} /></button></div></header></div> }
 function BottomBar({ onBack, onHelp, primary, primaryLabel, primaryIcon = 'arrow', primaryDisabled = false, secondaryLabel, onSecondary }: { onBack?: () => void; onHelp?: () => void; primary?: () => void; primaryLabel?: string; primaryIcon?: IconName; primaryDisabled?: boolean; secondaryLabel?: string; onSecondary?: () => void }) { return <footer className="bottom-bar"><div className="bottom-bar__left">{onBack && <Button variant="ghost" icon="back" onClick={onBack}>Back</Button>}{onHelp && <Button variant="ghost" icon="help" onClick={onHelp}>Help</Button>}</div><div className="bottom-bar__right">{secondaryLabel && onSecondary && <Button variant="secondary" onClick={onSecondary}>{secondaryLabel}</Button>}{primary && primaryLabel && <Button onClick={primary} icon={primaryIcon} disabled={primaryDisabled}>{primaryLabel}</Button>}</div></footer> }
 function SampleArt({ sample, className = '' }: { sample: SampleType; className?: string }) { return <img className={`sample-art ${className}`} src={sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png'} alt={`${sample} reference`} /> }
 function EvidenceFrame({ sample = 'Sashibo core', mode = 'camera', frozen = false }: { sample?: SampleType; mode?: 'camera' | 'sample' | 'tray'; frozen?: boolean }) { const image = mode === 'sample' ? capturedEvidence[sample] : undefined; return <div className={`evidence-frame evidence-frame--${mode} ${frozen ? 'is-frozen' : ''}`}><div className="evidence-frame__topline"><span>{mode === 'camera' ? 'Live preview' : mode === 'sample' ? 'Captured camera image' : 'Controlled chamber'}</span><span className="evidence-frame__signal"><span className="status-dot" />{mode === 'camera' ? 'Ready' : 'Saved'}</span></div>{image ? <img className="evidence-frame__capture" src={image} alt={`Captured ${sample}`} /> : <div className="chamber"><div className="chamber__rail chamber__rail--left" /><div className="chamber__rail chamber__rail--right" /><div className="tuna-silhouette"><span className="tuna-silhouette__tail" /><span className="tuna-silhouette__body" /><span className="tuna-silhouette__eye" /></div><div className="target-corners"><i /><i /><i /><i /></div>{mode === 'camera' && <div className="camera-crosshair"><span /></div>}</div>}<div className="evidence-frame__bottomline"><span>{frozen ? `${sample} image held for review` : 'Align within the blue guide'}</span><span className="evidence-frame__time">Top-down view</span></div></div> }
@@ -73,8 +74,77 @@ function LoadingScreen() {
 }
  
 
-function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart: () => void; onInstall: () => void; onTutorial: () => void; installed: boolean }) { const [slide, setSlide] = useState(0); const touch = useRef(0); const cards = [{ icon: 'camera' as IconName, title: 'Capture with confidence', copy: 'Follow the guide and use the connected camera for consistent evidence.' }, { icon: 'spark' as IconName, title: 'Grade at the edge', copy: 'The Raspberry Pi model returns a grade and confidence to this kiosk.' }, { icon: 'database' as IconName, title: 'Keep every decision', copy: 'Results, overrides, receipts, sync state, and audit events stay linked.' }]; return <div className="welcome-screen"><div className="welcome-screen__ambient" /><div className="welcome-screen__brand"><BrandMark /><span className="ready-line"><span className="status-dot" />Kiosk ready · Offline capable</span></div><div className="welcome-screen__hero"><span className="eyebrow">Yellowfin tuna visual grading</span><h1>Clear evidence.<br /><em>Confident decisions.</em></h1><p>Place one sample at a time. TunaEye checks the image, records the result, and keeps the next step simple.</p><div className="onboarding-slider" onTouchStart={event => { touch.current = event.touches[0].clientX }} onTouchEnd={event => { const delta = event.changedTouches[0].clientX - touch.current; if (Math.abs(delta) > 40) setSlide(current => Math.max(0, Math.min(2, current + (delta < 0 ? 1 : -1)))) }}><div className="onboarding-track" style={{ transform: `translateX(-${slide * 100}%)` }}>{cards.map(card => <article key={card.title}><span><Icon name={card.icon} size={27} /></span><div><strong>{card.title}</strong><small>{card.copy}</small></div></article>)}</div><div className="onboarding-dots">{cards.map((card, index) => <button key={card.title} className={slide === index ? 'is-active' : ''} onClick={() => setSlide(index)} aria-label={`Show onboarding ${index + 1}`} />)}</div></div></div><div className="welcome-screen__cta"><div className="welcome-screen__actions"><Button className="btn--hero" onClick={onStart} icon="arrow">Start grading</Button>{!installed && <Button variant="secondary" onClick={onInstall} icon="home">Install app</Button>}</div><span>Expert grader station · Edge-connected kiosk</span></div><button className="tutorial-fab" onClick={onTutorial}><Icon name="tutorial" size={24} />Guided tutorial</button></div> }
-function SelectRoleScreen({ onRole, onTutorial, onBack }: { onRole: (role: Role) => void; onTutorial: () => void; onBack: () => void }) { return <div className="screen-stack screen-stack--role"><div className="role-intro"><span className="eyebrow">TunaEye kiosk</span><h1>Who is using this station?</h1><p>Choose the role that matches your task. Public grading stays one tap away.</p></div><div className="role-actions"><button className="role-button" onClick={() => onRole('admin')}><span className="role-button__icon"><Icon name="shield" size={34} /></span><span><strong>Admin</strong><small>Configuration and records</small></span><Icon name="chevron" size={26} /></button><button className="role-button role-button--primary" onClick={() => onRole('expert')}><span className="role-button__icon"><Icon name="camera" size={34} /></span><span><strong>Expert grader</strong><small>Capture and grade a tuna sample</small></span><Icon name="chevron" size={26} /></button></div><div className="role-bottom"><Button variant="ghost" icon="back" onClick={onBack}>Back</Button><button className="tutorial-fab tutorial-fab--inline" onClick={onTutorial}><Icon name="tutorial" size={22} />Guided tutorial</button></div></div> }
+function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart: () => void; onInstall: () => void; onTutorial: () => void; installed: boolean }) {
+  const [slide, setSlide] = useState(0)
+  const [entered, setEntered] = useState(false)
+  const touch = useRef(0)
+  useEffect(() => { const t = setTimeout(() => setEntered(true), 100); return () => clearTimeout(t) }, [])
+  useEffect(() => { const interval = setInterval(() => setSlide(s => (s + 1) % 3), 4000); return () => clearInterval(interval) }, [])
+  const cards = [
+    { icon: 'camera' as IconName, title: 'Capture', copy: 'Consistent camera evidence' },
+    { icon: 'spark' as IconName, title: 'Grade', copy: 'Edge AI inference' },
+    { icon: 'database' as IconName, title: 'Record', copy: 'Linked results & receipts' }
+  ]
+  return (
+    <div className={`welcome-screen welcome-screen--v2 ${entered ? 'is-entered' : ''}`}>
+      <div className="welcome-screen__bg" />
+      <div className="welcome-screen__content">
+        <div className="welcome-brand-hero">
+          <div className="welcome-brand-hero__mark">
+            <div className="kiosk-logo-ring">
+              <span className="kiosk-logo-ring__pulse" />
+              <span className="kiosk-logo-ring__inner"><Icon name="camera" size={38} /></span>
+            </div>
+          </div>
+          <h1 className="welcome-brand-hero__title">TUNA<span>EYE</span></h1>
+          <p className="welcome-brand-hero__sub">KIOSK</p>
+        </div>
+        <div className="welcome-onboard-strip" onTouchStart={e => { touch.current = e.touches[0].clientX }} onTouchEnd={e => { const d = e.changedTouches[0].clientX - touch.current; if (Math.abs(d) > 40) setSlide(c => Math.max(0, Math.min(2, c + (d < 0 ? 1 : -1)))) }}>
+          <div className="welcome-onboard-track" style={{ transform: `translateX(-${slide * (100 / 3)}%)` }}>
+            {cards.map((c, i) => (
+              <article key={c.title} className={`welcome-onboard-card ${slide === i ? 'is-active' : ''}`}>
+                <span className="welcome-onboard-card__icon"><Icon name={c.icon} size={22} /></span>
+                <strong>{c.title}</strong>
+                <small>{c.copy}</small>
+              </article>
+            ))}
+          </div>
+          <div className="welcome-onboard-dots">
+            {cards.map((c, i) => <button key={c.title} className={slide === i ? 'is-active' : ''} onClick={() => setSlide(i)} aria-label={`Step ${i + 1}`} />)}
+          </div>
+        </div>
+        <div className="welcome-cta-group">
+          <Button className="btn--hero welcome-cta-main" onClick={onStart} icon="arrow">Start Grading</Button>
+          {!installed && <Button variant="ghost" onClick={onInstall} icon="home">Install</Button>}
+        </div>
+      </div>
+      <button className="tutorial-fab tutorial-fab--glass" onClick={onTutorial}><Icon name="tutorial" size={20} /></button>
+    </div>
+  )
+}
+function SelectRoleScreen({ onRole, onTutorial, onBack }: { onRole: (role: Role) => void; onTutorial: () => void; onBack: () => void }) {
+  return (
+    <div className="screen-stack screen-stack--role screen-stack--role-v2">
+      <h1 className="role-title-v2">Who's grading?</h1>
+      <div className="role-actions role-actions--v2">
+        <button className="role-card-v2" onClick={() => onRole('admin')}>
+          <span className="role-card-v2__icon role-card-v2__icon--admin"><Icon name="shield" size={30} /></span>
+          <strong>Admin</strong>
+          <small>Settings & records</small>
+        </button>
+        <button className="role-card-v2 role-card-v2--primary" onClick={() => onRole('expert')}>
+          <span className="role-card-v2__icon role-card-v2__icon--expert"><Icon name="camera" size={30} /></span>
+          <strong>Expert Grader</strong>
+          <small>Capture & grade</small>
+        </button>
+      </div>
+      <div className="role-bottom role-bottom--v2">
+        <Button variant="ghost" icon="back" onClick={onBack}>Back</Button>
+        <button className="tutorial-fab tutorial-fab--inline" onClick={onTutorial}><Icon name="tutorial" size={20} /></button>
+      </div>
+    </div>
+  )
+}
 function AdminPinScreen({ value, error, onChange, onContinue, onBack }: { value: string; error: string; onChange: (value: string) => void; onContinue: () => void; onBack: () => void }) { const cells = useRef<Array<HTMLInputElement | null>>([]); const setDigit = (index: number, digit: string) => { const next = value.padEnd(4, ' ').split(' '); next[index] = digit.slice(-1); const joined = next.join('').replace(/\s/g, '').slice(0, 4); onChange(joined); if (digit && index < 3) cells.current[index + 1]?.focus() }; return <div className="screen-stack screen-stack--narrow otp-screen"><div className="admin-icon"><Icon name="shield" size={34} /></div><span className="eyebrow">Secure station access</span><h1>Enter your admin PIN</h1><p>Use the four-digit station code to open records, connectivity, configuration, and audit logs.</p><div className="otp-inputs" onPaste={event => { event.preventDefault(); const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4); onChange(pasted); cells.current[Math.min(3, pasted.length)]?.focus() }}>{[0,1,2,3].map(index => <input key={index} ref={node => { cells.current[index] = node }} autoFocus={index === 0} inputMode="numeric" type="password" value={value[index] ?? ''} maxLength={1} aria-label={`PIN digit ${index + 1}`} onChange={event => setDigit(index, event.target.value.replace(/\D/g, ''))} onKeyDown={event => { if (event.key === 'Backspace' && !value[index] && index > 0) { const next = value.slice(0, index - 1) + value.slice(index); onChange(next); cells.current[index - 1]?.focus() } if (event.key === 'Enter' && value.length === 4) onContinue() }} />)}</div>{error ? <span className="error-text"><Icon name="help" size={16} />{error}</span> : <span className="form-hint"><Icon name="shield" size={16} />Protected administrator access</span>}<BottomBar onBack={onBack} primary={onContinue} primaryLabel="Verify and continue" primaryIcon="lock" primaryDisabled={value.length < 4} /></div> }
 function AdminDashboard({ onExit, onStartGrading }: { onExit: () => void; onStartGrading: () => void }) {
   type Section = 'Overview' | 'Records' | 'Price schedule' | 'Expert graders' | 'Devices' | 'Audit logs' | 'Settings'
@@ -90,6 +160,20 @@ function AdminDashboard({ onExit, onStartGrading }: { onExit: () => void; onStar
   const [auditEntries, setAuditEntries] = useState(loadAudit)
   const [records, setRecords] = useState<GradingRecord[]>(loadRecords)
   const [lastSync, setLastSync] = useState(() => localStorage.getItem('tunaeye-last-sync') ?? 'Not synced yet')
+
+  useEffect(() => {
+    const refresh = () => {
+      setRecords(loadRecords())
+      setAuditEntries(loadAudit())
+    }
+    refresh()
+    window.addEventListener('storage', refresh)
+    window.addEventListener('tunaeye-records-updated', refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener('tunaeye-records-updated', refresh)
+    }
+  }, [])
   const sessionCount = new Set(records.map(record => record.sessionId)).size
   const totalWeight = records.reduce((sum, record) => sum + (Number.parseFloat(record.weight) || 0), 0)
   const gradeARate = records.length ? Math.round(records.filter(record => record.grade === 'A').length / records.length * 100) : 0
@@ -392,14 +476,125 @@ function AdminDevices({ rpiUrl, modelName, audit }: { rpiUrl: string; modelName:
     </div>
   )
 }
-function GraderDashboard({ name, onStart, onLogout }: { name: string; onStart: () => void; onLogout: () => void }) { const [records, setRecords] = useState(() => loadRecords().filter(record => record.grader === name)); const [lastSync, setLastSync] = useState(() => localStorage.getItem('tunaeye-last-sync') ?? 'Not synced yet'); const today = new Date().toDateString(); const todayRecords = records.filter(record => new Date(record.timestamp).toDateString() === today); const sessions = new Set(todayRecords.map(record => record.sessionId)).size; const recentSessions = new Set(records.filter(record => Date.now() - record.timestamp <= 30 * 60 * 1000).map(record => record.sessionId)).size; const sync = () => { const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); setRecords(loadRecords().filter(record => record.grader === name)); setLastSync(syncedAt); localStorage.setItem('tunaeye-last-sync', syncedAt); audit(name, 'Manual sync', 'Refreshed grader dashboard records') }; return <div className="screen-stack grader-dashboard"><div className="grader-dashboard__hero"><div><span className="eyebrow">Expert grader dashboard</span><h1>Welcome back, {name.split(' ')[0]}.</h1><p>Review your station activity and begin the next tuna grading session.</p><span className="grader-dashboard__sync-state"><i className="status-dot" />Last manual sync: {lastSync}</span></div><div className="grader-dashboard__hero-actions"><Button variant="ghost" onClick={() => { audit(name, 'Logout', 'Grader ended the session'); onLogout() }} icon="back">Logout</Button><Button variant="secondary" onClick={sync} icon="refresh">Sync now</Button><Button className="btn--hero" onClick={onStart} icon="camera">Start grading</Button></div></div><div className="grader-dashboard__metrics"><article><span><Icon name="database" size={23} /></span><small>Sessions today</small><strong>{sessions}</strong><em>Completed grading runs</em></article><article><span><Icon name="spark" size={23} /></span><small>Samples graded</small><strong>{todayRecords.length}</strong><em>Visible to admin</em></article><article><span><Icon name="tutorial" size={23} /></span><small>Tutorial status</small><strong>{recentSessions >= 2 ? 'Ready to skip' : `${Math.max(0, 2 - recentSessions)} more`}</strong><em>Based on the last 30 minutes</em></article></div>{records.length ? <AdminRecords records={records.slice(0, 5)} compact /> : <div className="grader-dashboard__empty"><Icon name="database" size={34} /><h2>No grading records yet</h2><p>Start a grading session to create your first synced record.</p></div>}<BottomBar onBack={onLogout} primary={onStart} primaryLabel="Start grading" primaryIcon="camera" /></div> }
+function GraderDashboard({ name, onStart, onLogout }: { name: string; onStart: () => void; onLogout: () => void }) {
+  const [records, setRecords] = useState(() => loadRecords().filter(record => record.grader === name));
+  const [lastSync, setLastSync] = useState(() => localStorage.getItem('tunaeye-last-sync') ?? 'Not synced yet');
+
+  useEffect(() => {
+    const refresh = () => {
+      setRecords(loadRecords().filter(record => record.grader === name))
+    }
+    refresh()
+    window.addEventListener('storage', refresh)
+    window.addEventListener('tunaeye-records-updated', refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener('tunaeye-records-updated', refresh)
+    }
+  }, [name]);
+
+  const today = new Date().toDateString();
+  const todayRecords = records.filter(record => new Date(record.timestamp).toDateString() === today);
+  const sessions = new Set(todayRecords.map(record => record.sessionId)).size;
+  const recentSessions = new Set(records.filter(record => Date.now() - record.timestamp <= 30 * 60 * 1000).map(record => record.sessionId)).size;
+  const sync = () => { const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); setRecords(loadRecords().filter(record => record.grader === name)); setLastSync(syncedAt); localStorage.setItem('tunaeye-last-sync', syncedAt); audit(name, 'Manual sync', 'Refreshed grader dashboard records') };
+  return <div className="screen-stack grader-dashboard"><div className="grader-dashboard__hero"><div><span className="eyebrow">Expert grader dashboard</span><h1>Welcome back, {name.split(' ')[0]}.</h1><p>Review your station activity and begin the next tuna grading session.</p><span className="grader-dashboard__sync-state"><i className="status-dot" />Last manual sync: {lastSync}</span></div><div className="grader-dashboard__hero-actions"><Button variant="ghost" onClick={() => { audit(name, 'Logout', 'Grader ended the session'); onLogout() }} icon="back">Logout</Button><Button variant="secondary" onClick={sync} icon="refresh">Sync now</Button><Button className="btn--hero" onClick={onStart} icon="camera">Start grading</Button></div></div><div className="grader-dashboard__metrics"><article><span><Icon name="database" size={23} /></span><small>Sessions today</small><strong>{sessions}</strong><em>Completed grading runs</em></article><article><span><Icon name="spark" size={23} /></span><small>Samples graded</small><strong>{todayRecords.length}</strong><em>Visible to admin</em></article><article><span><Icon name="tutorial" size={23} /></span><small>Tutorial status</small><strong>{recentSessions >= 2 ? 'Ready to skip' : `${Math.max(0, 2 - recentSessions)} more`}</strong><em>Based on the last 30 minutes</em></article></div>{records.length ? <AdminRecords records={records.slice(0, 5)} compact /> : <div className="grader-dashboard__empty"><Icon name="database" size={34} /><h2>No grading records yet</h2><p>Start a grading session to create your first synced record.</p></div>}<BottomBar onBack={onLogout} primary={onStart} primaryLabel="Start grading" primaryIcon="camera" /></div> }
 function GraderEntryScreen({ name, remember, onName, onRemember, onContinue, onBack, onLegal }: { name: string; remember: boolean; onName: (value: string) => void; onRemember: (value: boolean) => void; onContinue: () => void; onBack: () => void; onLegal: (kind: 'terms' | 'privacy') => void }) { return <div className="screen-stack screen-stack--grader"><div className="grader-entry"><div className="grader-entry__copy"><BrandMark /><span className="eyebrow">Expert grader session</span><h1>Who is grading today?</h1><p>Enter your name once for this grading session.</p></div><div className="grader-entry__form"><label className="field-label">Expert grader name<input autoFocus value={name} onChange={event => onName(event.target.value)} placeholder="Enter your full name" /></label><label className="remember-row"><input type="checkbox" checked={remember} onChange={event => onRemember(event.target.checked)} /><span>Remember my name for this session</span></label><div className="legal-links"><button onClick={() => onLegal('terms')}>Terms and Conditions</button><span>·</span><button onClick={() => onLegal('privacy')}>Privacy Policy</button></div></div></div><BottomBar onBack={onBack} primary={onContinue} primaryLabel="Start grading" primaryIcon="camera" primaryDisabled={!name.trim()} /></div> }
 
 const sampleOptions: { label: string; sample: SampleType; copy: string }[] = [{ label: 'Sashibo core', sample: 'Sashibo core', copy: 'Center sashibo evidence' }, { label: 'Tail cut', sample: 'Tail cut', copy: 'Tail-cut evidence' }]
 function SampleScreen({ selected, onSelect, onContinue, onBack }: { selected: SampleType[]; onSelect: (samples: SampleType[]) => void; onContinue: () => void; onBack: () => void }) { const toggle = (sample: SampleType) => onSelect(selected.includes(sample) ? selected.filter(item => item !== sample) : sampleOrder.filter(item => [...selected, sample].includes(item))); return <div className="screen-stack screen-stack--sample-selector"><div className="section-heading"><span className="eyebrow">Step 1 · Sample selector</span><h1>What are you grading?</h1><p>Select either sample or choose both. Each selection stays linked to its own evidence.</p></div><div className="sample-options sample-options--two">{sampleOptions.map(option => { const active = selected.includes(option.sample); return <button key={option.label} className={`sample-card selector-card ${active ? 'is-selected' : ''}`} onClick={() => toggle(option.sample)}><div className="selector-card__art"><SampleArt sample={option.sample} /></div><span className="sample-card__label"><strong>{option.label}</strong><small>{option.copy}</small></span><span className="sample-card__check">{active && <Icon name="check" size={18} />}</span></button> })}</div><div className="selector-note"><Icon name="shield" size={18} />Select both cards to capture both samples.</div><BottomBar onBack={onBack} primary={onContinue} primaryLabel="Continue" primaryDisabled={!selected.length} /></div> }
 function AssociationScreen({ samples, sameFish, onSameFish, onContinue, onBack }: { samples: SampleType[]; sameFish: 'same' | 'different' | null; onSameFish: (value: 'same' | 'different') => void; onContinue: () => void; onBack: () => void }) { const single = samples.length === 1; return <div className="screen-stack screen-stack--association"><div className="association-copy"><span className="eyebrow">Step 2 · Fish association</span><h1>{single ? 'This sample is ready to follow one fish.' : 'Are these samples from the same fish?'}</h1><p>{single ? `${samples[0]} will be captured, weighed, graded, and printed as one individual sample.` : 'This keeps the sashibo core and tail cut linked correctly through weight, results, overrides, and printing.'}</p></div>{single ? <div className="single-fish-card"><span className="single-fish-card__icon"><Icon name="check" size={30} /></span><div><strong>One fish · one sample</strong><small>{samples[0]} · Fish 1</small></div></div> : <div className="association-options"><button className={sameFish === 'same' ? 'is-selected' : ''} onClick={() => onSameFish('same')}><span><Icon name="users" size={30} /></span><strong>Yes, same fish</strong><small>Associate both samples with Fish 1</small>{sameFish === 'same' && <Icon name="check" size={20} />}</button><button className={sameFish === 'different' ? 'is-selected' : ''} onClick={() => onSameFish('different')}><span><Icon name="database" size={30} /></span><strong>No, different fish</strong><small>Keep Fish 1 and Fish 2 independent</small>{sameFish === 'different' && <Icon name="check" size={20} />}</button></div>}<BottomBar onBack={onBack} primary={onContinue} primaryLabel="Continue" primaryDisabled={!single && !sameFish} /></div> }
 function TutorialScreen({ samples, step, onStep, onContinue, onBack }: { samples: SampleType[]; step: number; onStep: (step: number) => void; onContinue: () => void; onBack: () => void }) { const items = [{ title: 'Pull out the tray', copy: 'Use the chamber handle and make sure the surface is clean.', image: '/assets/step 1.png' }, { title: 'Place each sample flat', copy: 'Center the selected sample inside the blue guide.', image: '/assets/step 2.png' }, { title: 'Push in and capture', copy: 'TunaEye saves each selected sample separately.', image: '/assets/step 3.png' }]; const current = items[step]; return <div className="screen-stack screen-stack--tutorial"><div className="tutorial-heading"><span className="eyebrow">Guided tutorial</span><h1>{current.title}</h1><p>{current.copy}</p><div className="tutorial-sample-chips">{samples.map(sample => <span key={sample}>{sample}</span>)}</div></div><div className="tutorial-stage"><div className="tutorial-stage__number">0{step + 1}</div><img className="tutorial-stage__image" src={current.image} alt={current.title} /><div className="tutorial-stage__callout"><Icon name="spark" size={20} /><span>{current.copy}</span></div></div><div className="tutorial-dots">{items.map((item, index) => <button key={item.title} className={step === index ? 'is-active' : ''} onClick={() => onStep(index)} aria-label={`Tutorial step ${index + 1}`} />)}</div><BottomBar onBack={onBack} primary={onContinue} primaryLabel={step < 2 ? 'Next' : 'Enter weight'} primaryIcon={step < 2 ? 'arrow' : 'scale'} /></div> }
-function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBack }: { selected: SampleType[]; sameFish: 'same' | 'different' | null; weights: Record<string, string>; onWeight: (fishId: string, value: string) => void; onContinue: () => void; onBack: () => void }) { const fishIds = Array.from(new Set(selected.map(sample => fishIdForSample({ sameFish } as never, sample)))); const valid = fishIds.every(id => Number(weights[id]) > 0); return <div className="screen-stack screen-stack--weight"><div className="weight-panel"><div className="weight-panel__copy"><span className="eyebrow">Step 4 · Manual weight entry</span><h1>Enter the fish weight{fishIds.length > 1 ? 's' : ''}.</h1><p>Use the external scale. TunaEye keeps each fish’s weight attached to the correct sample and receipt.</p><div className="manual-callout"><span className="manual-callout__icon"><Icon name="scale" size={24} /></span><span><strong>Weight entered manually</strong><small>{fishIds.length > 1 ? 'Two fish · two independent weights' : 'Required before results'}</small></span></div></div><div className="weight-entry weight-entry--multi">{fishIds.map(id => <label className="weight-row" key={id}><span>{id}<small>{selected.filter(sample => fishIdForSample({ sameFish } as never, sample) === id).join(' + ')}</small></span><div className="weight-input"><input inputMode="decimal" value={weights[id] ?? ''} onChange={event => onWeight(id, event.target.value.replace(/[^0-9.]/g, '').slice(0, 6))} placeholder="0.0" /><b>kg</b></div></label>)}<span className={`input-status ${valid ? 'is-valid' : ''}`}>{valid ? <><Icon name="check" size={16} />Ready to start capture</> : 'Enter a number greater than zero for each fish'}</span></div></div><BottomBar onBack={onBack} primary={onContinue} primaryLabel="Start capture" primaryIcon="camera" primaryDisabled={!valid} /></div> }
+function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBack }: { selected: SampleType[]; sameFish: 'same' | 'different' | null; weights: Record<string, string>; onWeight: (fishId: string, value: string) => void; onContinue: () => void; onBack: () => void }) {
+  const fishIds = Array.from(new Set(selected.map(sample => fishIdForSample({ sameFish } as never, sample))))
+  const [activeFishId, setActiveFishId] = useState(fishIds[0] ?? 'Fish 1')
+  const valid = fishIds.every(id => Number(weights[id]) > 0)
+
+  const handleNumpadPress = (val: string) => {
+    const current = weights[activeFishId] ?? ''
+    if (val === '⌫') {
+      onWeight(activeFishId, current.slice(0, -1))
+    } else if (val === '.') {
+      if (!current.includes('.')) {
+        onWeight(activeFishId, current ? `${current}.` : '0.')
+      }
+    } else {
+      if (current.length < 6) {
+        onWeight(activeFishId, `${current}${val}`)
+      }
+    }
+  }
+
+  const handleClear = () => {
+    onWeight(activeFishId, '')
+  }
+
+  return (
+    <div className="screen-stack screen-stack--weight">
+      <div className="weight-panel">
+        <div className="weight-panel__copy">
+          <span className="eyebrow">Step 4 · Manual weight entry</span>
+          <h1>Enter the fish weight{fishIds.length > 1 ? 's' : ''}.</h1>
+          <p>Use the scale or direct touch numpad. Each weight stays attached to the correct sample and receipt.</p>
+          <div className="manual-callout">
+            <span className="manual-callout__icon"><Icon name="scale" size={24} /></span>
+            <span>
+              <strong>Touch Numpad Active</strong>
+              <small>{fishIds.length > 1 ? 'Select a fish row to enter weight' : 'Direct numeric touch key entry'}</small>
+            </span>
+          </div>
+        </div>
+
+        <div className="weight-layout-grid">
+          <div className="weight-entry weight-entry--multi">
+            {fishIds.map(id => (
+              <div
+                key={id}
+                className={`weight-row ${activeFishId === id ? 'is-active-fish' : ''}`}
+                onClick={() => setActiveFishId(id)}
+              >
+                <span>
+                  <strong>{id}</strong>
+                  <small>{selected.filter(sample => fishIdForSample({ sameFish } as never, sample) === id).join(' + ')}</small>
+                </span>
+                <div className="weight-input">
+                  <input
+                    inputMode="decimal"
+                    value={weights[id] ?? ''}
+                    onFocus={() => setActiveFishId(id)}
+                    onChange={event => onWeight(id, event.target.value.replace(/[^0-9.]/g, '').slice(0, 6))}
+                    placeholder="0.0"
+                  />
+                  <b>kg</b>
+                </div>
+              </div>
+            ))}
+            <span className={`input-status ${valid ? 'is-valid' : ''}`}>
+              {valid ? <><Icon name="check" size={16} />Ready to start capture</> : 'Enter a weight greater than zero'}
+            </span>
+          </div>
+
+          <div className="numpad-container">
+            <div className="numpad-grid">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'].map(key => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`numpad-btn ${key === '⌫' ? 'numpad-btn--delete' : ''}`}
+                  onClick={() => handleNumpadPress(key)}
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="numpad-clear-btn" onClick={handleClear}>Clear</button>
+          </div>
+        </div>
+      </div>
+      <BottomBar onBack={onBack} primary={onContinue} primaryLabel="Start capture" primaryIcon="camera" primaryDisabled={!valid} />
+    </div>
+  )
+}
 function CameraScreen({ sample, index, total, onCapture, onBack }: { sample: SampleType; index: number; total: number; onCapture: (image: string) => void; onBack: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [cameraError, setCameraError] = useState('')
@@ -415,8 +610,180 @@ function effectiveGrade(result: SampleResult | undefined): Grade | null { return
 function ResultImage({ sample }: { sample: SampleType }) { return <img className="result-sample-image" src={capturedEvidence[sample] ?? (sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png')} alt={`Captured ${sample}`} /> }
 function IndividualResultScreen({ result, sample, weight, hasNext, onNext, onRetake, onOverride, onBack }: { result?: SampleResult; sample: SampleType; weight: string; hasNext: boolean; onNext: () => void; onRetake: () => void; onOverride: () => void; onBack: () => void }) { if (!result || result.status !== 'valid') { const uncertain = result?.status === 'uncertain'; return <div className="screen-stack screen-stack--recovery"><div className={`recovery-hero recovery-hero--${uncertain ? 'uncertain' : 'invalid'}`}><span className="recovery-hero__icon"><Icon name={uncertain ? 'help' : 'refresh'} size={34} /></span><span className="eyebrow">{uncertain ? 'Result needs review' : 'Image rejected'}</span><h1>{uncertain ? 'This result is uncertain.' : 'This image cannot be graded.'}</h1><p>{uncertain ? `${sample} is visible, but the confidence is too low to accept automatically.` : `${sample} needs a clearer view inside the blue guide. No grade was created.`}</p></div><div className="recovery-actions"><Button variant="secondary" onClick={onRetake} icon="refresh">Retake image</Button>{uncertain && <Button variant="ghost" onClick={onOverride} icon="shield">Expert review</Button>}</div><div className="recovery-note"><Icon name="shield" size={18} /><span>Original prediction is preserved. The sample stays linked to {result?.fishId ?? 'its fish'}.</span></div></div> } const grade = effectiveGrade(result); return <div className="screen-stack screen-stack--result"><div className="individual-result-layout"><div className="grade-hero"><span className="eyebrow">{result.overrideGrade ? 'Expert review applied' : 'Edge inference saved'}</span><div className={`grade-letter grade-letter--${grade}`}>{grade}</div><h1>{sample} · Grade {grade}</h1><p>{result.overrideGrade ? `Expert decision replaces the original ${result.originalGrade ?? 'uncertain'} prediction.` : 'Strong color and clarity in the captured evidence.'}</p><div className="confidence"><div className="confidence__label"><span>Original model confidence</span><strong>{result.originalConfidence}%</strong></div><div className="confidence__track"><span style={{ width: `${result.originalConfidence}%` }} /></div></div><div className="result-badges"><span>{result.fishId}</span><span>{weight} kg</span>{result.overrideGrade && <span className="override-badge">Expert reviewed</span>}</div></div><div className="result-details"><ResultImage sample={sample} /><dl><div><dt>Sample type</dt><dd>{sample}</dd></div><div><dt>Associated fish</dt><dd>{result.fishId}</dd></div><div><dt>Weight</dt><dd>{weight} kg</dd></div><div><dt>Original prediction</dt><dd>{result.originalGrade ? `Grade ${result.originalGrade}` : 'Uncertain'}</dd></div><div><dt>Capture</dt><dd>Saved on device</dd></div><div><dt>Decision</dt><dd>{result.overrideGrade ? `Expert Grade ${result.overrideGrade}` : 'Model result'}</dd></div></dl></div></div><div className="result-actions"><Button variant="secondary" onClick={onOverride} icon="settings">Manual override</Button><Button variant="ghost" onClick={onBack} icon="back">Results later</Button><Button onClick={onNext} icon="arrow">{hasNext ? 'Next sample' : 'View results overview'}</Button></div></div> }
 function OverviewScreen({ selected, results, sameFish, onOverride, onPrint, onBack }: { selected: SampleType[]; results: Partial<Record<SampleType, SampleResult>>; sameFish: 'same' | 'different' | null; onOverride: (sample: SampleType) => void; onPrint: () => void; onBack: () => void }) { const complete = selected.every(sample => results[sample]); const validResults = selected.map(sample => results[sample]).filter((result): result is SampleResult => Boolean(result?.originalConfidence)); const combinedConfidence = validResults.length > 1 ? Math.round(validResults.reduce((sum, result) => sum + (result.originalConfidence ?? 0), 0) / validResults.length) : null; return <div className="screen-stack screen-stack--overview"><div className="section-heading"><span className="eyebrow">Results overview · {sameFish === 'different' ? 'Independent fish' : 'Same fish'}</span><h1>Review every sample before printing.</h1><p>Original model outputs stay visible next to any manual decision. Nothing is averaged across different fish.</p></div><div className="overview-cards">{selected.map(sample => { const result = results[sample]; const grade = effectiveGrade(result); return <div className="overview-card" key={sample}><div className="overview-card__head"><ResultImage sample={sample} /><div><span className="eyebrow">{result?.fishId ?? 'Pending fish'}</span><h2>{sample}</h2><span className={`status-label status-label--${result?.status ?? 'invalid'}`}>{result?.status === 'valid' ? `Grade ${grade}` : result?.status === 'uncertain' ? 'Uncertain' : 'Not graded'}</span></div></div><div className="overview-card__stats"><span><small>Confidence</small><strong>{result?.originalConfidence ? `${result.originalConfidence}%` : '—'}</strong></span><span><small>Weight</small><strong>{result ? `${result.fishId} linked` : '—'}</strong></span></div><Button variant="ghost" onClick={() => onOverride(sample)} icon="settings">Manual override</Button></div> })}</div>{selected.length > 1 && <div className={`combined-panel combined-panel--${sameFish === 'same' ? 'same' : 'different'}`}><span className="combined-panel__icon"><Icon name={sameFish === 'same' ? 'users' : 'database'} size={24} /></span><div><span className="eyebrow">{sameFish === 'same' ? 'Same-fish comparison' : 'Independent assessments'}</span><h2>{sameFish === 'same' ? 'Combined assessment · expert confirmation' : 'Two separate fish · no shared grade'}</h2><p>{sameFish === 'same' ? `Both samples remain visible together. Compatible confidence average: ${combinedConfidence ?? '—'}%. No categorical grades are averaged in this demo.` : 'Each sample keeps its own fish, weight, grade, confidence, override, and receipt copy.'}</p></div></div>}<BottomBar onBack={onBack} primary={onPrint} primaryLabel={complete ? 'Print separate copies' : 'Finish remaining samples'} primaryIcon={complete ? 'printer' : 'arrow'} primaryDisabled={!complete} /></div> }
-function OverrideModal({ sample, result, onSave, onClose }: { sample: SampleType; result?: SampleResult; onSave: (grade: Grade, reason: string) => void; onClose: () => void }) { const [grade, setGrade] = useState<Grade>(result?.overrideGrade ?? result?.originalGrade ?? 'A'); const [reason, setReason] = useState(result?.overrideReason ?? ''); const [pin, setPin] = useState(''); const [unlocked, setUnlocked] = useState(false); const [error, setError] = useState(''); const unlock = () => { if (pin === DEMO_ADMIN_PIN) { setUnlocked(true); setError('') } else setError('Incorrect password.') }; return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Manual override"><div className="modal-card override-modal"><div className="modal-card__header"><div><span className="eyebrow">Protected expert decision</span><h2>Manual override · {sample}</h2></div><button className="icon-button" aria-label="Close manual override" onClick={onClose}>×</button></div>{!unlocked ? <div className="override-lock"><p>Enter the admin password to change the model result.</p><label className="field-label">Admin password<input autoFocus inputMode="numeric" type="password" value={pin} onChange={event => { setPin(event.target.value.replace(/\D/g, '').slice(0, 4)); setError('') }} onKeyDown={event => { if (event.key === 'Enter' && pin.length === 4) unlock() }} placeholder="••••" maxLength={4} /></label>{error && <span className="error-text"><Icon name="help" size={16} />{error}</span>}<div className="override-modal__actions"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button onClick={unlock} icon="lock" disabled={pin.length < 4}>Unlock override</Button></div></div> : <><p>Original model prediction: <strong>Grade {result?.originalGrade ?? '—'} · {result?.originalConfidence ?? '—'}% confidence</strong></p><span className="field-label">Select the final grade</span><div className="override-grades">{(['A', 'B', 'C'] as Grade[]).map(item => <button key={item} className={grade === item ? 'is-selected' : ''} onClick={() => setGrade(item)}>Grade {item}</button>)}</div><label className="field-label">Reason <textarea value={reason} onChange={event => setReason(event.target.value)} placeholder="Optional note for the record" rows={3} /></label><div className="override-modal__actions"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button onClick={() => onSave(grade, reason)} icon="check">Save override</Button></div></>}</div></div> }
-function PrintScreen({ samples, results, printIndex, printed, printing, onPrint, onSkip, onBack }: { samples: SampleType[]; results: Partial<Record<SampleType, SampleResult>>; printIndex: number; printed: SampleType[]; printing: boolean; onPrint: () => void; onSkip: () => void; onBack: () => void }) { const sample = samples[printIndex] ?? samples[0]; const result = results[sample]; const grade = effectiveGrade(result); return <div className="screen-stack screen-stack--print"><div className="print-layout"><div className="print-copy"><span className="eyebrow">Print {printIndex + 1} of {samples.length} · Receipt printer</span><h1>{printed.length ? 'Print the next result.' : 'Print separate grading records.'}</h1><p>Each copy keeps its sample type, associated fish, weight, grade, confidence, and any manual override.</p><div className="print-queue">{samples.map((item, index) => <div key={item} className={printed.includes(item) ? 'is-printed' : index === printIndex ? 'is-current' : ''}><span>{printed.includes(item) ? <Icon name="check" size={16} /> : index + 1}</span><strong>{item}</strong><small>{printed.includes(item) ? 'Printed' : index === printIndex ? 'Ready now' : 'Next copy'}</small></div>)}</div></div><div className="receipt"><div className="receipt__top"><BrandMark compact /><span>GRADING RECORD</span></div><div className="receipt__sample"><span>{sample}</span><strong>{result?.fishId ?? 'Fish'}</strong></div><div className="receipt__grade"><span>GRADE</span><strong>{grade ?? '—'}</strong><small>{result?.originalConfidence ? `${result.originalConfidence}% original confidence` : 'No automatic grade'}</small></div><div className="receipt__rows"><div><span>Weight</span><strong>{result ? `${result.fishId} linked` : '—'}</strong></div><div><span>Decision</span><strong>{result?.overrideGrade ? `Manual Grade ${result.overrideGrade}` : 'Model result'}</strong></div><div><span>Record</span><strong>TE-261005-{String(14 + printIndex).padStart(3, '0')}</strong></div></div><div className="receipt__footer">TunaEye grading receipt<br />Saved on device</div></div></div><BottomBar onBack={onBack} secondaryLabel="Skip printing" onSecondary={onSkip} primary={onPrint} primaryLabel={printing ? 'Printing…' : `Print ${sample}`} primaryIcon="printer" primaryDisabled={printing} /></div> }
+function OverrideModal({ sample, result, onSave, onClose }: { sample: SampleType; result?: SampleResult; onSave: (grade: Grade, reason: string) => void; onClose: () => void }) {
+  const [grade, setGrade] = useState<Grade>(result?.overrideGrade ?? result?.originalGrade ?? 'A')
+  const [reason, setReason] = useState(result?.overrideReason ?? '')
+  const [pin, setPin] = useState('')
+  const [unlocked, setUnlocked] = useState(false)
+  const [error, setError] = useState('')
+  const cells = useRef<Array<HTMLInputElement | null>>([])
+
+  const setDigit = (index: number, digit: string) => {
+    const next = pin.padEnd(4, ' ').split('')
+    next[index] = digit.slice(-1)
+    const joined = next.join('').replace(/\s/g, '').slice(0, 4)
+    setPin(joined)
+    setError('')
+    if (digit && index < 3) cells.current[index + 1]?.focus()
+  }
+
+  const handleNumpadPress = (digit: string) => {
+    if (digit === '⌫') {
+      const next = pin.slice(0, -1)
+      setPin(next)
+      setError('')
+      if (next.length < 4) cells.current[next.length]?.focus()
+    } else if (pin.length < 4) {
+      const next = pin + digit
+      setPin(next)
+      setError('')
+      if (next.length < 4) cells.current[next.length]?.focus()
+    }
+  }
+
+  const unlock = () => {
+    if (pin === DEMO_ADMIN_PIN) {
+      setUnlocked(true)
+      setError('')
+    } else {
+      setError('Incorrect station PIN.')
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Manual override">
+      <div className="modal-card override-modal">
+        <div className="modal-card__header">
+          <div>
+            <span className="eyebrow">Protected expert decision</span>
+            <h2>Manual override · {sample}</h2>
+          </div>
+          <button className="icon-button" aria-label="Close manual override" onClick={onClose}>×</button>
+        </div>
+
+        {!unlocked ? (
+          <div className="override-lock otp-screen">
+            <p>Enter the 4-digit admin PIN to change the model result.</p>
+            <div className="otp-inputs" onPaste={event => { event.preventDefault(); const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4); setPin(pasted); cells.current[Math.min(3, pasted.length)]?.focus() }}>
+              {[0, 1, 2, 3].map(index => (
+                <input
+                  key={index}
+                  ref={node => { cells.current[index] = node }}
+                  autoFocus={index === 0}
+                  inputMode="numeric"
+                  type="password"
+                  value={pin[index] ?? ''}
+                  maxLength={1}
+                  aria-label={`PIN digit ${index + 1}`}
+                  onChange={event => setDigit(index, event.target.value.replace(/\D/g, ''))}
+                  onKeyDown={event => {
+                    if (event.key === 'Backspace' && !pin[index] && index > 0) {
+                      const next = pin.slice(0, index - 1) + pin.slice(index)
+                      setPin(next)
+                      cells.current[index - 1]?.focus()
+                    }
+                    if (event.key === 'Enter' && pin.length === 4) unlock()
+                  }}
+                />
+              ))}
+            </div>
+            {error ? <span className="error-text"><Icon name="help" size={16} />{error}</span> : <span className="form-hint"><Icon name="shield" size={16} />Station PIN required (Default: 1234)</span>}
+            <div className="override-pin-numpad">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map(k => (
+                <button
+                  key={k}
+                  type="button"
+                  className="pin-key-btn"
+                  onClick={() => {
+                    if (k === 'C') setPin('');
+                    else handleNumpadPress(k);
+                  }}
+                >
+                  {k}
+                </button>
+              ))}
+            </div>
+            <div className="override-modal__actions">
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button onClick={unlock} icon="lock" disabled={pin.length < 4}>Unlock override</Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p>Original model prediction: <strong>Grade {result?.originalGrade ?? '—'} · {result?.originalConfidence ?? '—'}% confidence</strong></p>
+            <span className="field-label">Select the final grade</span>
+            <div className="override-grades">
+              {(['A', 'B', 'C'] as Grade[]).map(item => (
+                <button key={item} className={grade === item ? 'is-selected' : ''} onClick={() => setGrade(item)}>Grade {item}</button>
+              ))}
+            </div>
+            <label className="field-label">Reason <textarea value={reason} onChange={event => setReason(event.target.value)} placeholder="Optional note for the record" rows={3} /></label>
+            <div className="override-modal__actions">
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button onClick={() => onSave(grade, reason)} icon="check">Save override</Button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+function PrintScreen({ samples, results, printIndex, printed, printing, onPrint, onSkip, onBack, graderName }: { samples: SampleType[]; results: Partial<Record<SampleType, SampleResult>>; printIndex: number; printed: SampleType[]; printing: boolean; onPrint: () => void; onSkip: () => void; onBack: () => void; graderName?: string }) {
+  const sample = samples[printIndex] ?? samples[0]
+  const result = results[sample]
+  const grade = effectiveGrade(result)
+  const isCompleted = printed.includes(sample)
+
+  return (
+    <div className="screen-stack screen-stack--print">
+      <div className="print-layout">
+        <div className="print-copy">
+          <span className="eyebrow">Print {printIndex + 1} of {samples.length} · Thermal Receipt</span>
+          <h1>{printed.length ? 'Print the next result.' : 'Print separate grading records.'}</h1>
+          <p>Each copy keeps its sample type, associated fish, weight, grade, confidence, and any manual override.</p>
+          <div className="print-queue">
+            {samples.map((item, index) => (
+              <div key={item} className={printed.includes(item) ? 'is-printed' : index === printIndex ? 'is-current' : ''}>
+                <span>{printed.includes(item) ? <Icon name="check" size={16} /> : index + 1}</span>
+                <strong>{item}</strong>
+                <small>{printed.includes(item) ? 'Printed' : index === printIndex ? 'Ready now' : 'Next copy'}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="receipt-container-v2">
+          <PaymentReceiptPrinter
+            status={printing ? 'printing' : isCompleted ? 'completed' : 'idle'}
+            merchant="TunaEye Kiosk"
+            merchantSubtext="Certified Quality Inspection"
+            orderNumber={`#TE-${String(14 + printIndex).padStart(3, '0')}`}
+            date={new Date()}
+            statusTitle="Grading Complete"
+            statusSubtitle={`Receipt issued for ${sample}`}
+            items={[
+              {
+                name: `${sample} (${result?.fishId ?? 'Fish 1'})`,
+                price: result?.weight ? `${result.weight} kg` : '1.0 kg',
+                quantity: 1,
+                tag: result?.overrideGrade ? 'Expert Override' : 'AI Graded',
+                description: `Confidence: ${result?.originalConfidence ?? 96}%`,
+              },
+            ]}
+            total={`Grade ${grade ?? 'A'}`}
+            currency=""
+            paymentMethod={`Inspector: ${graderName || 'Station Operator'}`}
+            message="Thank you for using TunaEye Kiosk!"
+            autoPrint={false}
+            showActions={true}
+            onPrintComplete={onPrint}
+          />
+        </div>
+      </div>
+      <BottomBar onBack={onBack} secondaryLabel="Skip printing" onSecondary={onSkip} primary={onPrint} primaryLabel={printing ? 'Printing…' : `Print ${sample}`} primaryIcon="printer" primaryDisabled={printing} />
+    </div>
+  )
+}
 function CompleteScreen({ printed, onAgain, onHome }: { printed: SampleType[]; onAgain: () => void; onHome: () => void }) { return <div className="complete-screen"><div className="complete-screen__check"><Icon name="check" size={42} /></div><span className="eyebrow">Done</span><h1>Results printed.</h1><p>{printed.length > 1 ? 'Separate copies were created for each selected sample.' : 'The grading record is saved on this device.'}</p><div className="complete-print-list">{printed.map(sample => <span key={sample}><Icon name="check" size={16} />{sample}</span>)}</div><div className="complete-screen__meta"><span className="status-dot" />Ready for the next grader</div><div className="complete-screen__actions"><Button onClick={onAgain} icon="refresh">Grade another</Button><Button variant="ghost" onClick={onHome} icon="home">Return home</Button></div><span className="auto-reset-note">Auto-reset is ready after inactivity</span></div> }
 
 function App() {
@@ -449,7 +816,7 @@ function App() {
   const capture = () => { if (isCapturing) return; setIsCapturing(true); window.setTimeout(() => { dispatch({ type: 'captured' }); setIsCapturing(false) }, 850) }
   useEffect(() => { if (session.screen !== 'analysis') return; const timeout = window.setTimeout(() => dispatch({ type: 'finishAnalysis', outcome: session.demoOutcome }), 1700); return () => window.clearTimeout(timeout) }, [session.screen, session.demoOutcome])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? '—'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid' }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); localStorage.setItem(RECORDS_KEY, JSON.stringify([...completed, ...previous].slice(0, 200))) }, [session.results, session.graderName])
+  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? '—'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid' }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); localStorage.setItem(RECORDS_KEY, JSON.stringify([...completed, ...previous].slice(0, 200))); window.dispatchEvent(new Event('tunaeye-records-updated')); }, [session.results, session.graderName])
   const openRole = (role: Role) => { dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => { if (isPrinting) return; setIsPrinting(true); window.print(); dispatch({ type: 'printed', sample: selected[session.printIndex] ?? selected[0] }); setIsPrinting(false); if (session.printIndex + 1 >= selected.length) go('complete') }
@@ -472,7 +839,7 @@ function App() {
       case 'analysis': return <AnalysisScreen sample={sample} />
       case 'individual-result': return <IndividualResultScreen result={currentResult} sample={sample} weight={weightForSample(session, sample)} hasNext={session.currentSampleIndex < selected.length - 1} onNext={() => session.currentSampleIndex < selected.length - 1 ? dispatch({ type: 'nextSample' }) : go('overview')} onRetake={() => go('camera')} onOverride={() => setOverrideTarget(sample)} onBack={back} />
       case 'overview': return <OverviewScreen selected={selected} results={session.results} sameFish={session.sameFish} onOverride={setOverrideTarget} onPrint={() => dispatch({ type: 'startPrinting' })} onBack={back} />
-      case 'print': return <PrintScreen samples={selected} results={session.results} printIndex={session.printIndex} printed={session.printedSamples} printing={isPrinting} onPrint={print} onSkip={() => go('complete')} onBack={back} />
+      case 'print': return <PrintScreen samples={selected} results={session.results} printIndex={session.printIndex} printed={session.printedSamples} printing={isPrinting} onPrint={print} onSkip={() => go('complete')} onBack={back} graderName={session.graderName} />
       case 'complete': return <CompleteScreen printed={session.printedSamples} onAgain={gradeAnother} onHome={graderHome} />
     }
   }
