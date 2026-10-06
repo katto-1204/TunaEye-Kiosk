@@ -1,5 +1,7 @@
 # Lessons
 
+- Marketing CTAs must match their destination: demos open media, downloads lead to installation, and neither should reuse the grading action.
+
 - Store image blobs in IndexedDB, not `localStorage`; persist one stable evidence ID in record metadata and avoid competing effects that overwrite the same record.
 - New landing sections must reuse the established section grid, spacing, and responsive rhythm; validate a full-page desktop screenshot before calling the page fixed.
 - When adding JSX to a large page, confirm every rendered component is imported or defined; a placeholder can crash the entire route at render time.

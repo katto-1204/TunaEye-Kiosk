@@ -1,5 +1,48 @@
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
+## Combined Mobile Download Section — 2026-10-07
+
+- [x] Merge the phone experience and installation guide into one section.
+- [x] Keep the download CTA anchored to the setup guide.
+- [x] Verify the combined desktop and mobile layout.
+
+### Review
+
+- Phone experience and setup guide now share one continuous blue download section with a subtle divider.
+- Download CTA scrolls to the setup guide; desktop and 390px checks pass without overflow.
+- Focused Playwright landing test and production build passed.
+
+## Landing Demo CTA and Footer — 2026-10-07
+
+- [x] Add the supplied Hero Video Dialog interaction.
+- [x] Change the demo CTA to `View Demo`.
+- [x] Route the mobile CTA to the download section.
+- [x] Rebuild the footer as the supplied two-panel layout.
+- [x] Verify dialog, download navigation, responsive footer, suite, and build.
+
+### Review
+
+- `View Demo` opens the accessible modal and closes cleanly; `Download App` scrolls to installation.
+- Desktop and 390px footer layouts pass browser checks with no console or request failures.
+- Full Playwright suite passed: 15/15 tests.
+- Production build passed (`tsc -b && vite build`).
+
+## Landing Device Mockups — 2026-10-07
+
+- [x] Add the supplied MacBook Pro component under `src/components/ui`.
+- [x] Add the supplied iPhone 16 Pro component under `src/components/ui`.
+- [x] Use the MacBook frame for the demo walkthrough poster.
+- [x] Use the iPhone 16 Pro frame for the mobile TunaEye preview.
+- [x] Remove the superseded phone component.
+- [x] Run full browser verification and final production build.
+
+### Review
+
+- Production build passed (`tsc -b && vite build`).
+- Full Playwright suite passed: 15/15 tests.
+- Desktop screenshots confirm the MacBook demo and iPhone 16 Pro mobile preview.
+- Mobile landing remains single-column with no horizontal overflow at 390×844.
+
 ## Offline Evidence and Landing Repair — 2026-10-07
 
 - [x] Trace capture data loss and duplicate record persistence.
@@ -7,11 +50,15 @@
 - [x] Keep record metadata lightweight and cloud-sync ready.
 - [x] Document the future kiosk/mobile Supabase contract without implementing cloud sync.
 - [x] Restore desktop grids, spacing, and responsive behavior for new landing sections.
-- [ ] Verify persistence, landing visuals, full browser suite, and production build.
+- [x] Verify persistence, landing visuals, full browser suite, and production build.
 
 ### Review
 
-- Pending verification.
+- Captured JPEG evidence persists in IndexedDB and reloads in dashboard records.
+- Record metadata stores only the stable evidence ID and remains `pending` for future sync.
+- Desktop landing sections render as two-column layouts; 390px collapses without horizontal overflow.
+- Production build passed and the full Playwright suite passed: 15/15 tests.
+- Screenshots saved under `test-results/landing-*-1280x800.png` and `test-results/landing-mobile-390x844.png`.
 
 ## iPhone Mockup Replacement — 2026-10-07
 

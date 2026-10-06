@@ -1497,27 +1497,6 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 }
 
 /* ── DEVICE COMPONENT STYLES ──────────────────────────────── */
-.iphone-mockup{
-  position:relative;
-  width:100%;
-  display:inline-block;
-  vertical-align:middle;
-  line-height:1;
-}
-.iphone-mockup__screen{
-  position:absolute;
-  overflow:hidden;
-  background:#07111f;
-  z-index:0;
-}
-.iphone-mockup__screen>img,
-.iphone-mockup__screen>video{
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:top;
-}
 .device-screen-content{
   min-height:100%;
   display:flex;
@@ -1532,12 +1511,3 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 .device-screen-content h3{font-size:24px;line-height:1.1}
 .device-screen-content p{color:#b7c7dc;font-size:15px}
 .device-screen-content .btn--primary{min-height:48px;padding:0 20px;font-size:16px;border-radius:14px}
-.iphone-mockup>svg{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  z-index:1;
-  pointer-events:none;
-  filter:drop-shadow(0 24px 32px rgba(15,23,42,.22));
-}

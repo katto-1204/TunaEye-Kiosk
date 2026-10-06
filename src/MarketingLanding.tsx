@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { TunaEyeHeroLogo } from './components/TunaEyeHeroLogo'
-import { Device } from './components/Device'
+import { Iphone16Pro } from './components/ui/iphone-16-pro'
+import { MacbookPro } from './components/ui/macbook-pro'
+import { DemoPlayIcon, HeroVideoDialog } from './components/ui/hero-video-dialog'
 
 export type MarketingPage = 'home' | 'features' | 'about' | 'team' | 'faq' | 'terms' | 'privacy'
 
@@ -332,31 +334,25 @@ export default function MarketingLanding({
       )}
 
       <footer className="site-footer">
-        <div>
+        <div className="site-footer__brand">
           <Logo />
-          <p>
-            Evidence-first yellowfin tuna visual grading platform built for connected ports, buying stations, and processing facilities.
-          </p>
+          <div className="site-footer__brand-bottom">
+            <strong>Evidence-first tuna grading.</strong>
+            <p>Built for ports, buying stations, and processing facilities.</p>
+            <div className="site-footer__socials" aria-label="Social links"><span>X</span><span>in</span><span>f</span><span>◎</span></div>
+            <small>© 2026 TunaEye Systems. All rights reserved.</small>
+          </div>
         </div>
-        <div>
-          <strong>Explore</strong>
-          {pages.filter(p => !p.children).map(item => (
-            <button key={item.id} onClick={() => navigate(item.id)}>
-              {item.label}
-            </button>
-          ))}
+        <div className="site-footer__links">
+          <div><strong>Product</strong><button onClick={() => navigate('features')}>Features</button><button onClick={() => navigate('home')}>Workflow</button><button onClick={onInstall}>Install app</button></div>
+          <div><strong>Resources</strong><button onClick={() => navigate('faq')}>Help</button><button onClick={() => navigate('faq')}>FAQ</button><button onClick={() => setChangelogOpen(true)}>Changelog</button></div>
+          <div><strong>Company</strong><button onClick={() => navigate('about')}>About</button><button onClick={() => navigate('team')}>Team</button><a href="mailto:hello@tunaeye.app">Contact</a></div>
+          <div><strong>Legal</strong><button onClick={() => navigate('terms')}>Terms</button><button onClick={() => navigate('privacy')}>Privacy</button><span>General Santos City</span></div>
+          <form className="site-footer__newsletter" onSubmit={event => event.preventDefault()}>
+            <strong>Newsletter</strong>
+            <div><label className="sr-only" htmlFor="footer-email">Email address</label><input id="footer-email" type="email" placeholder="Enter your email" /><button type="submit">Submit</button></div>
+          </form>
         </div>
-        <div>
-          <strong>Legal</strong>
-          <button onClick={() => navigate('terms')}>Terms of service</button>
-          <button onClick={() => navigate('privacy')}>Privacy policy</button>
-        </div>
-        <div>
-          <strong>Contact</strong>
-          <a href="mailto:hello@tunaeye.app">hello@tunaeye.app</a>
-          <span>General Santos City, Philippines</span>
-        </div>
-        <small>© 2026 TunaEye Systems. All rights reserved.</small>
       </footer>
 
       <button className="fixed-changelog-trigger" onClick={() => setChangelogOpen(true)} title="View Changelog">
@@ -443,43 +439,31 @@ function Home({
             <h2>Watch the complete grading workflow in under 60 seconds</h2>
             <p>From specimen capture to AI-powered analysis and cloud synchronization, see how TunaEye transforms traditional grading into a seamless, evidence-based process.</p>
             <div className="site-actions">
-              <button className="site-button site-button--primary" onClick={onOpen}>
-                Start Grading <Arrow />
-              </button>
+              <HeroVideoDialog videoSrc="/image.png" trigger={<span className="site-button site-button--primary">View Demo <Arrow /></span>} />
             </div>
           </div>
           <div className="site-demo-video__visual">
-            {/* Placeholder for demo video - replace with actual video embed */}
-            <div className="video-placeholder">
-              <div className="video-play-button">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                  <path d="M18 12.5v23l18-11.5-18-11.5Z" fill="currentColor" />
-                </svg>
-              </div>
-              <div className="video-overlay">
-                <h3>TunaEye Demo Video</h3>
-                <p>Click to play</p>
-              </div>
-            </div>
+            <MacbookPro className="demo-macbook" src="/image.png" aria-label="TunaEye workflow demo on a MacBook Pro" />
+            <HeroVideoDialog videoSrc="/image.png" trigger={<span className="video-play-button" aria-label="View TunaEye demo"><DemoPlayIcon /></span>} />
+            <span className="demo-macbook__label">Open interactive demo</span>
           </div>
         </section>
       </Reveal>
 
       {/* MOBILE EXPERIENCE SECTION */}
       <Reveal>
-        <section className="site-mobile-experience">
+        <section className="site-mobile-experience" id="download-app">
           <div className="mobile-experience-grid">
             {/* LEFT SIDE: Device Mockup + QR Code */}
             <div className="mobile-experience__left">
               <div className="device-mockup">
-                <Device>
-                  {/* Device screen content can go here */}
+                <Iphone16Pro className="iphone-16-pro" aria-label="TunaEye mobile grading preview">
                   <div className="device-screen-content">
                     <h3>TunaEye Grader</h3>
                     <p>Ready to grade</p>
                     <button className="btn--primary">Start Session</button>
                   </div>
-                </Device>
+                </Iphone16Pro>
               </div>
 
               <div className="qr-section">
@@ -531,17 +515,12 @@ function Home({
                   </div>
                 </div>
               </div>
-              <button className="site-button site-button--primary" onClick={onOpen}>
-                Start Grading <Arrow />
+              <button className="site-button site-button--primary" onClick={() => document.getElementById('installation-guide')?.scrollIntoView({ behavior: 'smooth' })}>
+                Download App <Arrow />
               </button>
             </div>
           </div>
-        </section>
-      </Reveal>
-
-      {/* INSTALLATION GUIDE */}
-      <Reveal>
-        <section className="site-installation">
+          <div className="site-installation" id="installation-guide">
           <div className="installation-grid">
             <div className="installation__copy">
               <span className="site-kicker">Getting Started</span>
@@ -617,6 +596,7 @@ function Home({
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </section>
       </Reveal>
