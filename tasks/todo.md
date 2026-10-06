@@ -1,5 +1,18 @@
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
+## Landscape Tablet QA Fixes — 2026-10-07
+
+- [x] Move the role help control to the right with a 48px target.
+- [x] Restore readable tutorial numbers for every slide.
+- [x] Shift the weight keypad group slightly left.
+- [x] Normalize Sync now spacing and touch size.
+- [x] Balance sample images without changing cards.
+- [ ] Verify 1024x600, 1280x800, 1366x768, suite, and build.
+
+### Review
+
+- Pending verification.
+
 ## Shared Supabase Connectivity — 2026-10-07
 
 - [x] Audit existing local persistence, sync controls, admin reads, auth, and schema files.

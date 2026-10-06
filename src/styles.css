@@ -997,6 +997,21 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
   text-align: right !important;
 }
 
+/* Targeted landscape-tablet QA fixes. */
+.tutorial-heading .tutorial-stage__number{position:static;display:block;margin-bottom:8px;color:#164e93!important;opacity:1!important;font-size:clamp(64px,8vw,96px)!important;line-height:.8;text-shadow:none}
+.selector-card__art .sample-art{width:auto;height:auto;object-fit:contain}
+.selector-card__art .sample-art--core{max-width:84%;max-height:82%}
+.selector-card__art .sample-art--tail{max-width:72%;max-height:76%}
+@media(min-width:701px) and (orientation:landscape){
+  .role-bottom--v2{justify-content:flex-end!important;gap:16px!important}
+  .role-bottom--v2>.btn{margin-right:auto}
+  .role-bottom--v2 .tutorial-fab{width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important}
+  .weight-split__input{margin-left:-24px;padding-right:24px}
+  .grader-hello__actions{gap:14px}
+  .grader-hello__subactions{gap:14px}
+  .grader-hello__subactions .btn{min-height:48px;justify-content:center;gap:9px}
+}
+
 .weight-panel--stacked .weight-input b {
   font-size: 18px !important;
   color: var(--secondary) !important;

@@ -389,7 +389,8 @@ for (const viewport of [
     await expectNoHorizontalOverflow()
 
     await page.goto('/kiosk/tutorial')
-    await expect(page.locator('.tutorial-stage__number')).toHaveCount(0)
+    await expect(page.locator('.tutorial-stage__number')).toHaveText('01')
+    await expect(page.locator('.tutorial-stage__number')).toBeVisible()
     await expectNoHorizontalOverflow()
 
     await page.goto('/kiosk/sample')
