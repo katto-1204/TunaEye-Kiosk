@@ -113,5 +113,6 @@ vite.config.ts          Vite development server configuration
 - Camera capture uses the real browser camera stream.
 - Captured evidence is stored as JPEG blobs in IndexedDB; lightweight grading metadata remains in `localStorage`.
 - Raspberry Pi inference requires the edge service described in `ARCHITECTURE.md`.
-- Supabase PostgreSQL and Convex synchronization require deployed services and environment configuration.
-- Until those services are connected, evidence, station records, and audit events remain browser-local with `syncState: "pending"`.
+- Supabase PostgreSQL and Storage synchronization require the migration under `supabase/migrations` and the environment variables in `.env.example`.
+- Without cloud configuration or connectivity, evidence and grading records remain local with a retryable sync state.
+- TunaEyePhone must follow `docs/SHARED_SUPABASE_CONTRACT.md` and use the same Supabase project.

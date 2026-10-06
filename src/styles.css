@@ -689,7 +689,7 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 .welcome-brand-hero{gap:10px!important}
 
 .weight-input-display{justify-content:center!important;gap:8px!important}
-.weight-input-display input{flex:0 1 auto!important;min-width:2ch!important;max-width:8ch!important;text-align:right!important}
+.weight-input-display input{flex:0 1 auto!important;min-width:3ch!important;max-width:8ch!important;text-align:right!important}
 .weight-input-display.is-error{border-color:#dc2626!important;background:#fff7f7!important;box-shadow:0 0 0 4px rgba(220,38,38,.12)!important}
 .weight-input-display.is-error b,.input-status.is-error{color:#b91c1c!important}
 .weight-limit-dialog{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #ef4444;border-radius:14px;background:#fff1f2;color:#991b1b;box-shadow:0 8px 22px rgba(153,27,27,.09)}

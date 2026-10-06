@@ -13,9 +13,9 @@ Tablet PWA kiosk  <----HTTP/LAN---->  Raspberry Pi edge service
       | captured evidence                | model inference
       | result + audit events            | grade + confidence + model id
       v                                  v
-Convex synchronization layer <----> Supabase PostgreSQL + object storage
+Supabase PostgreSQL + object storage
       |
-      +----> other kiosk/admin clients
+      +----> TunaEyePhone and authorized admin clients
       +----> native/mobile clients
 ```
 
@@ -84,12 +84,6 @@ Content-Type: application/json
 - Row-level security must isolate organizations and stations.
 - Service keys must never be stored in the browser.
 
-### Convex
-
-- Distributes live record changes and connection state to other authorized admin clients.
-- Coordinates queued/offline mutations and cross-device dashboard freshness.
-- Does not replace PostgreSQL as the long-term system of record in this design.
-
 ## Suggested data entities
 
 - `organizations`
@@ -123,7 +117,7 @@ Current kiosk evidence fields are `id`, `sessionId`, `sample`, `fishId`, `captur
 2. The Raspberry Pi supplies inference while the LAN is available.
 3. Results are saved locally immediately so dashboard navigation cannot lose them.
 4. Manual sync refreshes local dashboard state and records a sync event.
-5. The future cloud adapter uploads queued records and evidence, then Convex broadcasts the change to other clients.
+5. The cloud adapter uploads queued evidence and upserts the canonical Supabase record.
 6. Conflicts should use immutable inference events and append-only overrides rather than overwriting history.
 
 ## Fullscreen limitation

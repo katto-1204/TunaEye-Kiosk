@@ -481,122 +481,45 @@ function Home({
               </div>
             </div>
 
-            {/* RIGHT SIDE: Experience Grading on Phone */}
+            {/* RIGHT SIDE: Installation guide */}
             <div className="mobile-experience__right">
-              <h3>Experience Grading on Your Phone</h3>
+              <span className="site-kicker">Getting Started</span>
+              <h3>Install and set up your TunaEye grading station in minutes</h3>
               <p>
-                Try TunaEye's intuitive interface on any device. Our progressive web app delivers
-                the full grading experience with offline capabilities, seamless synchronization,
-                and instant access to your grading history.
+                Follow these simple steps to deploy TunaEye at your facility. Our offline-first
+                architecture ensures you can start grading immediately, even without internet connectivity.
               </p>
               <div className="experience-steps">
                 <div className="step">
-                  <div className="step-number">01</div>
-                  <div className="step-content">
-                    <h4>Capture Specimen</h4>
-                    <p>Use your phone's camera to capture high-quality images of tuna samples
-                    with guided alignment tools.</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-number">02</div>
-                  <div className="step-content">
-                    <h4>Enter Weight</h4>
-                    <p>Connect to digital scales or enter weight manually using our
-                    touch-optimized numpad interface.</p>
-                  </div>
-                </div>
-                <div className="step">
-                  <div className="step-number">03</div>
-                  <div className="step-content">
-                    <h4>Review Results</h4>
-                    <p>View AI-powered analysis results, apply expert overrides if needed,
-                    and generate print-ready reports.</p>
-                  </div>
-                </div>
-              </div>
-              <button className="site-button site-button--primary" onClick={() => document.getElementById('installation-guide')?.scrollIntoView({ behavior: 'smooth' })}>
-                Download App <Arrow />
-              </button>
-            </div>
-          </div>
-          <div className="site-installation" id="installation-guide">
-          <div className="installation-grid">
-            <div className="installation__copy">
-              <span className="site-kicker">Getting Started</span>
-              <h2>Install and set up your TunaEye grading station in minutes</h2>
-              <p>
-                Follow these simple steps to deploy TunaEye at your facility. Our offline-first
-                architecture ensures you can start grading immediately, even without internet
-                connectivity.
-              </p>
-              <div className="installation-steps">
-                <div className="step">
                   <div className="step-number">1</div>
                   <div className="step-content">
-                    <h3>Install the Application</h3>
-                    <p>
-                      Open TunaEye in your device's browser (Chrome, Safari, or Edge) and
-                      select "Install App" from the browser menu to add it to your home screen
-                      or desktop.
-                    </p>
+                    <h4>Install the Application</h4>
+                    <p>Open TunaEye in your device's browser (Chrome, Safari, or Edge) and select "Install App" from the browser menu to add it to your home screen or desktop.</p>
                   </div>
                 </div>
                 <div className="step">
                   <div className="step-number">2</div>
                   <div className="step-content">
-                    <h3>Launch the App</h3>
-                    <p>
-                      Tap the TunaEye icon on your home screen to launch the app in standalone
-                      mode, providing a native app experience without browser chrome.
-                    </p>
+                    <h4>Launch the App</h4>
+                    <p>Tap the TunaEye icon on your home screen to launch the app in standalone mode, providing a native app experience without browser chrome.</p>
                   </div>
                 </div>
                 <div className="step">
                   <div className="step-number">3</div>
                   <div className="step-content">
-                    <h3>Connect to Raspberry Pi</h3>
-                    <p>
-                      Scan the QR code displayed on your Raspberry Pi device to automatically
-                      configure the connection to your local edge AI gateway for sub-200ms
-                      inference.
-                    </p>
+                    <h4>Connect to Raspberry Pi</h4>
+                    <p>Scan the QR code displayed on your Raspberry Pi device to automatically configure the connection to your local edge AI gateway for sub-200ms inference.</p>
                   </div>
                 </div>
                 <div className="step">
                   <div className="step-number">4</div>
                   <div className="step-content">
-                    <h3>Begin Grading</h3>
-                    <p>
-                      Start your first grading session by entering your name, selecting sample
-                      type, and following the guided workflow for capture, weight entry, and
-                      analysis.
-                    </p>
+                    <h4>Begin Grading</h4>
+                    <p>Start your first grading session by entering your name, selecting sample type, and following the guided workflow for capture, weight entry, and analysis.</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="installation__visual">
-              <div className="installation-diagram">
-                {/* Visual guide showing installation steps */}
-                <div className="device-phone">
-                  <div className="phone-screen">Install</div>
-                </div>
-                <div className="arrow">→</div>
-                <div className="device-tablet">
-                  <div className="tablet-screen">Launch</div>
-                </div>
-                <div className="arrow">→</div>
-                <div className="device-pi">
-                  <div className="pi-screen">QR Code</div>
-                </div>
-                <div className="arrow">→</div>
-                <div className="device-grader">
-                  <div className="grader-screen">Grade</div>
-                </div>
-              </div>
-            </div>
-          </div>
           </div>
         </section>
       </Reveal>

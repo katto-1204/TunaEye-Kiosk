@@ -9,7 +9,7 @@ export interface EvidenceRecord {
   capturedAt: number
   mimeType: string
   blob: Blob
-  syncState: 'pending' | 'synced'
+  syncState: 'pending' | 'syncing' | 'synced' | 'failed'
   remotePath?: string
 }
 
@@ -68,6 +68,17 @@ export async function markEvidenceSynced(id: string, remotePath: string): Promis
   const database = await openDatabase()
   try {
     await requestResult(database.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put({ ...evidence, syncState: 'synced', remotePath }))
+  } finally {
+    database.close()
+  }
+}
+
+export async function updateEvidenceSyncState(id: string, syncState: EvidenceRecord['syncState']): Promise<void> {
+  const evidence = await getCapturedEvidence(id)
+  if (!evidence) return
+  const database = await openDatabase()
+  try {
+    await requestResult(database.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put({ ...evidence, syncState }))
   } finally {
     database.close()
   }

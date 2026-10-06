@@ -3,20 +3,20 @@ import { currentSample, fishIdForSample, initialSession, reducer, sampleOrder, w
 import ProductLanding, { type MarketingPage } from './MarketingLanding'
 import { PaymentReceiptPrinter } from './components/ui/payment-receipt-printer'
 import { getCapturedEvidence, saveCapturedEvidence } from './evidenceStorage'
+import { fetchCloudRecords, syncPendingRecords } from './cloudSync'
+import { isSupabaseConfigured } from './supabase'
+import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
 
 const ADMIN_PIN = '1234'
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
 const capturedEvidence: Partial<Record<SampleType, string>> = {}
 const clearCapturedEvidence = () => { Object.entries(capturedEvidence).forEach(([sample, source]) => { if (source?.startsWith('blob:')) URL.revokeObjectURL(source); delete capturedEvidence[sample as SampleType] }) }
 const existingGraders = ['Maria Santos', 'Jose Dela Cruz', 'Ana Mae Lim']
-interface GradingRecord { id: string; sessionId: string; timestamp: number; time: string; grader: string; sample: string; fish: string; weight: string; grade: string; status: string; capturedImage?: string; capturedImageId?: string; result?: { status: string; originalGrade: string | null; originalConfidence: number | null; overrideGrade: string | null; overrideReason: string }; transaction?: { currency: string; amount: number | null; syncState: 'pending' | 'synced' } }
-const RECORDS_KEY = 'tunaeye-records'
-const loadRecords = (): GradingRecord[] => { try { return JSON.parse(localStorage.getItem(RECORDS_KEY) ?? '[]') as GradingRecord[] } catch { return [] } }
 interface AuditEntry { id: string; timestamp: number; actor: string; action: string; detail: string }
 const AUDIT_KEY = 'tunaeye-audit-log'
 const loadAudit = (): AuditEntry[] => { try { return JSON.parse(localStorage.getItem(AUDIT_KEY) ?? '[]') as AuditEntry[] } catch { return [] } }
 const audit = (actor: string, action: string, detail: string) => { const entry = { id: crypto.randomUUID(), timestamp: Date.now(), actor, action, detail }; localStorage.setItem(AUDIT_KEY, JSON.stringify([entry, ...loadAudit()].slice(0, 500))) }
-const getConnectionSettings = () => ({ rpiUrl: localStorage.getItem('tunaeye-rpi-url') ?? 'http://tunaeye-pi.local:8000', modelName: localStorage.getItem('tunaeye-model-name') ?? 'Not configured', supabaseUrl: localStorage.getItem('tunaeye-supabase-url') ?? '', convexUrl: localStorage.getItem('tunaeye-convex-url') ?? '' })
+const getConnectionSettings = () => ({ rpiUrl: localStorage.getItem('tunaeye-rpi-url') ?? 'http://tunaeye-pi.local:8000', modelName: localStorage.getItem('tunaeye-model-name') ?? 'Not configured' })
 const allScreens: Screen[] = ['welcome', 'select-role', 'admin', 'admin-dashboard', 'grader', 'grader-dashboard', 'sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print', 'complete']
 const stepForScreen: Partial<Record<Screen, number>> = { camera: 0, review: 0, analysis: 1, 'individual-result': 2, overview: 2, print: 2 }
 const pathForScreen = (screen: Screen) => screen === 'welcome' ? '/' : screen === 'select-role' ? '/select-role' : screen === 'admin' || screen === 'admin-dashboard' ? '/admin' : `/kiosk/${screen}`
@@ -190,16 +190,18 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
   const [connections, setConnections] = useState(getConnectionSettings)
   const [rpiStatus, setRpiStatus] = useState<'Not checked' | 'Checking' | 'Connected' | 'Unavailable'>('Not checked')
   const [auditEntries, setAuditEntries] = useState(loadAudit)
-  const [records, setRecords] = useState<GradingRecord[]>(loadRecords)
+  const [records, setRecords] = useState<GradingRecord[]>(() => loadRecords().filter(record => record.transaction?.syncState === 'synced'))
   const [lastSync, setLastSync] = useState(() => localStorage.getItem('tunaeye-last-sync') ?? 'Not synced yet')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     const refresh = () => {
-      setRecords(loadRecords())
+      setRecords(loadRecords().filter(record => record.transaction?.syncState === 'synced'))
       setAuditEntries(loadAudit())
     }
     refresh()
+    if (isSupabaseConfigured() && navigator.onLine) void fetchCloudRecords().then(setRecords).catch(() => undefined)
     window.addEventListener('storage', refresh)
     window.addEventListener('tunaeye-records-updated', refresh)
     return () => {
@@ -222,18 +224,34 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
     }
   }
   const saveGraders = (next: string[]) => { setGraders(next); localStorage.setItem('tunaeye-graders', JSON.stringify(next)) }
-  const syncRecords = () => { const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); setRecords(loadRecords()); setAuditEntries(loadAudit()); setLastSync(syncedAt); localStorage.setItem('tunaeye-last-sync', syncedAt); audit('Admin', 'Manual sync', 'Refreshed station records and audit events') }
+  const syncRecords = async () => {
+    if (syncing) return
+    setSyncing(true)
+    try {
+      const summary = await syncPendingRecords()
+      setRecords(await fetchCloudRecords())
+      const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      setLastSync(syncedAt)
+      localStorage.setItem('tunaeye-last-sync', syncedAt)
+      audit('Admin', 'Manual sync', `${summary.synced} records synchronized; ${summary.failed} failed`)
+      onNotice?.({ title: summary.failed ? 'Sync completed with errors' : 'Sync complete', message: `${summary.synced} records synchronized. ${summary.failed} remain available for retry.`, icon: 'refresh' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Synchronization failed.'
+      audit('Admin', 'Manual sync failed', message)
+      onNotice?.({ title: 'Sync unavailable', message, icon: 'help' })
+    } finally { setSyncing(false) }
+  }
   const testRpi = async () => { setRpiStatus('Checking'); try { const response = await fetch(`${connections.rpiUrl.replace(/\/$/, '')}/health`, { signal: AbortSignal.timeout(5000) }); if (!response.ok) throw new Error(); const health = await response.json() as { model?: string }; if (health.model) setConnections(current => ({ ...current, modelName: health.model! })); setRpiStatus('Connected'); audit('Admin', 'RPi connection test', `Connected to ${connections.rpiUrl}`) } catch { setRpiStatus('Unavailable'); audit('Admin', 'RPi connection test', `Unable to reach ${connections.rpiUrl}`) } }
   const runDiagnostics = async () => { setDiagnostic('Testing camera…'); try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); stream.getTracks().forEach(track => track.stop()); setDiagnostic('All systems operational') } catch { setDiagnostic('Camera permission blocked') } }
   const heading = section === 'Overview' ? 'Good day, Admin.' : section
-  return <div className={`admin-workspace ${sidebarCollapsed ? 'admin-workspace--collapsed' : ''}`}><aside className="admin-sidebar"><button className="admin-sidebar__brand-link" onClick={() => { window.location.href = '/' }} aria-label="Go to TunaEye home"><BrandMark compact /></button><button className="admin-sidebar__toggle" onClick={() => setSidebarCollapsed(value => !value)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}><Icon name={sidebarCollapsed ? 'arrow' : 'back'} size={20} /></button><nav>{nav.map(item => <button key={item.label} className={section === item.label ? 'is-active' : ''} onClick={() => setSection(item.label)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav><div className="admin-sidebar__foot"><span><i className="status-dot" />System online</span><button onClick={() => { audit('Admin', 'Logout', 'Administrator ended the session'); onExit() }}><Icon name="back" size={18} /><span>Logout</span></button></div></aside><section className="admin-content"><header className="admin-content__header"><div><span className="eyebrow">{stationName} · Admin console</span><h1>{heading}</h1><p>{section === 'Overview' ? `Live station overview · Last manual sync: ${lastSync}` : `Manage ${section.toLowerCase()} for this station.`}</p></div><div className="admin-header-actions"><Button variant="secondary" onClick={syncRecords} icon="refresh">Sync now</Button><Button onClick={onStartGrading} icon="camera">Start grading</Button><div className="admin-avatar">AD</div></div></header>
+  return <div className={`admin-workspace ${sidebarCollapsed ? 'admin-workspace--collapsed' : ''}`}><aside className="admin-sidebar"><button className="admin-sidebar__brand-link" onClick={() => { window.location.href = '/' }} aria-label="Go to TunaEye home"><BrandMark compact /></button><button className="admin-sidebar__toggle" onClick={() => setSidebarCollapsed(value => !value)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}><Icon name={sidebarCollapsed ? 'arrow' : 'back'} size={20} /></button><nav>{nav.map(item => <button key={item.label} className={section === item.label ? 'is-active' : ''} onClick={() => setSection(item.label)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav><div className="admin-sidebar__foot"><span><i className="status-dot" />{navigator.onLine ? 'System online' : 'Offline'}</span><button onClick={() => { audit('Admin', 'Logout', 'Administrator ended the session'); onExit() }}><Icon name="back" size={18} /><span>Logout</span></button></div></aside><section className="admin-content"><header className="admin-content__header"><div><span className="eyebrow">{stationName} · Admin console</span><h1>{heading}</h1><p>{section === 'Overview' ? `Cloud-synchronized overview · Last sync: ${lastSync}` : `Manage ${section.toLowerCase()} for this station.`}</p></div><div className="admin-header-actions"><Button variant="secondary" onClick={() => void syncRecords()} icon="refresh" disabled={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button><Button onClick={onStartGrading} icon="camera">Start grading</Button><div className="admin-avatar">AD</div></div></header>
     {section === 'Overview' && <><div className="admin-metrics"><article><span><Icon name="database" size={22} /></span><small>Sessions recorded</small><strong>{sessionCount}</strong><em>Synced on this station</em></article><article><span><Icon name="scale" size={22} /></span><small>Total fish weight</small><strong>{totalWeight.toFixed(1)} kg</strong><em>Across {records.length} samples</em></article><article><span><Icon name="spark" size={22} /></span><small>Grade A rate</small><strong>{gradeARate}%</strong><em>{records.filter(record => record.grade === 'A').length} Grade A samples</em></article><article><span><Icon name="users" size={22} /></span><small>Active graders</small><strong>{graders.length}</strong><em>All profiles available</em></article></div><div className="admin-overview-grid"><article className="admin-chart"><div className="admin-section-title"><div><h2>Weekly grading volume</h2><p>Completed samples during the last seven days</p></div><b>{records.length} total</b></div><AdminTrendGraph data={weeklyData}/></article><article className="admin-breakdown"><h2>Grade breakdown</h2><div className="grade-ring"><strong>{records.length}<small>samples</small></strong></div><div className="grade-legend"><span><i className="grade-a" />Grade A <b>{gradeARate}%</b></span><span><i className="grade-b" />Grade B <b>{records.length ? Math.round(records.filter(record => record.grade === 'B').length / records.length * 100) : 0}%</b></span><span><i className="grade-c" />Grade C <b>{records.length ? Math.round(records.filter(record => record.grade === 'C').length / records.length * 100) : 0}%</b></span></div></article></div><AdminRecords records={records.slice(0, 3)} compact onViewAll={() => setSection('Records')} /></>}
     {section === 'Records' && <><div className="admin-toolbar"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search record, grader, sample, or grade…" /><Button variant="secondary" icon="printer" onClick={() => window.print()}>Export records</Button></div><AdminRecords records={visibleRecords} /></>}
     {section === 'Price schedule' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Approved buying prices</h2><p>Set the current rate per kilogram for each tuna grade.</p></div><span className="status-label status-label--valid">Active schedule</span></div><div className="price-editor">{(['A','B','C'] as Grade[]).map(grade => <label key={grade}><span>Grade {grade}<small>{grade === 'A' ? 'Premium quality' : grade === 'B' ? 'Standard quality' : 'Processing quality'}</small></span><div><b>₱</b><input inputMode="decimal" value={prices[grade]} onChange={event => setPrices({ ...prices, [grade]: event.target.value.replace(/[^0-9.]/g, '') })} /><small>per kg</small></div></label>)}</div><div className="admin-card-actions"><span>Last updated today · Values are stored on this device.</span><Button onClick={savePrices} icon="check">Save price schedule</Button></div></div>}
     {section === 'Expert graders' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Grader profiles</h2><p>Control who can start expert grading sessions.</p></div><b>{graders.length} active</b></div><div className="grader-admin-list">{graders.map((name,index) => <div key={name}><span className="admin-avatar">{name.split(' ').map(part => part[0]).slice(0,2).join('')}</span><span><strong>{name}</strong><small>{index === 0 ? 'Last active 8 minutes ago' : 'Available at this station'}</small></span><span className="status-label status-label--valid">Active</span><button aria-label={`Remove ${name}`} onClick={() => saveGraders(graders.filter(item => item !== name))}>Remove</button></div>)}</div><div className="admin-add-grader"><input value={newGrader} onChange={event => setNewGrader(event.target.value)} placeholder="Enter full name" /><Button icon="users" disabled={!newGrader.trim()} onClick={() => { const name = newGrader.trim(); if (name && !graders.includes(name)) saveGraders([...graders, name]); setNewGrader('') }}>Add grader</Button></div></div>}
     {section === 'Devices' && <AdminDevices rpiUrl={connections.rpiUrl} modelName={connections.modelName} audit={audit} onNotice={onNotice} />}
     {section === 'Audit logs' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Audit logs</h2><p>Navigation, grading, overrides, connections, sync, and administrator activity.</p></div><b>{auditEntries.length} events</b></div><div className="audit-list">{auditEntries.length ? auditEntries.slice(0, 12).map(entry => <article key={entry.id}><span><Icon name="shield" size={18} /></span><div><strong>{entry.action}</strong><small>{entry.actor} · {entry.detail}</small></div><time>{new Date(entry.timestamp).toLocaleString()}</time></article>) : <p>No audit events recorded yet.</p>}</div></div>}
-    {section === 'Settings' && <div className="admin-page-card settings-form"><div><h2>Station and connection settings</h2><p>Configure the kiosk, edge inference service, and cloud synchronization targets.</p></div><div className="connection-settings"><label>Station name<input value={stationName} onChange={event => setStationName(event.target.value)} /></label><label>Raspberry Pi API URL<input value={connections.rpiUrl} onChange={event => setConnections({ ...connections, rpiUrl: event.target.value })} /></label><label>AI model identifier<input value={connections.modelName} onChange={event => setConnections({ ...connections, modelName: event.target.value })} /></label><label>Supabase project URL<input value={connections.supabaseUrl} onChange={event => setConnections({ ...connections, supabaseUrl: event.target.value })} placeholder="https://project.supabase.co" /></label><label>Convex deployment URL<input value={connections.convexUrl} onChange={event => setConnections({ ...connections, convexUrl: event.target.value })} placeholder="https://deployment.convex.cloud" /></label></div><div className="connection-status"><span className={`status-label ${rpiStatus === 'Connected' ? 'status-label--valid' : rpiStatus === 'Unavailable' ? 'status-label--invalid' : 'status-label--uncertain'}`}>Raspberry Pi: {rpiStatus}</span><span>Active model: <strong>{connections.modelName}</strong></span><Button variant="secondary" icon="refresh" onClick={testRpi} disabled={rpiStatus === 'Checking'}>{rpiStatus === 'Checking' ? 'Checking…' : 'Test RPi connection'}</Button></div><label>Maximum accepted weight<input value="200 kg" disabled /></label><label className="settings-toggle"><span><strong>Offline mode</strong><small>Keep the PWA available without internet</small></span><input type="checkbox" defaultChecked /></label><label className="settings-toggle"><span><strong>Automatic printing</strong><small>Open print dialog after each completed session</small></span><input type="checkbox" /></label><div className="admin-card-actions"><span>Secrets are not stored here; configure credentials through the deployment environment.</span><Button icon="check" onClick={() => { localStorage.setItem('tunaeye-station', stationName); localStorage.setItem('tunaeye-rpi-url', connections.rpiUrl); localStorage.setItem('tunaeye-model-name', connections.modelName); localStorage.setItem('tunaeye-supabase-url', connections.supabaseUrl); localStorage.setItem('tunaeye-convex-url', connections.convexUrl); audit('Admin', 'Settings updated', 'Station and connection settings saved'); if (onNotice) { onNotice({ title: 'Settings Saved', message: 'Station identity, Raspberry Pi gateway endpoint, and connection settings were saved.', icon: 'check' }) } else { window.alert('Station settings saved.') } }}>Save settings</Button></div></div>}
+    {section === 'Settings' && <div className="admin-page-card settings-form"><div><h2>Station and connection settings</h2><p>Configure the kiosk and local Raspberry Pi. Supabase credentials come only from deployment environment variables.</p></div><div className="connection-settings"><label>Station name<input value={stationName} onChange={event => setStationName(event.target.value)} /></label><label>Raspberry Pi API URL<input value={connections.rpiUrl} onChange={event => setConnections({ ...connections, rpiUrl: event.target.value })} /></label><label>AI model identifier<input value={connections.modelName} onChange={event => setConnections({ ...connections, modelName: event.target.value })} /></label><label>Supabase cloud<input value={isSupabaseConfigured() ? 'Configured from environment' : 'Not configured'} disabled /></label></div><div className="connection-status"><span className={`status-label ${rpiStatus === 'Connected' ? 'status-label--valid' : rpiStatus === 'Unavailable' ? 'status-label--invalid' : 'status-label--uncertain'}`}>Raspberry Pi: {rpiStatus}</span><span>Active model: <strong>{connections.modelName}</strong></span><Button variant="secondary" icon="refresh" onClick={testRpi} disabled={rpiStatus === 'Checking'}>{rpiStatus === 'Checking' ? 'Checking…' : 'Test RPi connection'}</Button></div><label>Maximum accepted weight<input value="200 kg" disabled /></label><label className="settings-toggle"><span><strong>Offline mode</strong><small>Keep the PWA available without internet</small></span><input type="checkbox" defaultChecked /></label><label className="settings-toggle"><span><strong>Automatic printing</strong><small>Open print dialog after each completed session</small></span><input type="checkbox" /></label><div className="admin-card-actions"><span>Use only a publishable/anon key in Vite. Never expose a service-role key.</span><Button icon="check" onClick={() => { localStorage.setItem('tunaeye-station', stationName); localStorage.setItem('tunaeye-rpi-url', connections.rpiUrl); localStorage.setItem('tunaeye-model-name', connections.modelName); audit('Admin', 'Settings updated', 'Station and local edge settings saved'); onNotice?.({ title: 'Settings Saved', message: 'Station identity and Raspberry Pi settings were saved.', icon: 'check' }) }}>Save settings</Button></div></div>}
   </section></div>
 }
 function AdminRecords({ records, compact = false, onViewAll }: { records: GradingRecord[]; compact?: boolean; onViewAll?: () => void }) {
@@ -525,7 +543,7 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
   )
 }
 
-function GraderDashboard({ name, onStart, onLogout }: { name: string; onStart: () => void; onLogout: () => void }) {
+function GraderDashboard({ name, onStart, onLogout, onNotice }: { name: string; onStart: () => void; onLogout: () => void; onNotice: (notice: NoticeModalData) => void }) {
   const graderName = (name && name.trim()) || localStorage.getItem('tunaeye-grader-name') || 'Maria Santos'
   const getRelevantRecords = () => {
     const all = loadRecords()
@@ -534,6 +552,7 @@ function GraderDashboard({ name, onStart, onLogout }: { name: string; onStart: (
   }
   const [records, setRecords] = useState(getRelevantRecords)
   const [lastSync, setLastSync] = useState(() => localStorage.getItem('tunaeye-last-sync') ?? 'Just now')
+  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     const refresh = () => {
@@ -552,12 +571,22 @@ function GraderDashboard({ name, onStart, onLogout }: { name: string; onStart: (
   const todayRecords = records.filter(record => new Date(record.timestamp).toDateString() === today)
   const sessions = new Set(todayRecords.map(record => record.sessionId)).size
   const recentSessions = new Set(records.filter(record => Date.now() - record.timestamp <= 30 * 60 * 1000).map(record => record.sessionId)).size
-  const sync = () => {
-    const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    setRecords(getRelevantRecords())
-    setLastSync(syncedAt)
-    localStorage.setItem('tunaeye-last-sync', syncedAt)
-    audit(graderName, 'Manual sync', 'Refreshed grader dashboard records')
+  const sync = async () => {
+    if (syncing) return
+    setSyncing(true)
+    try {
+      const summary = await syncPendingRecords()
+      const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      setRecords(getRelevantRecords())
+      setLastSync(syncedAt)
+      localStorage.setItem('tunaeye-last-sync', syncedAt)
+      audit(graderName, 'Manual sync', `${summary.synced} records synchronized; ${summary.failed} failed`)
+      onNotice({ title: summary.failed ? 'Sync completed with errors' : 'Sync complete', message: `${summary.synced} records synchronized. ${summary.failed} remain available for retry.`, icon: 'refresh' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Synchronization failed.'
+      audit(graderName, 'Manual sync failed', message)
+      onNotice({ title: 'Sync unavailable', message, icon: 'help' })
+    } finally { setSyncing(false) }
   }
   return (
     <div className="screen-stack grader-dashboard">
@@ -573,7 +602,7 @@ function GraderDashboard({ name, onStart, onLogout }: { name: string; onStart: (
             <div className="grader-hello__actions">
               <Button className="btn--hero" onClick={onStart} icon="arrow">Start grading</Button>
               <div className="grader-hello__subactions">
-                <Button variant="secondary" onClick={sync} icon="refresh">Sync now</Button>
+                <Button variant="secondary" onClick={() => void sync()} icon="refresh" disabled={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button>
                 <Button variant="ghost" onClick={() => { audit(graderName, 'Logout', 'Grader ended session'); onLogout() }} icon="back">Logout</Button>
               </div>
             </div>
@@ -740,7 +769,7 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
                   onChange={event => onWeight(id, event.target.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, '').slice(0, 6))}
                   placeholder="0.0"
                   readOnly
-                  style={{ width: `${Math.max(2, (weights[id] ?? '').length)}ch` }}
+                  style={{ width: `${Math.max(3, (weights[id] ?? '').length)}ch` }}
                 />
                 <b>kg</b>
               </div>
@@ -1100,15 +1129,20 @@ function App() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(() => window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem('tunaeye-installed') === 'true')
   const [currentPathScreen] = useState<Screen>(() => screenForPath(window.location.pathname))
-  const gradingSessionRef = useRef({ id: `TE-${Date.now()}`, timestamp: Date.now() })
+  const gradingSessionRef = useRef({ id: crypto.randomUUID(), timestamp: Date.now() })
   useEffect(() => { const timeout = window.setTimeout(() => setBooting(false), 2600); return () => window.clearTimeout(timeout) }, [])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
   useEffect(() => { if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen])
+  useEffect(() => {
+    const syncOnReconnect = () => { if (isSupabaseConfigured()) void syncPendingRecords().catch(() => undefined) }
+    window.addEventListener('online', syncOnReconnect)
+    return () => window.removeEventListener('online', syncOnReconnect)
+  }, [])
   const go = useCallback((screen: Screen) => { dispatch({ type: 'navigate', screen }); window.history.pushState({}, '', pathForScreen(screen)) }, [])
-  const goHome = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
+  const goHome = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
   const graderHome = useCallback(() => { clearCapturedEvidence(); dispatch({ type: 'navigate', screen: 'grader-dashboard' }); window.history.pushState({}, '', pathForScreen('grader-dashboard')) }, [])
   const graderLogout = useCallback(() => { clearCapturedEvidence(); localStorage.removeItem('tunaeye-grader-name'); dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
-  const gradeAnother = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'gradeAnother' }); window.history.pushState({}, '', pathForScreen('sample')) }, [])
+  const gradeAnother = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'gradeAnother' }); window.history.pushState({}, '', pathForScreen('sample')) }, [])
   const back = () => { const previous: Partial<Record<Screen, Screen>> = { 'select-role': 'welcome', admin: 'select-role', 'admin-dashboard': 'select-role', grader: 'select-role', 'grader-dashboard': 'grader', sample: 'grader-dashboard', association: 'sample', tutorial: selected.length === 1 ? 'sample' : 'association', weight: 'tutorial', camera: 'weight', review: 'camera', analysis: 'review', 'individual-result': 'review', overview: 'individual-result', print: 'overview' }; const target = previous[session.screen]; target ? go(target) : goHome() }
   const selected = session.selectedSamples.length ? session.selectedSamples : ['Sashibo core'] as SampleType[]
   const sample = currentSample(session)
@@ -1131,8 +1165,8 @@ function App() {
   }
   useEffect(() => { if (session.screen !== 'analysis') return; const timeout = window.setTimeout(() => dispatch({ type: 'finishAnalysis', outcome: session.demoOutcome }), 1700); return () => window.clearTimeout(timeout) }, [session.screen, session.demoOutcome])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? '—'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); localStorage.setItem(RECORDS_KEY, JSON.stringify([...completed, ...previous].slice(0, 200))); window.dispatchEvent(new Event('tunaeye-records-updated')); }, [session.results, session.graderName])
-  const openRole = (role: Role) => { gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
+  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
+  const openRole = (role: Role) => { gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {
     if (isPrinting) return
@@ -1178,7 +1212,7 @@ function App() {
       case 'admin': return <AdminPinScreen value={session.adminPin} error={session.adminError} onChange={value => dispatch({ type: 'setAdminPin', value })} onContinue={() => { if (session.adminPin === ADMIN_PIN) { audit('Admin', 'Login', 'Administrator authenticated at the kiosk'); dispatch({ type: 'adminAuthenticated' }) } else { audit('Unknown', 'Failed admin login', 'Incorrect station PIN'); dispatch({ type: 'adminError', message: 'Incorrect station PIN.' }) } }} onBack={back} />
       case 'admin-dashboard': return <AdminDashboard onExit={goHome} onNotice={setNoticeModal} onStartGrading={() => { dispatch({ type: 'setRole', role: 'expert' }); go(session.graderName ? 'grader-dashboard' : 'grader') }} />
       case 'grader': return <GraderEntryScreen name={session.graderName} remember={session.rememberName} onName={value => dispatch({ type: 'setGraderName', value })} onRemember={value => dispatch({ type: 'setRememberName', value })} onContinue={() => go('sample')} onBack={back} onLegal={setLegalKind} />
-      case 'grader-dashboard': return <GraderDashboard name={session.graderName} onStart={gradeAnother} onLogout={goHome} />
+      case 'grader-dashboard': return <GraderDashboard name={session.graderName} onStart={gradeAnother} onLogout={goHome} onNotice={setNoticeModal} />
       case 'sample': return <SampleScreen selected={selected} onSelect={samples => dispatch({ type: 'setSamples', samples })} onContinue={() => { if (selected.length === 1) { dispatch({ type: 'setSameFish', value: 'same' }); go(canSkipTutorial ? 'weight' : 'tutorial') } else go('association') }} onBack={back} />
       case 'association': return <AssociationScreen samples={selected} sameFish={session.sameFish} onSameFish={value => dispatch({ type: 'setSameFish', value })} onContinue={() => { if (selected.length === 1) dispatch({ type: 'setSameFish', value: 'same' }); go(canSkipTutorial ? 'weight' : 'tutorial') }} onBack={back} />
       case 'tutorial': return <TutorialScreen samples={selected} step={session.tutorialStep} onStep={step => dispatch({ type: 'setTutorialStep', step })} onContinue={() => session.tutorialStep < 2 ? dispatch({ type: 'setTutorialStep', step: session.tutorialStep + 1 }) : go('weight')} onBack={back} />

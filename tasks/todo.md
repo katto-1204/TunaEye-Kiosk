@@ -1,15 +1,42 @@
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
+## Shared Supabase Connectivity — 2026-10-07
+
+- [x] Audit existing local persistence, sync controls, admin reads, auth, and schema files.
+- [x] Add one typed Supabase client and canonical grading record contract.
+- [x] Add private Storage upload, authenticated upsert, verification, and retry states.
+- [x] Wire manual sync and connectivity-based reconnect sync without Realtime.
+- [x] Add SQL schema, indexes, Auth profile trigger, RLS, and Storage policies.
+- [x] Document the exact TunaEyePhone integration contract.
+- [x] Validate typecheck, offline behavior, mocked cloud sync, browser suite, and build.
+
+### Review
+
+- Production build/typecheck passed.
+- Mocked Supabase browser test passed: Auth, Storage upload, idempotent upsert, read-back verification, reconnect sync, and Admin cloud retrieval.
+- Full default Playwright run passed: 15 tests, with the credential-gated Supabase test skipped as designed.
+- No lint script exists in `package.json`; no live Supabase project credentials were available, so the migration was not applied remotely.
+
+## Weight Placeholder Clipping — 2026-10-07
+
+- [x] Match the empty input width to the three-character `0.0` placeholder.
+- [x] Verify the weight display at tablet size.
+
+### Review
+
+- Empty weight inputs now reserve enough width for the full `0.0` placeholder.
+- Focused Playwright weight test and production build passed.
+
 ## Combined Mobile Download Section — 2026-10-07
 
 - [x] Merge the phone experience and installation guide into one section.
-- [x] Keep the download CTA anchored to the setup guide.
+- [x] Replace the phone experience copy with the setup guide.
 - [x] Verify the combined desktop and mobile layout.
 
 ### Review
 
-- Phone experience and setup guide now share one continuous blue download section with a subtle divider.
-- Download CTA scrolls to the setup guide; desktop and 390px checks pass without overflow.
+- Phone mockup, QR area, and setup guide now share one two-column section with no duplicate lower block.
+- The superseded experience copy, diagram, divider, and download CTA were removed.
 - Focused Playwright landing test and production build passed.
 
 ## Landing Demo CTA and Footer — 2026-10-07

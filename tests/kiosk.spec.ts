@@ -32,15 +32,13 @@ test('uninstalled visitors see the public landing after loading and can scroll',
   await expect(page.getByRole('dialog', { name: 'TunaEye demo video' })).toBeVisible()
   await page.getByRole('button', { name: 'Close demo video' }).click()
   await expect(page.getByRole('dialog', { name: 'TunaEye demo video' })).toHaveCount(0)
-  await page.getByRole('button', { name: /Download App/ }).click()
-  await expect(page.locator('#installation-guide')).toBeInViewport()
+  await expect(page.getByRole('heading', { name: /Install and set up your TunaEye/ })).toBeVisible()
   const landingLayout = await page.evaluate(() => ({
     demoColumns: getComputedStyle(document.querySelector('.site-demo-video')!).gridTemplateColumns.split(' ').length,
     mobileColumns: getComputedStyle(document.querySelector('.mobile-experience-grid')!).gridTemplateColumns.split(' ').length,
-    installationColumns: getComputedStyle(document.querySelector('.installation-grid')!).gridTemplateColumns.split(' ').length,
   }))
-  expect(landingLayout).toEqual({ demoColumns: 2, mobileColumns: 2, installationColumns: 2 })
-  for (const [name, selector] of [['demo', '.site-demo-video'], ['mobile', '.site-mobile-experience'], ['installation', '.site-installation']] as const) {
+  expect(landingLayout).toEqual({ demoColumns: 2, mobileColumns: 2 })
+  for (const [name, selector] of [['demo', '.site-demo-video'], ['mobile', '.site-mobile-experience']] as const) {
     const section = page.locator(selector)
     await section.scrollIntoViewIfNeeded()
     await expect(section).toBeVisible()
@@ -114,6 +112,7 @@ test('admin dashboard scrolls, graph interacts, and records paginate', async ({ 
       grader: index % 2 ? 'Maria Santos' : 'Jose Dela Cruz',
       sample: index % 2 ? 'Sashibo core' : 'Tail cut',
       fish: 'Fish 1', weight: `${20 + index} kg`, grade: index % 3 === 0 ? 'A' : 'B', status: 'Model result',
+      transaction: { currency: 'PHP', amount: null, syncState: 'synced' },
     }))))
   })
   await page.goto('/')
@@ -218,7 +217,7 @@ test('camera help triggers custom notice modal instead of alert', async ({ page 
   await expect(modal).not.toBeVisible()
 })
 
-test('completed grading session immediately syncs into grader and admin dashboard', async ({ page }) => {
+test('completed grading session remains local and pending until cloud sync', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('tunaeye-installed', 'true')
     localStorage.setItem('tunaeye-grader-name', 'Maria Santos')
@@ -281,7 +280,13 @@ test('completed grading session immediately syncs into grader and admin dashboar
   await expect(records.first().locator('img')).toBeVisible()
   const savedRecords = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]'))
   expect(savedRecords[0].capturedImageId).toBeTruthy()
+  expect(savedRecords[0].transaction.syncState).toBe('pending')
   expect(JSON.stringify(savedRecords)).not.toContain('data:image')
+
+  await page.getByRole('button', { name: 'Sync now' }).click()
+  await expect(page.getByRole('heading', { name: 'Sync unavailable' })).toBeVisible()
+  const afterFailedSync = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]'))
+  expect(afterFailedSync[0].transaction.syncState).toBe('pending')
 })
 
 test('58mm thermal printer receipt preview and print layout', async ({ page }) => {
