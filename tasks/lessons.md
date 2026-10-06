@@ -1,5 +1,10 @@
 # Lessons
 
+- Store image blobs in IndexedDB, not `localStorage`; persist one stable evidence ID in record metadata and avoid competing effects that overwrite the same record.
+- New landing sections must reuse the established section grid, spacing, and responsive rhythm; validate a full-page desktop screenshot before calling the page fixed.
+- When adding JSX to a large page, confirm every rendered component is imported or defined; a placeholder can crash the entire route at render time.
+- For kiosk screens, size the content around persistent bottom actions; `height: 100%` on a panel can clip the action row when its parent also contains a footer.
+
 - Validate every tablet layout at short 16:10 browser heights; physical screen size alone is not a CSS viewport.
 - Save grading records when inference completes, not only on the final printing screen.
 - Separate public-web entry from installed-kiosk entry instead of overloading one landing screen.

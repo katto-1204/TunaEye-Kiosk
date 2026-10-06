@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type Rea
 import { currentSample, fishIdForSample, initialSession, reducer, sampleOrder, weightForSample, type DemoOutcome, type Grade, type Role, type SampleResult, type SampleType, type Screen } from './kioskState'
 import ProductLanding, { type MarketingPage } from './MarketingLanding'
 import { PaymentReceiptPrinter } from './components/ui/payment-receipt-printer'
+import { getCapturedEvidence, saveCapturedEvidence } from './evidenceStorage'
 
 const ADMIN_PIN = '1234'
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
 const capturedEvidence: Partial<Record<SampleType, string>> = {}
+const clearCapturedEvidence = () => { Object.entries(capturedEvidence).forEach(([sample, source]) => { if (source?.startsWith('blob:')) URL.revokeObjectURL(source); delete capturedEvidence[sample as SampleType] }) }
 const existingGraders = ['Maria Santos', 'Jose Dela Cruz', 'Ana Mae Lim']
-interface GradingRecord { id: string; sessionId: string; timestamp: number; time: string; grader: string; sample: string; fish: string; weight: string; grade: string; status: string; capturedImage?: string; result?: { status: string; originalGrade: string | null; originalConfidence: number | null; overrideGrade: string | null; overrideReason: string }; transaction?: { currency: string; amount: number | null; syncState: 'pending' | 'synced' } }
+interface GradingRecord { id: string; sessionId: string; timestamp: number; time: string; grader: string; sample: string; fish: string; weight: string; grade: string; status: string; capturedImage?: string; capturedImageId?: string; result?: { status: string; originalGrade: string | null; originalConfidence: number | null; overrideGrade: string | null; overrideReason: string }; transaction?: { currency: string; amount: number | null; syncState: 'pending' | 'synced' } }
 const RECORDS_KEY = 'tunaeye-records'
 const loadRecords = (): GradingRecord[] => { try { return JSON.parse(localStorage.getItem(RECORDS_KEY) ?? '[]') as GradingRecord[] } catch { return [] } }
 interface AuditEntry { id: string; timestamp: number; actor: string; action: string; detail: string }
@@ -54,6 +56,20 @@ function TopBar({ screen, onHome, onLanding }: { screen: Screen; onHome: () => v
 function BottomBar({ onBack, onHelp, primary, primaryLabel, primaryIcon = 'arrow', primaryDisabled = false, secondaryLabel, onSecondary }: { onBack?: () => void; onHelp?: () => void; primary?: () => void; primaryLabel?: string; primaryIcon?: IconName; primaryDisabled?: boolean; secondaryLabel?: string; onSecondary?: () => void }) { return <footer className="bottom-bar"><div className="bottom-bar__left">{onBack && <Button variant="ghost" icon="back" onClick={onBack}>Back</Button>}{onHelp && <Button variant="ghost" icon="help" onClick={onHelp}>Help</Button>}</div><div className="bottom-bar__right">{secondaryLabel && onSecondary && <Button variant="secondary" onClick={onSecondary}>{secondaryLabel}</Button>}{primary && primaryLabel && <Button onClick={primary} icon={primaryIcon} disabled={primaryDisabled}>{primaryLabel}</Button>}</div></footer> }
 function SampleArt({ sample, className = '' }: { sample: SampleType; className?: string }) { return <img className={`sample-art ${className}`} src={sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png'} alt={`${sample} reference`} /> }
 function EvidenceFrame({ sample = 'Sashibo core', mode = 'camera', frozen = false }: { sample?: SampleType; mode?: 'camera' | 'sample' | 'tray'; frozen?: boolean }) { const image = mode === 'sample' ? capturedEvidence[sample] : undefined; return <div className={`evidence-frame evidence-frame--${mode} ${frozen ? 'is-frozen' : ''}`}><div className="evidence-frame__topline"><span>{mode === 'camera' ? 'Live preview' : mode === 'sample' ? 'Captured camera image' : 'Controlled chamber'}</span><span className="evidence-frame__signal"><span className="status-dot" />{mode === 'camera' ? 'Ready' : 'Saved'}</span></div>{image ? <img className="evidence-frame__capture" src={image} alt={`Captured ${sample}`} /> : <div className="chamber"><div className="chamber__rail chamber__rail--left" /><div className="chamber__rail chamber__rail--right" /><div className="tuna-silhouette"><span className="tuna-silhouette__tail" /><span className="tuna-silhouette__body" /><span className="tuna-silhouette__eye" /></div><div className="target-corners"><i /><i /><i /><i /></div>{mode === 'camera' && <div className="camera-crosshair"><span /></div>}</div>}<div className="evidence-frame__bottomline"><span>{frozen ? `${sample} image held for review` : 'Align within the blue guide'}</span><span className="evidence-frame__time">Top-down view</span></div></div> }
+function StoredEvidenceImage({ evidenceId, legacySource, className, alt }: { evidenceId?: string; legacySource?: string; className?: string; alt: string }) {
+  const [source, setSource] = useState(legacySource)
+  useEffect(() => {
+    if (!evidenceId) return
+    let objectUrl = ''
+    void getCapturedEvidence(evidenceId).then(evidence => {
+      if (!evidence) return
+      objectUrl = URL.createObjectURL(evidence.blob)
+      setSource(objectUrl)
+    })
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl) }
+  }, [evidenceId])
+  return source ? <img className={className} src={source} alt={alt} /> : null
+}
 function TutorialModal({ onClose, title = 'Guided tutorial' }: { onClose: () => void; title?: string }) { return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}><div className="modal-card"><div className="modal-card__header"><div><span className="eyebrow">{title}</span><h2>Three quick checks before capture</h2></div><button className="icon-button" aria-label="Close tutorial" onClick={onClose}>×</button></div><div className="tutorial-list"><div><span>01</span><div><strong>Pull the tray out</strong><p>Use the chamber handle and keep the sample surface clean.</p></div></div><div><span>02</span><div><strong>Place the tuna flat</strong><p>Keep the selected sample centered in the blue guide.</p></div></div><div><span>03</span><div><strong>Check the view</strong><p>When the image is clear, press Capture once.</p></div></div></div><Button onClick={onClose} icon="check">Got it</Button></div></div> }
 function LegalModal({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () => void }) { const privacy = kind === 'privacy'; return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={privacy ? 'Privacy policy' : 'Terms and conditions'}><div className="modal-card legal-modal"><div className="modal-card__header"><div><span className="eyebrow">TunaEye</span><h2>{privacy ? 'Privacy policy' : 'Terms and conditions'}</h2></div><button className="icon-button" aria-label="Close" onClick={onClose}>×</button></div><p>{privacy ? 'TunaEye stores grading evidence, grader identity, device events, and audit records for operational traceability. Authorized administrators control retention and cloud synchronization through the configured services.' : 'TunaEye supports trained tuna graders and does not replace required regulatory, safety, or purchasing review. Operators remain responsible for confirming the sample, fish association, and final decision.'}</p><Button onClick={onClose}>Close</Button></div></div> }
 
@@ -251,7 +267,7 @@ function AdminRecords({ records, compact = false, onViewAll }: { records: Gradin
           <div key={record.id} className="grader-record-item" role="button" tabIndex={0} onClick={() => setSelectedRecord(record)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') setSelectedRecord(record) }}>
             <span><strong>{record.id}</strong><small>{record.time}</small></span>
             <span>{record.grader}</span>
-            <span className="record-sample-cell">{record.capturedImage && <img src={record.capturedImage} alt={`Captured ${record.sample}`} />}<strong>{record.sample}</strong><small>{record.fish} · {record.result?.originalConfidence ? `${record.result.originalConfidence}% confidence` : 'Result saved'}</small></span>
+            <span className="record-sample-cell"><StoredEvidenceImage evidenceId={record.capturedImageId} legacySource={record.capturedImage} alt={`Captured ${record.sample}`} /><strong>{record.sample}</strong><small>{record.fish} · {record.result?.originalConfidence ? `${record.result.originalConfidence}% confidence` : 'Result saved'}</small></span>
             <span>{record.weight}</span>
             <span className={`table-grade table-grade--${record.grade}`}>{record.grade}</span>
             <span className={`status-label ${record.status === 'Override' ? 'status-label--uncertain' : 'status-label--valid'}`}>{record.status}</span>
@@ -268,7 +284,7 @@ function AdminRecords({ records, compact = false, onViewAll }: { records: Gradin
           </div>
         </div>
       )}
-      {selectedRecord && <div className="record-review-backdrop" role="dialog" aria-modal="true" aria-label={`Record ${selectedRecord.id}`} onClick={() => setSelectedRecord(null)}><article className="record-review" onClick={event => event.stopPropagation()}><header><div><span className="eyebrow">Captured tuna record</span><h2>{selectedRecord.id}</h2><p>{selectedRecord.time} · {selectedRecord.grader}</p></div><button className="icon-button" onClick={() => setSelectedRecord(null)} aria-label="Close record">×</button></header>{selectedRecord.capturedImage ? <img className="record-review__image" src={selectedRecord.capturedImage} alt={`Captured ${selectedRecord.sample}`} /> : <div className="record-review__missing">Captured image unavailable for this older record.</div>}<div className="record-review__grade"><span>Final result</span><strong>Grade {selectedRecord.grade}</strong><small>{selectedRecord.result?.originalConfidence ?? '—'}% original confidence</small></div><dl><div><dt>Sample</dt><dd>{selectedRecord.sample}</dd></div><div><dt>Fish association</dt><dd>{selectedRecord.fish}</dd></div><div><dt>Weight</dt><dd>{selectedRecord.weight}</dd></div><div><dt>Model result</dt><dd>{selectedRecord.result?.originalGrade ? `Grade ${selectedRecord.result.originalGrade}` : selectedRecord.result?.status ?? selectedRecord.status}</dd></div><div><dt>Expert decision</dt><dd>{selectedRecord.result?.overrideGrade ? `Grade ${selectedRecord.result.overrideGrade}` : 'No override'}</dd></div><div><dt>Sync status</dt><dd>{selectedRecord.transaction?.syncState ?? 'Pending'}</dd></div></dl>{selectedRecord.result?.overrideReason && <p className="record-review__reason"><strong>Override reason:</strong> {selectedRecord.result.overrideReason}</p>}</article></div>}
+      {selectedRecord && <div className="record-review-backdrop" role="dialog" aria-modal="true" aria-label={`Record ${selectedRecord.id}`} onClick={() => setSelectedRecord(null)}><article className="record-review" onClick={event => event.stopPropagation()}><header><div><span className="eyebrow">Captured tuna record</span><h2>{selectedRecord.id}</h2><p>{selectedRecord.time} · {selectedRecord.grader}</p></div><button className="icon-button" onClick={() => setSelectedRecord(null)} aria-label="Close record">×</button></header>{selectedRecord.capturedImageId || selectedRecord.capturedImage ? <StoredEvidenceImage className="record-review__image" evidenceId={selectedRecord.capturedImageId} legacySource={selectedRecord.capturedImage} alt={`Captured ${selectedRecord.sample}`} /> : <div className="record-review__missing">Captured image unavailable for this older record.</div>}<div className="record-review__grade"><span>Final result</span><strong>Grade {selectedRecord.grade}</strong><small>{selectedRecord.result?.originalConfidence ?? '—'}% original confidence</small></div><dl><div><dt>Sample</dt><dd>{selectedRecord.sample}</dd></div><div><dt>Fish association</dt><dd>{selectedRecord.fish}</dd></div><div><dt>Weight</dt><dd>{selectedRecord.weight}</dd></div><div><dt>Model result</dt><dd>{selectedRecord.result?.originalGrade ? `Grade ${selectedRecord.result.originalGrade}` : selectedRecord.result?.status ?? selectedRecord.status}</dd></div><div><dt>Expert decision</dt><dd>{selectedRecord.result?.overrideGrade ? `Grade ${selectedRecord.result.overrideGrade}` : 'No override'}</dd></div><div><dt>Sync status</dt><dd>{selectedRecord.transaction?.syncState ?? 'Pending'}</dd></div></dl>{selectedRecord.result?.overrideReason && <p className="record-review__reason"><strong>Override reason:</strong> {selectedRecord.result.overrideReason}</p>}</article></div>}
     </div>
   )
 }
@@ -687,7 +703,7 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
           <span className="eyebrow">Step 4 · Weight entry</span>
           <h1>Enter the fish weight{fishIds.length > 1 ? 's' : ''}.</h1>
           <p>Use the numpad to the right to enter the exact weight in kilograms for each fish.</p>
-          <div className="weight-entry weight-entry--multi">
+          <div className="weight-entry weight-entry--multi" style={{ flex: "1 1 auto", minHeight: 0 }}>
             {fishIds.map(id => (
               <div
                 key={id}
@@ -752,26 +768,25 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
     </div>
   )
 }
-function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sample: SampleType; index: number; total: number; onCapture: (image: string) => void; onBack: () => void; onHelp?: () => void }) {
+function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sample: SampleType; index: number; total: number; onCapture: (blob: Blob, previewUrl: string) => void; onBack: () => void; onHelp?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [cameraError, setCameraError] = useState('')
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [cameraId, setCameraId] = useState('')
   useEffect(() => { let stream: MediaStream | undefined; setCameraError(''); navigator.mediaDevices?.getUserMedia({ video: cameraId ? { deviceId: { exact: cameraId } } : { facingMode: 'environment' }, audio: false }).then(async value => { stream = value; if (videoRef.current) videoRef.current.srcObject = value; const devices = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'videoinput'); setCameras(devices); if (!cameraId) setCameraId(value.getVideoTracks()[0]?.getSettings().deviceId ?? devices[0]?.deviceId ?? '') }).catch(() => setCameraError('Allow camera access in your browser, then reload this screen.')); return () => stream?.getTracks().forEach(track => track.stop()) }, [cameraId])
-  const capture = () => {
+  const capture = async () => {
     const video = videoRef.current
-    let image = ''
     if (video?.videoWidth) {
       const canvas = document.createElement('canvas')
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
       canvas.getContext('2d')?.drawImage(video, 0, 0)
-      image = canvas.toDataURL('image/jpeg', .9)
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', .9))
+      if (blob) onCapture(blob, URL.createObjectURL(blob))
     } else {
-      image = sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png'
+      const previewUrl = sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png'
+      onCapture(await fetch(previewUrl).then(response => response.blob()), previewUrl)
     }
-    capturedEvidence[sample] = image
-    onCapture(image)
   }
   return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera"><video ref={videoRef} autoPlay playsInline muted /><div className="target-corners"><i /><i /><i /><i /></div>{cameraError && <div className="camera-error"><Icon name="camera" size={28} />{cameraError}</div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>Live camera evidence</small></span></div><h1>Align the sample in the guide.</h1><p>Keep the surface still and fully visible. This sample remains linked to its fish.</p>{cameras.length > 0 && <label className="camera-selector"><span><Icon name="camera" size={18} />Camera source</span><select value={cameraId} onChange={event => setCameraId(event.target.value)}>{cameras.map((camera, cameraIndex) => <option key={camera.deviceId} value={camera.deviceId}>{camera.label || `Camera ${cameraIndex + 1}`}</option>)}</select><small>{cameras.length} camera{cameras.length === 1 ? '' : 's'} detected</small></label>}</aside></div><BottomBar onBack={onBack} onHelp={onHelp} primary={capture} primaryLabel="Capture" primaryIcon="camera" /></div>
 }
@@ -1090,33 +1105,33 @@ function App() {
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
   useEffect(() => { if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen])
   const go = useCallback((screen: Screen) => { dispatch({ type: 'navigate', screen }); window.history.pushState({}, '', pathForScreen(screen)) }, [])
-  const goHome = useCallback(() => { Object.keys(capturedEvidence).forEach(key => delete capturedEvidence[key as SampleType]); gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
-  const graderHome = useCallback(() => { Object.keys(capturedEvidence).forEach(key => delete capturedEvidence[key as SampleType]); dispatch({ type: 'navigate', screen: 'grader-dashboard' }); window.history.pushState({}, '', pathForScreen('grader-dashboard')) }, [])
-  const graderLogout = useCallback(() => { Object.keys(capturedEvidence).forEach(key => delete capturedEvidence[key as SampleType]); localStorage.removeItem('tunaeye-grader-name'); dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
-  const gradeAnother = useCallback(() => { Object.keys(capturedEvidence).forEach(key => delete capturedEvidence[key as SampleType]); gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'gradeAnother' }); window.history.pushState({}, '', pathForScreen('sample')) }, [])
+  const goHome = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
+  const graderHome = useCallback(() => { clearCapturedEvidence(); dispatch({ type: 'navigate', screen: 'grader-dashboard' }); window.history.pushState({}, '', pathForScreen('grader-dashboard')) }, [])
+  const graderLogout = useCallback(() => { clearCapturedEvidence(); localStorage.removeItem('tunaeye-grader-name'); dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
+  const gradeAnother = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'gradeAnother' }); window.history.pushState({}, '', pathForScreen('sample')) }, [])
   const back = () => { const previous: Partial<Record<Screen, Screen>> = { 'select-role': 'welcome', admin: 'select-role', 'admin-dashboard': 'select-role', grader: 'select-role', 'grader-dashboard': 'grader', sample: 'grader-dashboard', association: 'sample', tutorial: selected.length === 1 ? 'sample' : 'association', weight: 'tutorial', camera: 'weight', review: 'camera', analysis: 'review', 'individual-result': 'review', overview: 'individual-result', print: 'overview' }; const target = previous[session.screen]; target ? go(target) : goHome() }
   const selected = session.selectedSamples.length ? session.selectedSamples : ['Sashibo core'] as SampleType[]
   const sample = currentSample(session)
   const currentResult = session.results[sample]
   const recentSessions = new Set(loadRecords().filter(record => record.grader === session.graderName && Date.now() - record.timestamp <= 30 * 60 * 1000).map(record => record.sessionId)).size
   const canSkipTutorial = recentSessions >= 2
-  const capture = () => { if (isCapturing) return; setIsCapturing(true); window.setTimeout(() => { dispatch({ type: 'captured' }); setIsCapturing(false) }, 850) }
+  const capture = async (blob: Blob, previewUrl: string) => {
+    if (isCapturing) return
+    setIsCapturing(true)
+    const recordId = `${gradingSessionRef.current.id}-${sampleOrder.indexOf(sample) + 1}`
+    try {
+      await saveCapturedEvidence({ id: recordId, sessionId: gradingSessionRef.current.id, sample, fishId: fishIdForSample(session, sample), capturedAt: Date.now(), blob })
+      capturedEvidence[sample] = previewUrl
+      window.setTimeout(() => { dispatch({ type: 'captured' }); setIsCapturing(false) }, 850)
+    } catch {
+      if (previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
+      setIsCapturing(false)
+      setNoticeModal({ title: 'Capture not saved', message: 'TunaEye could not store this image on the device. Free device storage and capture it again.', icon: 'camera' })
+    }
+  }
   useEffect(() => { if (session.screen !== 'analysis') return; const timeout = window.setTimeout(() => dispatch({ type: 'finishAnalysis', outcome: session.demoOutcome }), 1700); return () => window.clearTimeout(timeout) }, [session.screen, session.demoOutcome])
-  useEffect(() => {
-    const rows = sampleOrder.flatMap((item, index) => {
-      const result = session.results[item]
-      if (!result?.captured) return []
-      const recordId = `${gradingSessionRef.current.id}-${index + 1}`
-      return [{ id: recordId, capturedImage: capturedEvidence[item], result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }]
-    })
-    if (!rows.length) return
-    const current = loadRecords()
-    const enriched = current.map(record => { const extra = rows.find(row => row.id === record.id); return extra ? { ...record, ...extra } : record })
-    localStorage.setItem(RECORDS_KEY, JSON.stringify(enriched))
-    window.dispatchEvent(new Event('tunaeye-records-updated'))
-  }, [session.results])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? '—'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid' }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); localStorage.setItem(RECORDS_KEY, JSON.stringify([...completed, ...previous].slice(0, 200))); window.dispatchEvent(new Event('tunaeye-records-updated')); }, [session.results, session.graderName])
+  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? '—'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); localStorage.setItem(RECORDS_KEY, JSON.stringify([...completed, ...previous].slice(0, 200))); window.dispatchEvent(new Event('tunaeye-records-updated')); }, [session.results, session.graderName])
   const openRole = (role: Role) => { gradingSessionRef.current = { id: `TE-${Date.now()}`, timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {

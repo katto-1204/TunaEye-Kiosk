@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { TunaEyeHeroLogo } from './components/TunaEyeHeroLogo'
+import { Device } from './components/Device'
 
 export type MarketingPage = 'home' | 'features' | 'about' | 'team' | 'faq' | 'terms' | 'privacy'
 
@@ -433,6 +434,192 @@ function Home({
           <span>04. Receipt &amp; Cloud Sync</span>
         </div>
       </section>
+
+      {/* DEMO VIDEO SECTION */}
+      <Reveal>
+        <section className="site-demo-video">
+          <div className="site-demo-video__copy">
+            <span className="site-kicker">See TunaEye in Action</span>
+            <h2>Watch the complete grading workflow in under 60 seconds</h2>
+            <p>From specimen capture to AI-powered analysis and cloud synchronization, see how TunaEye transforms traditional grading into a seamless, evidence-based process.</p>
+            <div className="site-actions">
+              <button className="site-button site-button--primary" onClick={onOpen}>
+                Start Grading <Arrow />
+              </button>
+            </div>
+          </div>
+          <div className="site-demo-video__visual">
+            {/* Placeholder for demo video - replace with actual video embed */}
+            <div className="video-placeholder">
+              <div className="video-play-button">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                  <path d="M18 12.5v23l18-11.5-18-11.5Z" fill="currentColor" />
+                </svg>
+              </div>
+              <div className="video-overlay">
+                <h3>TunaEye Demo Video</h3>
+                <p>Click to play</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* MOBILE EXPERIENCE SECTION */}
+      <Reveal>
+        <section className="site-mobile-experience">
+          <div className="mobile-experience-grid">
+            {/* LEFT SIDE: Device Mockup + QR Code */}
+            <div className="mobile-experience__left">
+              <div className="device-mockup">
+                <Device>
+                  {/* Device screen content can go here */}
+                  <div className="device-screen-content">
+                    <h3>TunaEye Grader</h3>
+                    <p>Ready to grade</p>
+                    <button className="btn--primary">Start Session</button>
+                  </div>
+                </Device>
+              </div>
+
+              <div className="qr-section">
+                <h3>Scan to Download</h3>
+                <div className="qr-code">
+                  {/* QR code will go here - placeholder */}
+                  <div className="qr-placeholder">
+                    <div className="qr-pattern"></div>
+                    <div className="qr-pattern"></div>
+                    <div className="qr-pattern"></div>
+                  </div>
+                  <p>Scan to install TunaEye on your phone</p>
+                </div>
+                <p className="qr-drive-link">(Drive link QR)</p>
+              </div>
+            </div>
+
+            {/* RIGHT SIDE: Experience Grading on Phone */}
+            <div className="mobile-experience__right">
+              <h3>Experience Grading on Your Phone</h3>
+              <p>
+                Try TunaEye's intuitive interface on any device. Our progressive web app delivers
+                the full grading experience with offline capabilities, seamless synchronization,
+                and instant access to your grading history.
+              </p>
+              <div className="experience-steps">
+                <div className="step">
+                  <div className="step-number">01</div>
+                  <div className="step-content">
+                    <h4>Capture Specimen</h4>
+                    <p>Use your phone's camera to capture high-quality images of tuna samples
+                    with guided alignment tools.</p>
+                  </div>
+                </div>
+                <div className="step">
+                  <div className="step-number">02</div>
+                  <div className="step-content">
+                    <h4>Enter Weight</h4>
+                    <p>Connect to digital scales or enter weight manually using our
+                    touch-optimized numpad interface.</p>
+                  </div>
+                </div>
+                <div className="step">
+                  <div className="step-number">03</div>
+                  <div className="step-content">
+                    <h4>Review Results</h4>
+                    <p>View AI-powered analysis results, apply expert overrides if needed,
+                    and generate print-ready reports.</p>
+                  </div>
+                </div>
+              </div>
+              <button className="site-button site-button--primary" onClick={onOpen}>
+                Start Grading <Arrow />
+              </button>
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* INSTALLATION GUIDE */}
+      <Reveal>
+        <section className="site-installation">
+          <div className="installation-grid">
+            <div className="installation__copy">
+              <span className="site-kicker">Getting Started</span>
+              <h2>Install and set up your TunaEye grading station in minutes</h2>
+              <p>
+                Follow these simple steps to deploy TunaEye at your facility. Our offline-first
+                architecture ensures you can start grading immediately, even without internet
+                connectivity.
+              </p>
+              <div className="installation-steps">
+                <div className="step">
+                  <div className="step-number">1</div>
+                  <div className="step-content">
+                    <h3>Install the Application</h3>
+                    <p>
+                      Open TunaEye in your device's browser (Chrome, Safari, or Edge) and
+                      select "Install App" from the browser menu to add it to your home screen
+                      or desktop.
+                    </p>
+                  </div>
+                </div>
+                <div className="step">
+                  <div className="step-number">2</div>
+                  <div className="step-content">
+                    <h3>Launch the App</h3>
+                    <p>
+                      Tap the TunaEye icon on your home screen to launch the app in standalone
+                      mode, providing a native app experience without browser chrome.
+                    </p>
+                  </div>
+                </div>
+                <div className="step">
+                  <div className="step-number">3</div>
+                  <div className="step-content">
+                    <h3>Connect to Raspberry Pi</h3>
+                    <p>
+                      Scan the QR code displayed on your Raspberry Pi device to automatically
+                      configure the connection to your local edge AI gateway for sub-200ms
+                      inference.
+                    </p>
+                  </div>
+                </div>
+                <div className="step">
+                  <div className="step-number">4</div>
+                  <div className="step-content">
+                    <h3>Begin Grading</h3>
+                    <p>
+                      Start your first grading session by entering your name, selecting sample
+                      type, and following the guided workflow for capture, weight entry, and
+                      analysis.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="installation__visual">
+              <div className="installation-diagram">
+                {/* Visual guide showing installation steps */}
+                <div className="device-phone">
+                  <div className="phone-screen">Install</div>
+                </div>
+                <div className="arrow">→</div>
+                <div className="device-tablet">
+                  <div className="tablet-screen">Launch</div>
+                </div>
+                <div className="arrow">→</div>
+                <div className="device-pi">
+                  <div className="pi-screen">QR Code</div>
+                </div>
+                <div className="arrow">→</div>
+                <div className="device-grader">
+                  <div className="grader-screen">Grade</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </Reveal>
 
       {/* WHY TUNAEYE / VALUE PROP */}
       <Reveal>

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "style": "default",
+  "rsc": false,
+  "registries": [
+    {
+      "url": "https://registry.reactbits.dev",
+      "headers": {
+        "Authorization": "Bearer ${REACTBITS_LICENSE_KEY}"
+      }
+    }
+  ]
+}

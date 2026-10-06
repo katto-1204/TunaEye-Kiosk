@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test'
 
 test('uninstalled visitors see the public landing after loading and can scroll', async ({ page }) => {
+  const browserErrors: string[] = []
+  const failedRequests: string[] = []
+  page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()) })
+  page.on('pageerror', error => browserErrors.push(error.message))
+  page.on('requestfailed', request => failedRequests.push(`${request.method()} ${request.url()}`))
+
   await page.goto('/')
   await expect(page.locator('.pdial')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Clear evidence/i }).first()).toBeVisible({ timeout: 5000 })
@@ -12,6 +18,32 @@ test('uninstalled visitors see the public landing after loading and can scroll',
     return document.documentElement.scrollHeight > window.innerHeight || (siteShell && siteShell.scrollHeight > window.innerHeight)
   })
   expect(isScrollable).toBe(true)
+
+  const iphone = page.locator('.iphone-mockup')
+  await iphone.scrollIntoViewIfNeeded()
+  await expect(iphone).toBeVisible()
+  await expect(iphone.locator('svg')).toHaveAttribute('viewBox', '0 0 433 882')
+  await expect(iphone.locator('.iphone-mockup__screen')).toContainText('TunaEye Grader')
+  await iphone.screenshot({ path: 'test-results/iphone-mockup.png' })
+  const landingLayout = await page.evaluate(() => ({
+    demoColumns: getComputedStyle(document.querySelector('.site-demo-video')!).gridTemplateColumns.split(' ').length,
+    mobileColumns: getComputedStyle(document.querySelector('.mobile-experience-grid')!).gridTemplateColumns.split(' ').length,
+    installationColumns: getComputedStyle(document.querySelector('.installation-grid')!).gridTemplateColumns.split(' ').length,
+  }))
+  expect(landingLayout).toEqual({ demoColumns: 2, mobileColumns: 2, installationColumns: 2 })
+  for (const [name, selector] of [['demo', '.site-demo-video'], ['mobile', '.site-mobile-experience'], ['installation', '.site-installation']] as const) {
+    const section = page.locator(selector)
+    await section.scrollIntoViewIfNeeded()
+    await expect(section).toBeVisible()
+    await section.screenshot({ path: `test-results/landing-${name}-1280x800.png` })
+  }
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.locator('.site-mobile-experience').scrollIntoViewIfNeeded()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  expect(await page.locator('.mobile-experience-grid').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1)
+  await page.screenshot({ path: 'test-results/landing-mobile-390x844.png' })
+  expect(browserErrors).toEqual([])
+  expect(failedRequests).toEqual([])
 })
 
 test('installed tablet opens kiosk welcome screen and enters tight workflow screens', async ({ page }) => {
@@ -186,9 +218,25 @@ test('completed grading session immediately syncs into grader and admin dashboar
   // Camera screen
   await expect(page.getByRole('heading', { name: /Align the sample/i })).toBeVisible()
   await page.getByRole('button', { name: 'Capture' }).click()
-  
+
   // Review screen
   await expect(page.getByRole('heading', { name: /Use this image/i })).toBeVisible({ timeout: 5000 })
+  const evidence = await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('tunaeye-offline', 1)
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
+    })
+    const records = await new Promise<unknown[]>((resolve, reject) => {
+      const request = database.transaction('evidence').objectStore('evidence').getAll()
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
+    })
+    database.close()
+    return records
+  })
+  expect(evidence).toHaveLength(1)
+  expect(evidence[0]).toMatchObject({ sample: 'Sashibo core', fishId: 'Fish 1', syncState: 'pending' })
   await page.getByRole('button', { name: 'Use this image' }).click()
   
   // Analysis screen -> Result screen
@@ -214,6 +262,10 @@ test('completed grading session immediately syncs into grader and admin dashboar
   const records = page.locator('.grader-record-item')
   expect(await records.count()).toBeGreaterThanOrEqual(1)
   await expect(records.first()).toContainText('Sashibo core')
+  await expect(records.first().locator('img')).toBeVisible()
+  const savedRecords = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]'))
+  expect(savedRecords[0].capturedImageId).toBeTruthy()
+  expect(JSON.stringify(savedRecords)).not.toContain('data:image')
 })
 
 test('58mm thermal printer receipt preview and print layout', async ({ page }) => {

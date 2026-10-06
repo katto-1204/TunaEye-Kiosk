@@ -111,7 +111,7 @@ vite.config.ts          Vite development server configuration
 ## Integration notes
 
 - Camera capture uses the real browser camera stream.
-- Captured evidence is kept in memory for the active grading session.
+- Captured evidence is stored as JPEG blobs in IndexedDB; lightweight grading metadata remains in `localStorage`.
 - Raspberry Pi inference requires the edge service described in `ARCHITECTURE.md`.
 - Supabase PostgreSQL and Convex synchronization require deployed services and environment configuration.
-- Until those services are connected, station records and audit events remain browser-local.
+- Until those services are connected, evidence, station records, and audit events remain browser-local with `syncState: "pending"`.

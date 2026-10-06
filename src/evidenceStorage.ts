@@ -1,0 +1,74 @@
+const DATABASE_NAME = 'tunaeye-offline'
+const STORE_NAME = 'evidence'
+
+export interface EvidenceRecord {
+  id: string
+  sessionId: string
+  sample: string
+  fishId: string
+  capturedAt: number
+  mimeType: string
+  blob: Blob
+  syncState: 'pending' | 'synced'
+  remotePath?: string
+}
+
+function openDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DATABASE_NAME, 1)
+    request.onupgradeneeded = () => {
+      const store = request.result.createObjectStore(STORE_NAME, { keyPath: 'id' })
+      store.createIndex('syncState', 'syncState')
+      store.createIndex('sessionId', 'sessionId')
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+function requestResult<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function saveCapturedEvidence(record: Omit<EvidenceRecord, 'mimeType' | 'syncState'>): Promise<EvidenceRecord> {
+  const evidence = { ...record, mimeType: record.blob.type || 'image/jpeg', syncState: 'pending' as const }
+  const database = await openDatabase()
+  try {
+    await requestResult(database.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put(evidence))
+    return evidence
+  } finally {
+    database.close()
+  }
+}
+
+export async function getCapturedEvidence(id: string): Promise<EvidenceRecord | undefined> {
+  const database = await openDatabase()
+  try {
+    return await requestResult(database.transaction(STORE_NAME).objectStore(STORE_NAME).get(id))
+  } finally {
+    database.close()
+  }
+}
+
+export async function listPendingEvidence(): Promise<EvidenceRecord[]> {
+  const database = await openDatabase()
+  try {
+    return await requestResult(database.transaction(STORE_NAME).objectStore(STORE_NAME).index('syncState').getAll('pending'))
+  } finally {
+    database.close()
+  }
+}
+
+export async function markEvidenceSynced(id: string, remotePath: string): Promise<void> {
+  const evidence = await getCapturedEvidence(id)
+  if (!evidence) return
+  const database = await openDatabase()
+  try {
+    await requestResult(database.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put({ ...evidence, syncState: 'synced', remotePath }))
+  } finally {
+    database.close()
+  }
+}

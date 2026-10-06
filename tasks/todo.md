@@ -1,5 +1,42 @@
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
+## Offline Evidence and Landing Repair — 2026-10-07
+
+- [x] Trace capture data loss and duplicate record persistence.
+- [x] Store captured JPEG blobs in IndexedDB with stable evidence IDs.
+- [x] Keep record metadata lightweight and cloud-sync ready.
+- [x] Document the future kiosk/mobile Supabase contract without implementing cloud sync.
+- [x] Restore desktop grids, spacing, and responsive behavior for new landing sections.
+- [ ] Verify persistence, landing visuals, full browser suite, and production build.
+
+### Review
+
+- Pending verification.
+
+## iPhone Mockup Replacement — 2026-10-07
+
+- [x] Replace the placeholder device shell with the supplied 433×882 iPhone SVG.
+- [x] Preserve the existing TunaEye screen content inside the new frame.
+- [x] Verify the production build and landing page in-browser.
+
+### Review
+
+- Production build passed (`tsc -b && vite build`).
+- Full Playwright suite passed: 15/15 tests.
+- Landing regression check confirms the 433×882 SVG, preserved screen content, zero browser errors, and zero failed requests.
+- Visual screenshot saved at `test-results/iphone-mockup.png`.
+
+## Landing Render Crash and Weight Screen Cutoff — 2026-10-07
+
+- [x] Replace the undefined video placeholder icon with an inline play symbol.
+- [x] Remove fixed-height pressure from the weight information panel so the bottom action remains visible.
+- [x] Add reusable Ponytail and Caveman response hooks.
+- [ ] Verify production build and landing/weight flows in the browser.
+
+### Review
+
+- Pending verification.
+
 ## Admin Records and Analytics Upgrade — 2026-10-07
 
 - [ ] Allow scoped vertical scrolling throughout the admin workspace.

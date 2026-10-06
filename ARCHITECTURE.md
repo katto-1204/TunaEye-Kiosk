@@ -115,6 +115,10 @@ Content-Type: application/json
 
 ## Offline and synchronization behavior
 
+The kiosk and mobile app must share stable evidence IDs and the same logical operations: `saveCapturedEvidence`, `getCapturedEvidence`, `listPendingEvidence`, and `markEvidenceSynced`. Each platform may use its native local database, but both must produce the same record fields and use the same Supabase project, tables, bucket paths, and sync-state transitions once cloud sync is implemented.
+
+Current kiosk evidence fields are `id`, `sessionId`, `sample`, `fishId`, `capturedAt`, `mimeType`, `blob`, `syncState`, and optional `remotePath`. No Supabase client or credentials are wired yet.
+
 1. The kiosk creates a local grading session and audit events.
 2. The Raspberry Pi supplies inference while the LAN is available.
 3. Results are saved locally immediately so dashboard navigation cannot lose them.
