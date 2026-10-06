@@ -1,5 +1,14 @@
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
+## Admin Records and Analytics Upgrade — 2026-10-07
+
+- [ ] Allow scoped vertical scrolling throughout the admin workspace.
+- [ ] Make pagination visible and usable on every full records view.
+- [ ] Upgrade the dashboard chart to an interactive animated line graph.
+- [ ] Improve admin cards, table hierarchy, spacing, and tablet responsiveness.
+- [ ] Configure/install the licensed React Bits Pro Simple Graph when `REACTBITS_LICENSE_KEY` is available.
+- [ ] Verify scrolling, pagination, chart interaction, and all tablet viewports with Playwright.
+
 ## Kiosk Input, Print, and Completion QA — 2026-10-07
 
 - [x] Remove the remaining tutorial number and grader-landing star.

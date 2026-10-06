@@ -50,6 +50,50 @@ test('admin OTP opens diagnostics, audit logs, and logout', async ({ page }) => 
   await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
 })
 
+test('admin dashboard scrolls, graph interacts, and records paginate', async ({ page }) => {
+  const browserErrors: string[] = []
+  page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()) })
+  page.on('pageerror', error => browserErrors.push(error.message))
+  await page.setViewportSize({ width: 1024, height: 600 })
+  await page.addInitScript(() => {
+    localStorage.setItem('tunaeye-installed', 'true')
+    const now = Date.now()
+    localStorage.setItem('tunaeye-records', JSON.stringify(Array.from({ length: 19 }, (_, index) => ({
+      id: `TE-QA-${String(index + 1).padStart(3, '0')}`,
+      sessionId: `QA-${index + 1}`,
+      timestamp: now - (index % 7) * 86_400_000,
+      time: 'Today, 10:00 AM',
+      grader: index % 2 ? 'Maria Santos' : 'Jose Dela Cruz',
+      sample: index % 2 ? 'Sashibo core' : 'Tail cut',
+      fish: 'Fish 1', weight: `${20 + index} kg`, grade: index % 3 === 0 ? 'A' : 'B', status: 'Model result',
+    }))))
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Get started' }).click()
+  await page.getByRole('button', { name: /Admin/ }).click()
+  for (const [index, digit] of ['1', '2', '3', '4'].entries()) await page.getByLabel(`PIN digit ${index + 1}`).fill(digit)
+  await page.getByRole('button', { name: 'Verify and continue' }).click()
+
+  const adminContent = page.locator('.admin-content')
+  await expect(page.getByTestId('admin-simple-graph')).toBeVisible()
+  await page.getByRole('button', { name: /samples/ }).last().focus()
+  await expect(page.locator('.admin-trend__tooltip')).toBeVisible()
+  expect(await adminContent.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true)
+  await page.screenshot({ path: 'test-results/admin-graph-1024x600.png', fullPage: false })
+
+  await page.getByRole('button', { name: /Records/ }).click()
+  await expect(page.getByText('Showing 1–8 of 19')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Previous' })).toBeDisabled()
+  await page.getByRole('button', { name: 'Next' }).click()
+  await expect(page.getByText('Showing 9–16 of 19')).toBeVisible()
+  await expect(page.getByText('TE-QA-009')).toBeVisible()
+  await adminContent.evaluate(element => { element.scrollTop = element.scrollHeight })
+  expect(await adminContent.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  expect(browserErrors).toEqual([])
+  await page.screenshot({ path: 'test-results/admin-records-pagination-1024x600.png', fullPage: false })
+})
+
 test('weight numpad entry and touch keypad interaction', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
   await page.goto('/kiosk/weight')

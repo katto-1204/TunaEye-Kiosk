@@ -9,3 +9,4 @@
 - Put final tablet overrides after legacy compact rules; otherwise a valid QA media query can be silently undone later in the cascade.
 - When the user says an element should be removed, delete it from the render tree; styling it differently does not satisfy the request.
 - Numeric limits must validate and explain the entered value, never silently rewrite it to the maximum.
+- Pagination that only renders after a hidden threshold looks missing during normal QA; keep the controls visible with an explicit page and record count.
