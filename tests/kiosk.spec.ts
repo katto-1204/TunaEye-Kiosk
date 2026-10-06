@@ -21,7 +21,7 @@ test('installed tablet opens kiosk welcome screen and enters tight workflow scre
   await expect(page.getByRole('button', { name: 'Install' })).toHaveCount(0)
   
   // Navigate into kiosk workflow (select-role)
-  await page.getByRole('button', { name: /Start grading/i }).click()
+  await page.getByRole('button', { name: /Get started/i }).click()
   await expect(page.getByRole('heading', { name: "Who's grading?" })).toBeVisible()
   
   // Verify interactive kiosk workflow is tight (overflow: hidden, fits viewport)
@@ -37,7 +37,7 @@ test('installed tablet opens kiosk welcome screen and enters tight workflow scre
 test('admin OTP opens diagnostics, audit logs, and logout', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
   await page.goto('/')
-  await page.getByRole('button', { name: 'Start grading' }).click()
+  await page.getByRole('button', { name: 'Get started' }).click()
   await page.getByRole('button', { name: /Admin/ }).click()
   for (const [index, digit] of ['1', '2', '3', '4'].entries()) await page.getByLabel(`PIN digit ${index + 1}`).fill(digit)
   await page.getByRole('button', { name: 'Verify and continue' }).click()
@@ -162,8 +162,8 @@ test('completed grading session immediately syncs into grader and admin dashboar
   // Complete screen
   await expect(page.getByRole('heading', { name: 'Results printed.' })).toBeVisible()
   
-  // Return home to grader dashboard
-  await page.getByRole('button', { name: 'Return home' }).click()
+  // Return to grader dashboard
+  await page.getByRole('button', { name: 'Dashboard' }).click()
   await expect(page.getByRole('heading', { name: /Welcome back/i })).toBeVisible()
   
   // Verify recent grading records contains the newly completed session
@@ -208,3 +208,108 @@ test('58mm thermal printer receipt preview and print layout', async ({ page }) =
   expect(slipStyle.display).toBe('block')
 })
 
+test('weight entry normalizes leading zero and explains values above 200 kg', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/kiosk/weight')
+  const input = page.locator('.weight-input input').first()
+
+  await page.getByRole('button', { name: '0', exact: true }).click()
+  await page.getByRole('button', { name: '8', exact: true }).click()
+  await expect(input).toHaveValue('8')
+
+  await page.getByRole('button', { name: 'Clear' }).click()
+  for (const digit of ['8', '9', '9']) await page.getByRole('button', { name: digit, exact: true }).click()
+  await expect(input).toHaveValue('899')
+  await expect(page.locator('.weight-limit-dialog')).toContainText('Weight exceeds the limit')
+  await expect(page.getByRole('button', { name: 'Start capture' })).toBeDisabled()
+  await expect(page.locator('.weight-input-display')).toHaveClass(/is-error/)
+  await page.screenshot({ path: 'test-results/weight-limit-1280x800.png', fullPage: false })
+
+  const inputBox = await input.boundingBox()
+  const unitBox = await page.locator('.weight-input-display b').first().boundingBox()
+  expect(unitBox!.x - (inputBox!.x + inputBox!.width)).toBeLessThanOrEqual(12)
+})
+
+test('completion actions and grader logout return to the kiosk landing', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('tunaeye-installed', 'true')
+    localStorage.setItem('tunaeye-grader-name', 'Maria Santos')
+  })
+  await page.goto('/kiosk/complete')
+  await expect(page.getByRole('button', { name: 'Grade another' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Dashboard' })).toBeVisible()
+  await page.screenshot({ path: 'test-results/completion-actions-1280x800.png', fullPage: false })
+  await page.getByRole('button', { name: 'Logout' }).click()
+  await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible()
+  await expect(page.locator('.welcome-brand-hero__mark')).toHaveCount(0)
+  await expect(page.locator('.welcome-brand-hero__title')).toContainText('TUNAEYE')
+  expect(await page.evaluate(() => localStorage.getItem('tunaeye-grader-name'))).toBeNull()
+})
+
+for (const viewport of [
+  { width: 1024, height: 600 },
+  { width: 1280, height: 800 },
+  { width: 1366, height: 768 },
+]) {
+  test(`QA tablet surfaces fit and remain readable at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    const browserErrors: string[] = []
+    const failedRequests: string[] = []
+    page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()) })
+    page.on('pageerror', error => browserErrors.push(error.message))
+    page.on('requestfailed', request => failedRequests.push(`${request.method()} ${request.url()}`))
+    await page.setViewportSize(viewport)
+    await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+
+    const expectNoHorizontalOverflow = async () => {
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    }
+
+    await page.goto('/kiosk/select-role')
+    const roleCards = page.locator('.role-card-v2')
+    await expect(roleCards).toHaveCount(2)
+    expect((await roleCards.first().boundingBox())!.height).toBeGreaterThanOrEqual(200)
+    expect((await roleCards.first().boundingBox())!.width).toBeGreaterThanOrEqual(300)
+    await expectNoHorizontalOverflow()
+
+    await page.goto('/kiosk/tutorial')
+    await expect(page.locator('.tutorial-stage__number')).toHaveCount(0)
+    await expectNoHorizontalOverflow()
+
+    await page.goto('/kiosk/sample')
+    await page.getByRole('button', { name: /Tail cut/ }).click()
+    await page.getByRole('button', { name: 'Continue' }).click()
+    const associationCards = page.locator('.association-options button')
+    await expect(associationCards).toHaveCount(2)
+    const [firstCard, secondCard] = await Promise.all([associationCards.nth(0).boundingBox(), associationCards.nth(1).boundingBox()])
+    expect(Math.abs(firstCard!.height - secondCard!.height)).toBeLessThanOrEqual(1)
+    expect(Math.abs((firstCard!.x + secondCard!.x + secondCard!.width) / 2 - viewport.width / 2)).toBeLessThan(28)
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeInViewport()
+    await expectNoHorizontalOverflow()
+
+    await page.goto('/kiosk/print')
+    expect((await page.locator('.print-queue > div').first().boundingBox())!.height).toBeGreaterThanOrEqual(68)
+    await expect(page.getByRole('button', { name: 'Skip printing' })).toBeInViewport()
+    const receipt = await page.locator('.receipt-container-v2').boundingBox()
+    const printActions = await page.locator('.screen-stack--print > .bottom-bar').boundingBox()
+    expect(receipt!.y + receipt!.height).toBeLessThanOrEqual(printActions!.y)
+    await expectNoHorizontalOverflow()
+    await page.screenshot({ path: `test-results/print-${viewport.width}x${viewport.height}.png`, fullPage: false })
+
+    await page.goto('/kiosk/complete')
+    const gradeAnother = await page.getByRole('button', { name: 'Grade another' }).boundingBox()
+    expect(Math.abs(gradeAnother!.x + gradeAnother!.width / 2 - viewport.width / 2)).toBeLessThan(8)
+    const dashboard = await page.getByRole('button', { name: 'Dashboard' }).boundingBox()
+    const logout = await page.getByRole('button', { name: 'Logout' }).boundingBox()
+    expect(Math.abs(dashboard!.y - logout!.y)).toBeLessThanOrEqual(1)
+    await expectNoHorizontalOverflow()
+
+    await page.goto('/kiosk/admin-dashboard')
+    await expect(page.getByRole('heading', { name: 'Good day, Admin.' })).toBeVisible()
+    expect((await page.getByRole('heading', { name: 'Good day, Admin.' }).boundingBox())!.height).toBeGreaterThanOrEqual(36)
+    await expectNoHorizontalOverflow()
+
+    await page.screenshot({ path: `test-results/tablet-${viewport.width}x${viewport.height}.png`, fullPage: false })
+    expect(browserErrors).toEqual([])
+    expect(failedRequests).toEqual([])
+  })
+}

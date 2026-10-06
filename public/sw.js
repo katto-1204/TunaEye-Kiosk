@@ -1,4 +1,4 @@
-const CACHE = 'tunaeye-v3'
+const CACHE = 'tunaeye-v4-admin-tablet'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',

@@ -133,7 +133,7 @@ export function reducer(state: Session, action: Action): Session {
     case 'setSameFish':
       return { ...state, sameFish: action.value }
     case 'setFishWeight':
-      return { ...state, fishWeights: { ...state.fishWeights, [action.fishId]: Number(action.value) > 200 ? '200' : action.value } }
+      return { ...state, fishWeights: { ...state.fishWeights, [action.fishId]: action.value } }
     case 'setTutorialStep':
       return { ...state, tutorialStep: action.step }
     case 'setDemoOutcome':

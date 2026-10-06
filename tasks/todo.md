@@ -1,5 +1,41 @@
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
+## Kiosk Input, Print, and Completion QA — 2026-10-07
+
+- [x] Remove the remaining tutorial number and grader-landing star.
+- [x] Rename the grader landing CTA to `Get started` and enlarge TunaEye.
+- [x] Normalize leading-zero weight entry without silently clamping values.
+- [x] Show an accessible 200 kg maximum error state and block continuation.
+- [x] Keep the receipt preview and print actions separated at tablet sizes.
+- [x] Center `Grade another`; place `Dashboard` and `Logout` side by side below it.
+- [x] Route logout to the grader landing screen and clear the saved grader.
+- [x] Verify all changed flows at 1024x600, 1280x800, and 1366x768.
+
+### Review
+
+- Production build passed.
+- Full Playwright suite passed: 14/14 tests.
+- Tablet collision checks passed at 1024x600, 1280x800, and 1366x768 with no horizontal overflow, browser errors, failed requests, or receipt/action overlap.
+- Visual screenshots confirm the weight error, centered completion controls, and responsive receipt preview.
+
+## QA Tablet UI Feedback — 2026-10-06
+
+- [x] Map the QA checklist to existing shared layout classes.
+- [x] Make role selection the dominant, touch-friendly tablet content.
+- [x] Increase print queue readability and action touch areas.
+- [x] Raise tutorial step-number contrast.
+- [x] Center the same-fish decision group with equal cards.
+- [x] Improve admin header hierarchy and spacing.
+- [x] Verify 1024x600, 1280x800, and 1366x768 with Playwright.
+- [x] Run the production build and full browser suite.
+
+### Review
+
+- Production build passed (`tsc -b && vite build`).
+- Full Playwright suite passed: 12/12 tests.
+- Focused QA viewport suite passed again with zero console errors, page errors, failed requests, or horizontal overflow: 3/3 tests.
+- Screenshots saved under `test-results/tablet-1024x600.png`, `tablet-1280x800.png`, and `tablet-1366x768.png`.
+
 ## Tasks
 
 ### 1. Weight Entry Screen (`WeightScreen`) Redesign (2-Column Side-by-Side)
@@ -32,4 +68,6 @@
 - [x] Update and run Playwright test suite (`npx playwright test`)
 - [x] Run production build (`npm run build`)
 - [x] Verify visual elegance and responsiveness
-
+- [x] Add a real toggleable admin sidebar with an icon-only collapsed state.
+- [x] Apply QA tablet sizing to role selection, print queue, placement number, association cards, and admin header.
+- [ ] Complete live browser screenshots at 1024x600, 1280x800, and 1366x768 after the OneDrive node_modules EPERM lock is cleared.

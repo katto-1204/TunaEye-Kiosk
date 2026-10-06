@@ -4,3 +4,8 @@
 - Save grading records when inference completes, not only on the final printing screen.
 - Separate public-web entry from installed-kiosk entry instead of overloading one landing screen.
 - Describe hardware and cloud integrations as connection contracts until real endpoints and credentials exist.
+- A responsive admin rail is not the same as a collapsible sidebar. Provide an explicit, visible toggle tied to layout state; keep icons available in the collapsed state and never depend on hover for kiosk controls.
+- Tablet QA must target 1024x600, 1280x800, and 1366x768 with larger touch targets, strong contrast, and no clipped bottom actions.
+- Put final tablet overrides after legacy compact rules; otherwise a valid QA media query can be silently undone later in the cascade.
+- When the user says an element should be removed, delete it from the render tree; styling it differently does not satisfy the request.
+- Numeric limits must validate and explain the entered value, never silently rewrite it to the maximum.
