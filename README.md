@@ -1,118 +1,135 @@
-# TunaEye Grading Kiosk
+<p align="center">
+  <img src="public/tunaeye-logo.svg" width="92" alt="TunaEye logo" />
+</p>
 
-TunaEye is a touch-friendly progressive web application for capturing and grading yellowfin tuna samples. It supports Sashibo core and tail-cut samples, real camera capture, per-fish weight tracking, expert review, result printing, offline use, and station administration.
+<h1 align="center">TunaEye. Sea Beyond the Cut.</h1>
 
-## Requirements
+<p align="center">
+  <strong>We don't replace the expert eye. We extend its reach.</strong>
+</p>
 
-- Node.js 20 or newer
-- npm or pnpm
-- Chrome, Edge, or another modern browser with camera and PWA support
-- HTTPS or `localhost` for camera access and PWA installation
+<p align="center">
+  Built on expert knowledge. Enhanced by computer vision.<br />
+  Designed to extend the reach of human expertise.
+</p>
 
-## Run locally
+<p align="center">
+  <img alt="Node 20+" src="https://img.shields.io/badge/Node-20%2B-2769eb?style=for-the-badge&labelColor=103b70" />
+  <img alt="Vite + React" src="https://img.shields.io/badge/Vite-React-1e5fd9?style=for-the-badge&labelColor=103b70" />
+  <img alt="PWA kiosk" src="https://img.shields.io/badge/PWA-Kiosk-5dbbf3?style=for-the-badge&labelColor=103b70" />
+  <img alt="Yellowfin" src="https://img.shields.io/badge/Species-Yellowfin-0ea5e9?style=for-the-badge&labelColor=103b70" />
+</p>
+
+---
+
+TunaEye is a **CNN-based computer vision** kiosk for yellowfin tuna. It supports expert graders by classifying **sashibo core** and **tail-cut** images — it does not take the grader's place.
+
+Expert-annotated data, standardized capture, and transfer learning make grading more consistent, faster, and easier to share. The human remains the authority.
+
+```text
+  expert traits  ──mirrors──►  CNN assist  ──supports──►  grader decision
+       ▲                              ▲
+  annotated cuts              sashibo + tail cut
+```
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>Expert, not replaced</h3>
+      Mirrors the traits graders already use. Final call stays with a qualified person.
+    </td>
+    <td width="33%" valign="top">
+      <h3>Standard capture</h3>
+      Guided tablet flow, lighting chamber, weight, and one evidence record per sample.
+    </td>
+    <td width="33%" valign="top">
+      <h3>CNN on the edge</h3>
+      Raspberry Pi inference on the station LAN. Review, override, print, then sync.
+    </td>
+  </tr>
+</table>
+
+---
+
+## What you get
+
+| Surface | Role |
+| --- | --- |
+| **Public landing** | Brand, install, station story |
+| **Kiosk PWA** | Capture → infer → review → receipt |
+| **Admin** | Records, prices, graders, devices, audit |
+| **Pi edge** | Grade + confidence over LAN |
+| **Cloud** | Supabase records + evidence when configured |
+
+```mermaid
+flowchart LR
+  A[Chamber + camera] --> B[Tablet kiosk]
+  B -->|image + cut + weight| C[Raspberry Pi CNN]
+  C -->|grade + confidence| B
+  B --> D[Receipt]
+  B --> E[Local store]
+  E --> F[Supabase when online]
+```
+
+---
+
+## Run
 
 ```powershell
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open **http://localhost:3000**
 
-For a production build:
+| Command | Result |
+| --- | --- |
+| `npm run build` then `npm run preview` | Production build |
+| `npx vercel` | HTTPS deploy (`dist` + SPA fallback) |
 
-```powershell
-npm run build
-npm run preview
-```
+Camera and PWA install need **HTTPS** or **localhost**.
 
-## Deploy to Vercel
+---
 
-Import this repository into Vercel or deploy it from the project folder:
-
-```powershell
-npx vercel
-```
-
-Vercel uses `pnpm build`, publishes `dist`, serves the app over HTTPS, and redirects client-side kiosk routes to `index.html` through `vercel.json`.
-
-## Grading workflow
-
-1. Start grading and select **Expert grader**.
-2. Enter or select the grader name.
-3. Select **Sashibo core**, **Tail cut**, or both cards.
-4. When both samples are selected, choose whether they belong to the same fish.
-5. Follow the three-step placement tutorial.
-6. Enter each fish weight. The maximum accepted value is **200 kg**.
-7. Select an available camera, align the sample, and capture the image.
-8. Review the captured image and send it to the configured Raspberry Pi inference service.
-9. Review or override the result, then print the grading receipt.
-
-Each selected sample keeps its own captured image, fish association, weight, grade, confidence, expert decision, and receipt.
-
-After two completed grading sessions by the same grader within 30 minutes, TunaEye skips the placement tutorial for the next grading run. **Grade another** keeps the current grader and returns directly to the sample selector.
-
-## Camera access
-
-The capture screen requests browser camera permission and lists every camera exposed by the device, including front, rear, USB, and virtual cameras.
-
-If camera access is blocked:
-
-1. Open the browser's site permissions.
-2. Allow camera access for TunaEye.
-3. Reload the capture screen.
-
-Camera access normally fails on plain HTTP addresses other than `localhost`. Use HTTPS when opening the kiosk from another device on the network.
-
-## Install as a PWA
-
-Use **Install app** on the welcome screen. If the native prompt is unavailable, open the browser menu and choose **Install app** or **Add to Home Screen**.
-
-The PWA includes:
-
-- Standalone kiosk display
-- 192px and 512px install icons
-- Safe-area support for tablets and phones
-- Offline application-shell caching
-- Responsive layouts for portrait and landscape screens
-
-After changing the service worker, refresh once so the browser can activate the new cache version.
-
-## Admin dashboard
-
-Choose **Admin** and enter the station PIN:
+## Grade a fish
 
 ```text
-1234
+1  Expert grader          5  Align + capture
+2  Name                   6  Pi inference
+3  Sashibo / tail / both  7  Review or override
+4  Weight (max 200 kg)    8  Print receipt
 ```
 
-The dashboard includes station analytics, grading records, price schedules, grader profiles, device diagnostics, local station settings, and a **Start grading** action. Grader and admin dashboards read the same records stored in the current browser.
+Same-fish vs different-fish is asked when both cuts are selected. After **two sessions in 30 minutes**, that grader skips the placement tutorial. **Grade another** keeps the grader and returns to sample select.
 
-## Expert review
+---
 
-An uncertain result can be sent to **Expert review**. Manual overrides require the admin PIN before the grader can select the accepted grade and record a reason. TunaEye preserves the original model confidence while marking the final record as expert reviewed.
+## Station notes
 
-## Printing receipts
+<p>
+<img src="public/assets/mobile%20app%20qr.png" width="140" align="right" alt="Install QR" />
+</p>
 
-The print action opens the operating system print dialog and isolates an 80 mm thermal-receipt layout. Select the connected receipt printer or save the receipt as PDF.
+- **Install** — landing QR, or browser **Install app / Add to Home Screen**
+- **Cameras** — lists every device camera; allow permission, then reload if blocked
+- **Admin PIN** — `1234` (change before production)
+- **Overrides** — PIN-gated; original model confidence is kept
+- **Print** — 80 mm receipt layout via the OS print dialog
+- **Offline** — JPEG evidence in IndexedDB; metadata local until sync
 
-Browsers cannot silently print without user confirmation unless the device is configured with a managed kiosk-printing policy.
+<br clear="all" />
 
-## Project structure
+---
 
-```text
-public/                 PWA manifest, service worker, icons, and tutorial assets
-src/App.tsx             Screens and application workflow
-src/kioskState.ts       Session state and reducer
-src/styles.css          Responsive kiosk, safe-area, and print styles
-src/main.tsx            React entry point and service-worker registration
-vite.config.ts          Vite development server configuration
-```
+## Repo map
 
-## Integration notes
+| Path | What it is |
+| --- | --- |
+| `src/MarketingLanding.tsx` | Public site |
+| `src/App.tsx` | Kiosk workflow |
+| `src/kioskState.ts` | Session reducer |
+| `public/` | PWA, icons, samples, install QR |
+| `ARCHITECTURE.md` | Pi / cloud contracts |
+| `FEATURES.md` | Feature inventory |
 
-- Camera capture uses the real browser camera stream.
-- Captured evidence is stored as JPEG blobs in IndexedDB; lightweight grading metadata remains in `localStorage`.
-- Raspberry Pi inference requires the edge service described in `ARCHITECTURE.md`.
-- Supabase PostgreSQL and Storage synchronization require the migration under `supabase/migrations` and the environment variables in `.env.example`.
-- Without cloud configuration or connectivity, evidence and grading records remain local with a retryable sync state.
-- TunaEyePhone must follow `docs/SHARED_SUPABASE_CONTRACT.md` and use the same Supabase project.
+Without Pi or cloud credentials, records stay on the device with a retryable sync state. Phone clients must use the same Supabase project as `docs/SHARED_SUPABASE_CONTRACT.md`.

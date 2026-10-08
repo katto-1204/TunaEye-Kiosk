@@ -1,17 +1,51 @@
+# Landing brand voice + visual README — 2026-10-09
+
+- [x] Rewrite README around Sea Beyond the Cut, expert-extend positioning, and operator essentials.
+- [x] Shorten landing hero/demo/install/story copy; keep CNN as assist, not replacement.
+- [x] Use `public/assets/mobile app qr.png` in the install section.
+- [x] Verify landing hero, install QR, and About copy in the browser.
+
+### Review
+
+- Hero now uses Sea Beyond the Cut plus the short expert-extend lines; install QR loads from `public/assets/mobile app qr.png`.
+- About page states CNN assist, expert-annotated data, and the replacement limit.
+- README rewritten as a visual product overview with run, grade, and station essentials.
+
+---
+
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
-## Master Kiosk UI/UX QA + Branding Overhaul — 2026-10-09
+## Interrupted Refresh Recovery + Full UI Audit — 2026-10-09
 
-- [ ] Audit shared kiosk layout, branding tokens, affected screens, dialogs, and current responsive tests.
-- [ ] Remove the kiosk navbar and its reserved height while preserving contextual navigation.
-- [ ] Apply the royal-blue/white design system without changing public marketing or admin behavior unnecessarily.
-- [ ] Fix role selection, legal dialogs, manual override, fish association, weight entry, and image review layouts.
-- [ ] Add bounding-box, overflow, modal, and workflow assertions at 1280×800, 1024×600, 1024×768, and 800×1280.
-- [ ] Visually inspect captured screenshots, repair regressions, run the full Playwright suite, and run the production build.
+- [ ] Detect a true browser/software reload on an unfinished grading route.
+- [ ] Reset only the unfinished in-memory session, replace the URL with the role selector, and preserve completed local records/evidence.
+- [ ] Show an immediate accessible notice explaining that the unfinished session was not saved.
+- [ ] Verify normal first navigation, completed screens, Admin routes, and browser history are not incorrectly redirected.
+- [ ] Re-run every kiosk UI/UX viewport check, modal bound check, workflow regression, and production build.
 
 ### Review
 
 - Pending implementation and verification.
+
+## Master Kiosk UI/UX QA + Branding Overhaul — 2026-10-09
+
+- [x] Audit shared kiosk layout, branding tokens, affected screens, dialogs, and current responsive tests.
+- [x] Remove the kiosk navbar and its reserved height while preserving contextual navigation.
+- [x] Apply the royal-blue/white design system without changing public marketing or admin behavior unnecessarily.
+- [x] Fix role selection, legal dialogs, manual override, fish association, weight entry, and image review layouts.
+- [x] Add bounding-box, overflow, modal, and workflow assertions at 1280×800, 1024×600, 1024×768, and 800×1280.
+- [x] Visually inspect captured screenshots, repair regressions, run the full Playwright suite, and run the production build.
+
+### Review
+
+- Removed the kiosk TopBar component and all rendered navbar footprint; contextual Back, Help, Retake, Use Image, completion, and Admin navigation remain available.
+- Applied the requested royal-blue, deep-blue, navy, white, soft-blue, light-background, and border tokens using restrained gradients.
+- Legal dialogs now use one shared viewport-bounded layout with an internally scrollable body and always-visible Close action.
+- Role cards, association cards, weight display/keypad, review decision panel, and override PIN/keypad were balanced for tablet use.
+- Visual inspection passed for 1024×600 print, 1280×800 weight validation, and 800×1280 Admin; a clipped chart tooltip found during inspection was fixed and retested.
+- Full Playwright suite passed: 19 tests; one live-credential Supabase test skipped as designed.
+- Final focused portrait/Admin verification passed: 2/2 tests.
+- Production build passed (`tsc -b && vite build`). No lint script exists.
 
 ## Image Upload Option + Raspberry Pi V2 Audit — 2026-10-09
 

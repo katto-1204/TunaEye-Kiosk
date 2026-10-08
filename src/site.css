@@ -42,7 +42,26 @@
 .device-mockup { max-width: 280px; }
 .iphone-16-pro { display: block; width: 100%; height: auto; color: #07111f; filter: drop-shadow(0 24px 32px rgba(15,23,42,.22)); }
 .qr-section { align-items: flex-start; }
-.qr-code { width: 100%; height: auto; min-height: 180px; padding: 18px; flex-direction: column; gap: 12px; text-align: center; }
+.qr-code {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 16px;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #d5e4f4;
+  box-shadow: 0 16px 36px rgba(16, 59, 112, 0.1);
+}
+.qr-code__image {
+  display: block;
+  width: min(220px, 100%);
+  height: auto;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: #fff;
+}
 .qr-code p { margin: 0; color: #526a85; font-size: 13px; line-height: 1.35; }
 .mobile-experience__right .experience-steps { gap: 20px; }
 .site-mobile-experience .step { gap: 16px; }
@@ -450,10 +469,25 @@
   font-style: normal;
 }
 .site-hero__copy > p {
-  max-width: 690px;
+  max-width: 520px;
   color: #4a617d;
   font-size: clamp(17px, 1.5vw, 22px);
-  line-height: 1.5;
+  line-height: 1.45;
+}
+.site-hero__quote {
+  max-width: 540px !important;
+  margin: 0;
+  color: #103b70 !important;
+  font-size: clamp(20px, 2.1vw, 28px) !important;
+  font-weight: 650;
+  line-height: 1.28 !important;
+  letter-spacing: -0.03em;
+}
+.site-hero__support {
+  max-width: 420px !important;
+  margin: 10px 0 0;
+  font-size: clamp(15px, 1.25vw, 17px) !important;
+  line-height: 1.4 !important;
 }
 .site-actions,
 .site-trust {

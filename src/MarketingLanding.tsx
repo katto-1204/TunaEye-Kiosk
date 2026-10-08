@@ -337,8 +337,8 @@ export default function MarketingLanding({
         <div className="site-footer__brand">
           <Logo />
           <div className="site-footer__brand-bottom">
-            <strong>Evidence-first tuna grading.</strong>
-            <p>Built for ports, buying stations, and processing facilities.</p>
+            <strong>We extend the expert eye.</strong>
+            <p>CNN assist for sashibo and tail-cut yellowfin grading.</p>
             <div className="site-footer__socials" aria-label="Social links"><span>X</span><span>in</span><span>f</span><span>◎</span></div>
             <small>© 2026 TunaEye Systems. All rights reserved.</small>
           </div>
@@ -399,13 +399,13 @@ function Home({
       <section className="site-hero">
         <div className="site-hero__mesh" />
         <div className="site-hero__copy">
+          <span className="site-kicker">Expert grading, extended</span>
           <h1>
-            Clear evidence.<br />
-            <em>Confident decisions.</em>
+            TunaEye.<br />
+            <em>Sea Beyond the Cut.</em>
           </h1>
-          <p>
-            TunaEye replaces subjective disputes with standardized visual evidence. Combining guided tablet workflows, sub-200ms Raspberry Pi edge AI inference, and auditable cloud record synchronization.
-          </p>
+          <p className="site-hero__quote">We don't replace the expert eye. We extend its reach.</p>
+          <p className="site-hero__support">Built on expert knowledge. Enhanced by computer vision.</p>
           <div className="site-actions">
             <button className="site-button site-button--primary" onClick={onOpen}>
               Start Grading <Arrow />
@@ -436,8 +436,8 @@ function Home({
         <section className="site-demo-video">
           <div className="site-demo-video__copy">
             <span className="site-kicker">See TunaEye in Action</span>
-            <h2>Watch the complete grading workflow in under 60 seconds</h2>
-            <p>From specimen capture to AI-powered analysis and cloud synchronization, see how TunaEye transforms traditional grading into a seamless, evidence-based process.</p>
+            <h2>From cut to grade — in one pass</h2>
+            <p>Watch experts' visual traits become a guided capture, CNN assist, and reviewable record.</p>
             <div className="site-actions">
               <HeroVideoDialog videoSrc="/image.png" trigger={<span className="site-button site-button--primary">View Demo <Arrow /></span>} />
             </div>
@@ -467,55 +467,52 @@ function Home({
               </div>
 
               <div className="qr-section">
-                <h3>Scan to Download</h3>
+                <h3>Scan to install</h3>
                 <div className="qr-code">
-                  {/* QR code will go here - placeholder */}
-                  <div className="qr-placeholder">
-                    <div className="qr-pattern"></div>
-                    <div className="qr-pattern"></div>
-                    <div className="qr-pattern"></div>
-                  </div>
-                  <p>Scan to install TunaEye on your phone</p>
+                  <img
+                    className="qr-code__image"
+                    src={encodeURI('/assets/mobile app qr.png')}
+                    alt="QR code to install the TunaEye mobile app"
+                    width={220}
+                    height={220}
+                  />
+                  <p>Point your camera at the code</p>
                 </div>
-                <p className="qr-drive-link">(Drive link QR)</p>
               </div>
             </div>
 
             {/* RIGHT SIDE: Installation guide */}
             <div className="mobile-experience__right">
               <span className="site-kicker">Getting Started</span>
-              <h3>Install and set up your TunaEye grading station in minutes</h3>
-              <p>
-                Follow these simple steps to deploy TunaEye at your facility. Our offline-first
-                architecture ensures you can start grading immediately, even without internet connectivity.
-              </p>
+              <h3>Install the station app. Keep the expert in charge.</h3>
+              <p>Scan the QR, install the PWA, connect the Pi, then grade. Offline capture still works.</p>
               <div className="experience-steps">
                 <div className="step">
                   <div className="step-number">1</div>
                   <div className="step-content">
-                    <h4>Install the Application</h4>
-                    <p>Open TunaEye in your device's browser (Chrome, Safari, or Edge) and select "Install App" from the browser menu to add it to your home screen or desktop.</p>
+                    <h4>Install</h4>
+                    <p>Scan the QR or open TunaEye in Chrome, Safari, or Edge, then choose Install App.</p>
                   </div>
                 </div>
                 <div className="step">
                   <div className="step-number">2</div>
                   <div className="step-content">
-                    <h4>Launch the App</h4>
-                    <p>Tap the TunaEye icon on your home screen to launch the app in standalone mode, providing a native app experience without browser chrome.</p>
+                    <h4>Launch</h4>
+                    <p>Open the home-screen icon for the standalone kiosk.</p>
                   </div>
                 </div>
                 <div className="step">
                   <div className="step-number">3</div>
                   <div className="step-content">
-                    <h4>Connect to Raspberry Pi</h4>
-                    <p>Scan the QR code displayed on your Raspberry Pi device to automatically configure the connection to your local edge AI gateway for sub-200ms inference.</p>
+                    <h4>Connect the Pi</h4>
+                    <p>Link the station to the local edge CNN for on-LAN inference.</p>
                   </div>
                 </div>
                 <div className="step">
                   <div className="step-number">4</div>
                   <div className="step-content">
-                    <h4>Begin Grading</h4>
-                    <p>Start your first grading session by entering your name, selecting sample type, and following the guided workflow for capture, weight entry, and analysis.</p>
+                    <h4>Grade</h4>
+                    <p>Name, cut type, capture — then review the assist before you accept.</p>
                   </div>
                 </div>
               </div>
@@ -529,14 +526,14 @@ function Home({
         <section className="site-story">
           <div>
             <span className="site-kicker">Why TunaEye Matters</span>
-            <h2>Every sample must tell one complete, tamper-proof story.</h2>
+            <h2>Close the gap. Do not replace the grader.</h2>
           </div>
           <div>
             <p>
-              Yellowfin tuna trading depends heavily on visual quality assessment. Without digital standardization, disagreements between vessel operators, buyers, and processors lead to renegotiations, delays, and lost value.
+              TunaEye is a CNN trained on expert-annotated sashibo core and tail-cut images. It mirrors the traits graders already look for so the assist is familiar, not foreign.
             </p>
             <p>
-              TunaEye locks every decision to a verified specimen, weight, grader identity, neural network confidence, and printed thermal receipt—ensuring complete accountability from receiving tray to final shipment.
+              Standardized capture and transfer learning make quality assessment more consistent and accessible. The expert still decides.
             </p>
             <button className="site-text-link" onClick={() => onNavigate('about')}>
               Read our engineering approach <Arrow />
@@ -1010,7 +1007,7 @@ const innerPageMeta: Record<
     eyebrow: 'Platform Features',
     title: 'Everything a connected tuna grading station needs.',
     intro:
-      'TunaEye combines guided sample capture, edge neural inference, evidence review, protected expert decision overrides, thermal receipt printing, and dual-cloud synchronization.',
+      'Guided capture, edge CNN assist, expert review, receipts, and cloud sync — built to extend graders, not replace them.',
     cards: [
       ['Guided Kiosk Workflow', 'Large touch targets, high contrast, and responsive 16:10 tablet layouts built for wet port floors.'],
       ['Multi-Camera Capture', 'Seamless switching between device, USB, and virtual station cameras with live optical alignment rails.'],
@@ -1024,13 +1021,13 @@ const innerPageMeta: Record<
   },
   about: {
     eyebrow: 'About TunaEye',
-    title: 'Better evidence for better yellowfin tuna decisions.',
+    title: 'Sea Beyond the Cut.',
     intro:
-      'TunaEye was engineered as a bridge between the physical craft of expert tuna grading and the transparency of connected digital records.',
+      'We don\'t replace the expert eye. We extend its reach. TunaEye is a CNN-based computer vision system that supports expert graders on sashibo core and tail-cut yellowfin images.',
     cards: [
-      ['Our Purpose', 'Empower trained graders with standardized evidence without replacing human judgment or commercial expertise.'],
-      ['Our Method', 'Link every sample photo to its exact fish identity, weight, grader ID, AI inference score, override reason, and thermal receipt.'],
-      ['Our Standard', 'Make every grading transaction inspectable, printable, auditable, and synchronizable across seafood supply chains.'],
+      ['Our purpose', 'Bridge traditional grading and AI-assisted assessment. Automate the repetitive look — keep the expert in charge.'],
+      ['Our method', 'Expert-annotated datasets, standardized image acquisition, and transfer learning that mirrors grader traits.'],
+      ['Our limit', 'TunaEye is decision support. It does not claim to replace human expertise or commercial judgment.'],
     ],
   },
   faq: {
@@ -1038,7 +1035,7 @@ const innerPageMeta: Record<
     title: 'Answers for station operators and deployment teams.',
     intro: 'Detailed breakdown of TunaEye hardware boundaries, offline mechanics, and security controls.',
     cards: [
-      ['Can TunaEye replace a trained grader?', 'No. TunaEye is an evidence and standardization tool. Expert review and final approval remain with qualified human graders.'],
+      ['Can TunaEye replace a trained grader?', 'No. We mirror expert traits and automate the repetitive look. Qualified graders still review, override, and own the decision.'],
       ['How does offline mode function?', 'The PWA and local IndexedDB store all sessions on the tablet. Inference runs on the local Pi LAN. Cloud sync uploads queued records once internet returns.'],
       ['How are multiple cuts handled per fish?', 'Graders can link both Sashibo Core and Tail Cut samples to the same fish ID, tracking individual images, weights, and grades under one master record.'],
       ['How is the tablet secured in kiosk mode?', 'The PWA manifest requests standalone fullscreen display. For full Android hardware button locking, managed kiosk / lock-task mode is recommended.'],

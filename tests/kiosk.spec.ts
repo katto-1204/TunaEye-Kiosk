@@ -158,23 +158,68 @@ test('weight numpad entry and touch keypad interaction', async ({ page }) => {
   await expect(input).toHaveValue('35.4')
 })
 
-test('kiosk topbar is compact and renders TunaEye brand mark', async ({ page }) => {
+test('kiosk navbar is removed and contextual navigation remains', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
   await page.goto('/kiosk/select-role')
   await expect(page.getByRole('heading', { name: "Who's grading?" })).toBeVisible({ timeout: 5000 })
-  
-  const topbar = page.locator('.topbar')
-  await expect(topbar).toBeVisible()
-  const box = await topbar.boundingBox()
-  expect(box).not.toBeNull()
-  // Height must be compact (around 38px, <= 48px)
-  expect(box!.height).toBeLessThanOrEqual(48)
-  
-  // Check brand mark
-  const brandWord = page.locator('.brand-word')
-  await expect(brandWord).toBeVisible()
-  await expect(brandWord).toContainText('Tuna')
-  await expect(brandWord).toContainText('Eye')
+  await expect(page.locator('.topbar, .topbar-wrapper')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Back' })).toBeVisible()
+  expect((await page.locator('.app-main').boundingBox())!.y).toBe(0)
+})
+
+test('refresh clears unfinished session, preserves completed records, and returns to role selection', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 600 })
+  await page.addInitScript(() => {
+    localStorage.setItem('tunaeye-installed', 'true')
+    localStorage.setItem('tunaeye-records', JSON.stringify([{ id: 'saved-record', sessionId: 'saved-session', timestamp: Date.now(), time: 'Now', grader: 'Maria Santos', sample: 'Sashibo core', fish: 'Fish 1', weight: '42 kg', grade: 'A', status: 'Complete' }]))
+  })
+  await page.goto('/kiosk/weight')
+  await expect(page.getByRole('heading', { name: /Enter the fish weight/i })).toBeVisible()
+  await page.reload()
+
+  await expect(page).toHaveURL(/\/select-role$/)
+  await expect(page.getByRole('heading', { name: "Who's grading?" })).toBeVisible({ timeout: 5000 })
+  const dialog = page.getByRole('dialog', { name: "Session wasn't saved" })
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('unfinished grading session was cleared')
+  const modalBox = await dialog.locator('.modal-card--notice').boundingBox()
+  expect(modalBox!.x).toBeGreaterThanOrEqual(16)
+  expect(modalBox!.y).toBeGreaterThanOrEqual(16)
+  expect(modalBox!.x + modalBox!.width).toBeLessThanOrEqual(1008)
+  expect(modalBox!.y + modalBox!.height).toBeLessThanOrEqual(584)
+  const action = dialog.getByRole('button', { name: 'Choose a role' })
+  await expect(action).toBeFocused()
+  await action.click()
+  await expect(dialog).toHaveCount(0)
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0]?.id)).toBe('saved-record')
+})
+
+test('refresh always returns to role selection but only unfinished work shows the warning', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/kiosk/complete')
+  await page.reload()
+  await expect(page).toHaveURL(/\/select-role$/)
+  await expect(page.getByRole('heading', { name: "Who's grading?" })).toBeVisible({ timeout: 5000 })
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('legal dialogs share safe tablet sizing and visible actions', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 600 })
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/kiosk/grader')
+  for (const name of ['Terms and Conditions', 'Privacy Policy']) {
+    await page.getByRole('button', { name }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    const box = await dialog.locator('.legal-modal').boundingBox()
+    expect(box!.x).toBeGreaterThanOrEqual(16)
+    expect(box!.y).toBeGreaterThanOrEqual(16)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(1008)
+    expect(box!.y + box!.height).toBeLessThanOrEqual(584)
+    const closeAction = dialog.locator('.legal-modal__actions').getByRole('button', { name: 'Close' })
+    await expect(closeAction).toBeInViewport()
+    await closeAction.click()
+  }
 })
 
 test('tablet viewport renders expert grader dashboard in bento layout', async ({ page }) => {
@@ -235,7 +280,7 @@ test('uploaded image uses the same saved-evidence and Pi inference flow', async 
   await expect(page.getByRole('button', { name: 'Upload image' })).toBeInViewport()
   await page.getByLabel('Upload specimen image').setInputFiles('public/assets/sashiboCoreFull.png')
   await expect(page.getByRole('heading', { name: 'Use this image?' })).toBeVisible()
-  await page.getByRole('button', { name: 'Use this image' }).click()
+  await page.getByRole('button', { name: 'Use Image' }).click()
   await expect(page.getByRole('heading', { name: 'Sashibo core · Grade B' })).toBeVisible()
   expect(gradeBody).toContain('sashibocore')
   expect(gradeBody).toContain('name="image"; filename="capture.jpg"')
@@ -295,10 +340,19 @@ test('completed grading session remains local and pending until cloud sync', asy
   })
   expect(evidence).toHaveLength(1)
   expect(evidence[0]).toMatchObject({ sample: 'Sashibo core', fishId: 'Fish 1', syncState: 'pending' })
-  await page.getByRole('button', { name: 'Use this image' }).click()
+  await page.getByRole('button', { name: 'Use Image' }).click()
   
   // Analysis screen -> Result screen
   await expect(page.getByRole('heading', { name: /Sashibo core · Grade/i })).toBeVisible({ timeout: 10000 })
+  await page.getByRole('button', { name: 'Manual override' }).click()
+  const override = page.getByRole('dialog', { name: 'Manual override' })
+  await expect(override).toBeVisible()
+  await expect(override.locator('.otp-inputs input')).toHaveCount(4)
+  await expect(override.locator('.pin-key-btn')).toHaveCount(12)
+  const overrideBox = await override.locator('.override-modal').boundingBox()
+  expect(overrideBox!.y + overrideBox!.height).toBeLessThanOrEqual(800)
+  await expect(override.getByRole('button', { name: 'Unlock override' })).toBeInViewport()
+  await override.getByRole('button', { name: 'Cancel' }).click()
   await page.getByRole('button', { name: 'View results overview' }).click()
   
   // Overview screen -> Print
@@ -413,6 +467,8 @@ test('completion actions and grader logout return to the kiosk landing', async (
 for (const viewport of [
   { width: 1024, height: 600 },
   { width: 1280, height: 800 },
+  { width: 1024, height: 768 },
+  { width: 800, height: 1280 },
   { width: 1366, height: 768 },
 ]) {
   test(`QA tablet surfaces fit and remain readable at ${viewport.width}x${viewport.height}`, async ({ page }) => {
@@ -432,7 +488,7 @@ for (const viewport of [
     const roleCards = page.locator('.role-card-v2')
     await expect(roleCards).toHaveCount(2)
     expect((await roleCards.first().boundingBox())!.height).toBeGreaterThanOrEqual(200)
-    expect((await roleCards.first().boundingBox())!.width).toBeGreaterThanOrEqual(300)
+    expect((await roleCards.first().boundingBox())!.width).toBeGreaterThanOrEqual(viewport.width < 900 ? 260 : 300)
     await expectNoHorizontalOverflow()
 
     await page.goto('/kiosk/tutorial')
@@ -452,7 +508,7 @@ for (const viewport of [
     await expectNoHorizontalOverflow()
 
     await page.goto('/kiosk/print')
-    expect((await page.locator('.print-queue > div').first().boundingBox())!.height).toBeGreaterThanOrEqual(68)
+    expect((await page.locator('.print-queue > div').first().boundingBox())!.height).toBeGreaterThanOrEqual(viewport.height > viewport.width ? 60 : 68)
     await expect(page.getByRole('button', { name: 'Skip printing' })).toBeInViewport()
     const receipt = await page.locator('.receipt-container-v2').boundingBox()
     const printActions = await page.locator('.screen-stack--print > .bottom-bar').boundingBox()
