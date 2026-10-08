@@ -1,6 +1,6 @@
 # TunaEye Shared Supabase Contract
 
-This contract is shared by TunaEye Kiosk, TunaEyePhone, and the Admin Dashboard. All clients use one Supabase project. Raspberry Pi devices never connect to Supabase.
+This contract is shared by TunaEye Kiosk, TunaEyePhoneLEGIT, and the Admin Dashboard. All clients use one Supabase project. Raspberry Pi devices never connect to Supabase.
 
 ## Environment
 
@@ -67,7 +67,15 @@ Local-only states are `pending`, `syncing`, `synced`, and `failed`. They are not
 
 No polling and no Supabase Realtime subscription are part of this contract.
 
-## TunaEyePhone requirements
+## Raspberry Pi boundary
+
+- The kiosk connects locally to the Pi API at `http://10.42.0.1:5000` and ustreamer at `http://10.42.0.1:8080` by default.
+- The exact snapshot blob saved to IndexedDB is sent to `POST /grade`; the Pi never receives Supabase credentials.
+- Pi `GRADE_A`, `GRADE_B`, `GRADE_C`, and `INVALID` responses map to the existing cloud grade enum. A 0–1 confidence is normalized once to the contract's 0–100 value.
+- Capture IDs, inference IDs, and class scores remain local metadata because the canonical cloud table currently has no matching columns.
+- An HTTPS-hosted PWA may be blocked from direct HTTP/private-network requests. Production needs an approved secure local gateway or a locally served kiosk origin before hardware support can be claimed.
+
+## TunaEyePhoneLEGIT requirements
 
 Required: `id`, authenticated `user_id`, `source: mobile`, `session_id`, `grader_name`, `sample_type`, `fish_id`, final `grade`, `result_status`, and `captured_at`.
 

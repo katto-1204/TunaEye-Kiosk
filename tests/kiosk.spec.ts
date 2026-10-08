@@ -217,7 +217,50 @@ test('camera help triggers custom notice modal instead of alert', async ({ page 
   await expect(modal).not.toBeVisible()
 })
 
+test('uploaded image uses the same saved-evidence and Pi inference flow', async ({ page }) => {
+  let gradeBody = ''
+  const browserErrors: string[] = []
+  const failedRequests: string[] = []
+  page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()) })
+  page.on('pageerror', error => browserErrors.push(error.message))
+  page.on('requestfailed', request => failedRequests.push(`${request.method()} ${request.url()}`))
+  await page.setViewportSize({ width: 1024, height: 600 })
+  await page.route('http://10.42.0.1:8080/**', route => route.fulfill({ contentType: 'image/jpeg', body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }))
+  await page.route('http://10.42.0.1:5000/grade', async route => {
+    gradeBody = route.request().postData() ?? ''
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id: 'upload-grade', capture_id: 'upload-capture', grade: 'GRADE_B', confidence: 0.91, scores: { GRADE_A: 0.05, GRADE_B: 0.91, GRADE_C: 0.03, INVALID: 0.01 } }) })
+  })
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/kiosk/camera')
+  await expect(page.getByRole('button', { name: 'Upload image' })).toBeInViewport()
+  await page.getByLabel('Upload specimen image').setInputFiles('public/assets/sashiboCoreFull.png')
+  await expect(page.getByRole('heading', { name: 'Use this image?' })).toBeVisible()
+  await page.getByRole('button', { name: 'Use this image' }).click()
+  await expect(page.getByRole('heading', { name: 'Sashibo core · Grade B' })).toBeVisible()
+  expect(gradeBody).toContain('sashibocore')
+  expect(gradeBody).toContain('name="image"; filename="capture.jpg"')
+  const evidenceType = await page.evaluate(async () => await new Promise<string | undefined>((resolve, reject) => {
+    const open = indexedDB.open('tunaeye-offline', 1)
+    open.onerror = () => reject(open.error)
+    open.onsuccess = () => {
+      const get = open.result.transaction('evidence').objectStore('evidence').getAll()
+      get.onerror = () => reject(get.error)
+      get.onsuccess = () => resolve(get.result[0]?.mimeType)
+    }
+  }))
+  expect(evidenceType).toBe('image/jpeg')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  expect(browserErrors).toEqual([])
+  expect(failedRequests).toEqual([])
+})
+
 test('completed grading session remains local and pending until cloud sync', async ({ page }) => {
+  let gradeBody = ''
+  await page.route('http://10.42.0.1:8080/**', route => route.fulfill({ contentType: 'image/jpeg', body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }))
+  await page.route('http://10.42.0.1:5000/grade', async route => {
+    gradeBody = route.request().postData() ?? ''
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id: 'grade-1', capture_id: 'capture-1', image_type: 'sashibocore', grade: 'GRADE_A', confidence: 0.963, scores: { GRADE_A: 0.963, GRADE_B: 0.025, GRADE_C: 0.01, INVALID: 0.002 } }) })
+  })
   await page.addInitScript(() => {
     localStorage.setItem('tunaeye-installed', 'true')
     localStorage.setItem('tunaeye-grader-name', 'Maria Santos')
@@ -280,6 +323,10 @@ test('completed grading session remains local and pending until cloud sync', asy
   await expect(records.first().locator('img')).toBeVisible()
   const savedRecords = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]'))
   expect(savedRecords[0].capturedImageId).toBeTruthy()
+  expect(savedRecords[0].result).toMatchObject({ inferenceId: 'grade-1', captureId: 'capture-1', originalGrade: 'A', originalConfidence: 96.3 })
+  expect(gradeBody).toContain('name="image_type"')
+  expect(gradeBody).toContain('sashibocore')
+  expect(gradeBody).toContain('name="image"; filename="capture.jpg"')
   expect(savedRecords[0].transaction.syncState).toBe('pending')
   expect(JSON.stringify(savedRecords)).not.toContain('data:image')
 

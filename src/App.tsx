@@ -4,8 +4,9 @@ import ProductLanding, { type MarketingPage } from './MarketingLanding'
 import { PaymentReceiptPrinter } from './components/ui/payment-receipt-printer'
 import { getCapturedEvidence, saveCapturedEvidence } from './evidenceStorage'
 import { fetchCloudRecords, syncPendingRecords } from './cloudSync'
-import { isSupabaseConfigured } from './supabase'
+import { getSupabase, isSupabaseConfigured } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
+import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage } from './piClient'
 
 const ADMIN_PIN = '1234'
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
@@ -16,7 +17,7 @@ interface AuditEntry { id: string; timestamp: number; actor: string; action: str
 const AUDIT_KEY = 'tunaeye-audit-log'
 const loadAudit = (): AuditEntry[] => { try { return JSON.parse(localStorage.getItem(AUDIT_KEY) ?? '[]') as AuditEntry[] } catch { return [] } }
 const audit = (actor: string, action: string, detail: string) => { const entry = { id: crypto.randomUUID(), timestamp: Date.now(), actor, action, detail }; localStorage.setItem(AUDIT_KEY, JSON.stringify([entry, ...loadAudit()].slice(0, 500))) }
-const getConnectionSettings = () => ({ rpiUrl: localStorage.getItem('tunaeye-rpi-url') ?? 'http://tunaeye-pi.local:8000', modelName: localStorage.getItem('tunaeye-model-name') ?? 'Not configured' })
+const getConnectionSettings = () => ({ rpiUrl: getPiSettings().apiUrl, modelName: localStorage.getItem('tunaeye-model-name') ?? 'TFLite edge model' })
 const allScreens: Screen[] = ['welcome', 'select-role', 'admin', 'admin-dashboard', 'grader', 'grader-dashboard', 'sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print', 'complete']
 const stepForScreen: Partial<Record<Screen, number>> = { camera: 0, review: 0, analysis: 1, 'individual-result': 2, overview: 2, print: 2 }
 const pathForScreen = (screen: Screen) => screen === 'welcome' ? '/' : screen === 'select-role' ? '/select-role' : screen === 'admin' || screen === 'admin-dashboard' ? '/admin' : `/kiosk/${screen}`
@@ -201,7 +202,9 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
       setAuditEntries(loadAudit())
     }
     refresh()
-    if (isSupabaseConfigured() && navigator.onLine) void fetchCloudRecords().then(setRecords).catch(() => undefined)
+    if (isSupabaseConfigured() && navigator.onLine) void getSupabase().auth.getSession().then(({ data }) => {
+      if (data.session) return fetchCloudRecords().then(setRecords)
+    }).catch(() => undefined)
     window.addEventListener('storage', refresh)
     window.addEventListener('tunaeye-records-updated', refresh)
     return () => {
@@ -241,8 +244,8 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
       onNotice?.({ title: 'Sync unavailable', message, icon: 'help' })
     } finally { setSyncing(false) }
   }
-  const testRpi = async () => { setRpiStatus('Checking'); try { const response = await fetch(`${connections.rpiUrl.replace(/\/$/, '')}/health`, { signal: AbortSignal.timeout(5000) }); if (!response.ok) throw new Error(); const health = await response.json() as { model?: string }; if (health.model) setConnections(current => ({ ...current, modelName: health.model! })); setRpiStatus('Connected'); audit('Admin', 'RPi connection test', `Connected to ${connections.rpiUrl}`) } catch { setRpiStatus('Unavailable'); audit('Admin', 'RPi connection test', `Unable to reach ${connections.rpiUrl}`) } }
-  const runDiagnostics = async () => { setDiagnostic('Testing camera…'); try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); stream.getTracks().forEach(track => track.stop()); setDiagnostic('All systems operational') } catch { setDiagnostic('Camera permission blocked') } }
+  const testRpi = async () => { setRpiStatus('Checking'); try { const health = await checkPiHealth(connections.rpiUrl) as { model?: string }; if (health.model) setConnections(current => ({ ...current, modelName: health.model! })); setRpiStatus('Connected'); audit('Admin', 'RPi connection test', `Connected to ${connections.rpiUrl}`) } catch { setRpiStatus('Unavailable'); audit('Admin', 'RPi connection test', `Unable to reach ${connections.rpiUrl}`) } }
+  const runDiagnostics = async () => { setDiagnostic('Testing Pi camera…'); try { await capturePiImage(); setDiagnostic('Pi camera operational') } catch { setDiagnostic('Pi camera unavailable') } }
   const heading = section === 'Overview' ? 'Good day, Admin.' : section
   return <div className={`admin-workspace ${sidebarCollapsed ? 'admin-workspace--collapsed' : ''}`}><aside className="admin-sidebar"><button className="admin-sidebar__brand-link" onClick={() => { window.location.href = '/' }} aria-label="Go to TunaEye home"><BrandMark compact /></button><button className="admin-sidebar__toggle" onClick={() => setSidebarCollapsed(value => !value)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}><Icon name={sidebarCollapsed ? 'arrow' : 'back'} size={20} /></button><nav>{nav.map(item => <button key={item.label} className={section === item.label ? 'is-active' : ''} onClick={() => setSection(item.label)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav><div className="admin-sidebar__foot"><span><i className="status-dot" />{navigator.onLine ? 'System online' : 'Offline'}</span><button onClick={() => { audit('Admin', 'Logout', 'Administrator ended the session'); onExit() }}><Icon name="back" size={18} /><span>Logout</span></button></div></aside><section className="admin-content"><header className="admin-content__header"><div><span className="eyebrow">{stationName} · Admin console</span><h1>{heading}</h1><p>{section === 'Overview' ? `Cloud-synchronized overview · Last sync: ${lastSync}` : `Manage ${section.toLowerCase()} for this station.`}</p></div><div className="admin-header-actions"><Button variant="secondary" onClick={() => void syncRecords()} icon="refresh" disabled={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button><Button onClick={onStartGrading} icon="camera">Start grading</Button><div className="admin-avatar">AD</div></div></header>
     {section === 'Overview' && <><div className="admin-metrics"><article><span><Icon name="database" size={22} /></span><small>Sessions recorded</small><strong>{sessionCount}</strong><em>Synced on this station</em></article><article><span><Icon name="scale" size={22} /></span><small>Total fish weight</small><strong>{totalWeight.toFixed(1)} kg</strong><em>Across {records.length} samples</em></article><article><span><Icon name="spark" size={22} /></span><small>Grade A rate</small><strong>{gradeARate}%</strong><em>{records.filter(record => record.grade === 'A').length} Grade A samples</em></article><article><span><Icon name="users" size={22} /></span><small>Active graders</small><strong>{graders.length}</strong><em>All profiles available</em></article></div><div className="admin-overview-grid"><article className="admin-chart"><div className="admin-section-title"><div><h2>Weekly grading volume</h2><p>Completed samples during the last seven days</p></div><b>{records.length} total</b></div><AdminTrendGraph data={weeklyData}/></article><article className="admin-breakdown"><h2>Grade breakdown</h2><div className="grade-ring"><strong>{records.length}<small>samples</small></strong></div><div className="grade-legend"><span><i className="grade-a" />Grade A <b>{gradeARate}%</b></span><span><i className="grade-b" />Grade B <b>{records.length ? Math.round(records.filter(record => record.grade === 'B').length / records.length * 100) : 0}%</b></span><span><i className="grade-c" />Grade C <b>{records.length ? Math.round(records.filter(record => record.grade === 'C').length / records.length * 100) : 0}%</b></span></div></article></div><AdminRecords records={records.slice(0, 3)} compact onViewAll={() => setSection('Records')} /></>}
@@ -326,24 +329,14 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
   const testCamera = async () => {
     setCameraStatus('Checking')
     try {
-      if (!navigator.mediaDevices?.enumerateDevices) {
-        setCameraStatus('Permission Required')
-        setCameraInfo('MediaDevices API not available in browser')
-        return
-      }
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      const videoInputs = devices.filter(d => d.kind === 'videoinput')
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-      const tracks = stream.getVideoTracks()
-      const label = tracks[0]?.label || (videoInputs.length ? `${videoInputs.length} camera(s) detected` : 'Camera connected')
-      tracks.forEach(track => track.stop())
+      await capturePiImage()
       setCameraStatus('Operational')
-      setCameraInfo(`Connected: ${label}`)
-      audit('Admin', 'Camera Diagnostic', `Optical camera verified: ${label}`)
+      setCameraInfo('Raspberry Pi USB camera snapshot verified')
+      audit('Admin', 'Camera Diagnostic', 'Raspberry Pi USB camera verified')
     } catch {
-      setCameraStatus('Permission Required')
-      setCameraInfo('Camera access blocked. Grant camera permission in browser.')
-      audit('Admin', 'Camera Diagnostic', 'Camera access blocked or unavailable')
+      setCameraStatus('No Camera')
+      setCameraInfo('Pi camera unavailable. Check TunaRpi, ustreamer, and USB camera.')
+      audit('Admin', 'Camera Diagnostic', 'Raspberry Pi camera unavailable')
     }
   }
 
@@ -351,16 +344,11 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
     setRpiState('Checking')
     const start = performance.now()
     try {
-      const response = await fetch(`${rpiUrl.replace(/\/$/, '')}/health`, { signal: AbortSignal.timeout(4000) })
+      const data = await checkPiHealth(rpiUrl) as { model?: string }
       const latency = Math.round(performance.now() - start)
-      if (response.ok) {
-        const data = await response.json().catch(() => ({})) as { model?: string }
-        setRpiState('Connected')
-        setRpiInfo(`Connected (${latency} ms) · AI Model: ${data.model || modelName}`)
-        audit('Admin', 'RPi Diagnostic', `Raspberry Pi reachable in ${latency}ms`)
-      } else {
-        throw new Error(`HTTP ${response.status}`)
-      }
+      setRpiState('Connected')
+      setRpiInfo(`Connected (${latency} ms) · AI Model: ${data.model || modelName}`)
+      audit('Admin', 'RPi Diagnostic', `Raspberry Pi reachable in ${latency}ms`)
     } catch {
       setRpiState('Unreachable')
       setRpiInfo(`Unable to connect to ${rpiUrl} (Station running in local offline browser mode)`)
@@ -798,26 +786,39 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
   )
 }
 function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sample: SampleType; index: number; total: number; onCapture: (blob: Blob, previewUrl: string) => void; onBack: () => void; onHelp?: () => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const uploadRef = useRef<HTMLInputElement>(null)
   const [cameraError, setCameraError] = useState('')
-  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
-  const [cameraId, setCameraId] = useState('')
-  useEffect(() => { let stream: MediaStream | undefined; setCameraError(''); navigator.mediaDevices?.getUserMedia({ video: cameraId ? { deviceId: { exact: cameraId } } : { facingMode: 'environment' }, audio: false }).then(async value => { stream = value; if (videoRef.current) videoRef.current.srcObject = value; const devices = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'videoinput'); setCameras(devices); if (!cameraId) setCameraId(value.getVideoTracks()[0]?.getSettings().deviceId ?? devices[0]?.deviceId ?? '') }).catch(() => setCameraError('Allow camera access in your browser, then reload this screen.')); return () => stream?.getTracks().forEach(track => track.stop()) }, [cameraId])
+  const [streamKey, setStreamKey] = useState(0)
+  const [capturing, setCapturing] = useState(false)
+  const streamUrl = `${getPiSettings().streamUrl}?reconnect=${streamKey}`
   const capture = async () => {
-    const video = videoRef.current
-    if (video?.videoWidth) {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      canvas.getContext('2d')?.drawImage(video, 0, 0)
-      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', .9))
-      if (blob) onCapture(blob, URL.createObjectURL(blob))
-    } else {
-      const previewUrl = sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png'
-      onCapture(await fetch(previewUrl).then(response => response.blob()), previewUrl)
-    }
+    if (capturing) return
+    setCapturing(true)
+    setCameraError('')
+    try { const blob = await capturePiImage(); onCapture(blob, URL.createObjectURL(blob)) }
+    catch { setCameraError('Camera capture failed. Confirm this tablet is connected to TunaRpi, then reconnect.') }
+    finally { setCapturing(false) }
   }
-  return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera"><video ref={videoRef} autoPlay playsInline muted /><div className="target-corners"><i /><i /><i /><i /></div>{cameraError && <div className="camera-error"><Icon name="camera" size={28} />{cameraError}</div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>Live camera evidence</small></span></div><h1>Align the sample in the guide.</h1><p>Keep the surface still and fully visible. This sample remains linked to its fish.</p>{cameras.length > 0 && <label className="camera-selector"><span><Icon name="camera" size={18} />Camera source</span><select value={cameraId} onChange={event => setCameraId(event.target.value)}>{cameras.map((camera, cameraIndex) => <option key={camera.deviceId} value={camera.deviceId}>{camera.label || `Camera ${cameraIndex + 1}`}</option>)}</select><small>{cameras.length} camera{cameras.length === 1 ? '' : 's'} detected</small></label>}</aside></div><BottomBar onBack={onBack} onHelp={onHelp} primary={capture} primaryLabel="Capture" primaryIcon="camera" /></div>
+  const upload = async (file?: File) => {
+    if (!file) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setCameraError('Choose a JPEG, PNG, or WebP image.'); return }
+    if (file.size === 0) { setCameraError('The selected image is empty. Choose another file.'); return }
+    if (file.size > 10 * 1024 * 1024) { setCameraError('Choose an image smaller than 10 MB.'); return }
+    try {
+      const bitmap = await createImageBitmap(file)
+      const canvas = document.createElement('canvas')
+      canvas.width = bitmap.width
+      canvas.height = bitmap.height
+      canvas.getContext('2d')?.drawImage(bitmap, 0, 0)
+      bitmap.close()
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', .92))
+      if (!blob) throw new Error()
+      setCameraError('')
+      onCapture(blob, URL.createObjectURL(blob))
+    } catch { setCameraError('TunaEye could not read this image. Choose another file.') }
+    finally { if (uploadRef.current) uploadRef.current.value = '' }
+  }
+  return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera"><img src={streamUrl} alt="Live Raspberry Pi USB camera preview" onLoad={() => setCameraError('')} onError={() => setCameraError('Raspberry Pi camera stream is unavailable.')} /><div className="target-corners"><i /><i /><i /><i /></div>{cameraError && <div className="camera-error" role="alert"><Icon name="camera" size={28} /><span>{cameraError}</span><Button variant="secondary" icon="refresh" onClick={() => { setCameraError(''); setStreamKey(key => key + 1) }}>Reconnect</Button></div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>Raspberry Pi USB camera</small></span></div><h1>Align the sample in the guide.</h1><p>Keep the surface still and fully visible. The snapshot or uploaded image shown next is the exact evidence sent for inference.</p><input ref={uploadRef} className="camera-upload-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload specimen image" onChange={event => void upload(event.target.files?.[0])} /><small className="camera-upload-note">Upload accepts JPEG, PNG, or WebP up to 10 MB and stores it as JPEG.</small></aside></div><BottomBar onBack={onBack} onHelp={onHelp} secondaryLabel="Upload image" onSecondary={() => uploadRef.current?.click()} primary={() => void capture()} primaryLabel={capturing ? 'Capturing…' : 'Capture'} primaryIcon="camera" primaryDisabled={capturing} /></div>
 }
 function ReviewScreen({ sample, outcome, onRetake, onUse, onBack }: { sample: SampleType; outcome: DemoOutcome; onRetake: () => void; onUse: () => void; onBack: () => void }) { const valid = outcome === 'valid'; return <div className="screen-stack screen-stack--review"><div className="review-layout"><EvidenceFrame sample={sample} mode="sample" frozen /><aside className="review-aside"><span className={`review-badge review-badge--${outcome}`}>{valid ? <Icon name="check" size={17} /> : <Icon name="help" size={17} />}{valid ? 'Image looks good' : outcome === 'uncertain' ? 'Needs a closer look' : 'Image needs retake'}</span><h1>{valid ? 'Use this image?' : 'Let’s fix the image first.'}</h1><p>{valid ? `${sample} is centered, clear, and ready for edge inference.` : outcome === 'uncertain' ? 'The view is usable, but the confidence may be too low for an automatic result.' : 'The sample is not positioned clearly enough inside the guide.'}</p><div className="review-note"><Icon name="shield" size={18} /><span>Evidence is linked before inference</span></div></aside></div><BottomBar onBack={onBack} secondaryLabel="Retake" onSecondary={onRetake} primary={onUse} primaryLabel="Use this image" primaryIcon="arrow" /></div> }
 function AnalysisScreen({ sample }: { sample: SampleType }) {
@@ -1155,6 +1156,7 @@ function App() {
     const recordId = `${gradingSessionRef.current.id}-${sampleOrder.indexOf(sample) + 1}`
     try {
       await saveCapturedEvidence({ id: recordId, sessionId: gradingSessionRef.current.id, sample, fishId: fishIdForSample(session, sample), capturedAt: Date.now(), blob })
+      if (capturedEvidence[sample]?.startsWith('blob:')) URL.revokeObjectURL(capturedEvidence[sample]!)
       capturedEvidence[sample] = previewUrl
       window.setTimeout(() => { dispatch({ type: 'captured' }); setIsCapturing(false) }, 850)
     } catch {
@@ -1163,9 +1165,28 @@ function App() {
       setNoticeModal({ title: 'Capture not saved', message: 'TunaEye could not store this image on the device. Free device storage and capture it again.', icon: 'camera' })
     }
   }
-  useEffect(() => { if (session.screen !== 'analysis') return; const timeout = window.setTimeout(() => dispatch({ type: 'finishAnalysis', outcome: session.demoOutcome }), 1700); return () => window.clearTimeout(timeout) }, [session.screen, session.demoOutcome])
+  useEffect(() => {
+    if (session.screen !== 'analysis') return
+    let cancelled = false
+    const analyze = async () => {
+      try {
+        const recordId = `${gradingSessionRef.current.id}-${sampleOrder.indexOf(sample) + 1}`
+        const evidence = await getCapturedEvidence(recordId)
+        if (!evidence) throw new Error('Captured evidence is missing.')
+        const result = await gradePiImage(evidence.blob, sample)
+        if (!cancelled) dispatch({ type: 'finishAnalysis', outcome: result.outcome, grade: result.grade, confidence: result.confidence, inferenceId: result.id, captureId: result.captureId, scores: result.scores })
+      } catch (error) {
+        if (cancelled) return
+        const message = error instanceof Error ? error.message : 'Inference failed.'
+        setNoticeModal({ title: 'Raspberry Pi inference unavailable', message: `${message} The captured image remains saved on this device.`, icon: 'help' })
+        go('review')
+      }
+    }
+    void analyze()
+    return () => { cancelled = true }
+  }, [session.screen, sample, go])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
+  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
   const openRole = (role: Role) => { gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {

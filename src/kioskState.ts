@@ -33,6 +33,9 @@ export interface SampleResult {
   overrideReason: string
   captured: boolean
   weight: string
+  inferenceId?: string
+  captureId?: string
+  scores?: Record<string, number>
 }
 
 export interface Session {
@@ -87,7 +90,7 @@ export type Action =
   | { type: 'setDemoOutcome'; outcome: DemoOutcome }
   | { type: 'captured' }
   | { type: 'startAnalysis' }
-  | { type: 'finishAnalysis'; outcome: DemoOutcome }
+  | { type: 'finishAnalysis'; outcome: DemoOutcome; grade?: Grade | null; confidence?: number | null; inferenceId?: string; captureId?: string; scores?: Record<string, number> }
   | { type: 'setAdminPin'; value: string }
   | { type: 'adminError'; message: string }
   | { type: 'adminAuthenticated' }
@@ -144,8 +147,8 @@ export function reducer(state: Session, action: Action): Session {
       return { ...state, screen: 'analysis' }
     case 'finishAnalysis': {
       const sample = currentSample(state)
-      const grade: Grade | null = action.outcome === 'valid' ? (sample === 'Sashibo core' ? 'A' : 'B') : null
-      const confidence = action.outcome === 'valid' ? (sample === 'Sashibo core' ? 96 : 91) : action.outcome === 'uncertain' ? 61 : null
+      const grade = action.grade ?? null
+      const confidence = action.confidence ?? null
       return {
         ...state,
         screen: 'individual-result',
@@ -161,6 +164,9 @@ export function reducer(state: Session, action: Action): Session {
             overrideReason: resultFor(state, sample)?.overrideReason ?? '',
             captured: true,
             weight: weightForSample(state, sample),
+            inferenceId: action.inferenceId,
+            captureId: action.captureId,
+            scores: action.scores,
           },
         },
       }

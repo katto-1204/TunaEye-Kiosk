@@ -1,5 +1,7 @@
 # Lessons
 
+- Never clean Playwright artifact directories while a browser suite is still running; wait for the process to exit, then restore or remove generated files.
+
 - Input width calculations must include placeholder length; a two-character minimum clips the three-character `0.0` weight display.
 - When asked to combine two landing sections, consolidate their unique content into one layout and remove the superseded block; wrapping both blocks in one parent is not a merge.
 - Marketing CTAs must match their destination: demos open media, downloads lead to installation, and neither should reuse the grading action.

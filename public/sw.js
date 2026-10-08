@@ -30,6 +30,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return
   const url = event.request.url
   if (!url.startsWith('http://') && !url.startsWith('https://')) return
+  if (url.startsWith('http://10.42.0.1:')) return
   if (url.includes('/@vite/') || url.includes('/@react-refresh') || url.includes('hot-update')) return
 
   event.respondWith(

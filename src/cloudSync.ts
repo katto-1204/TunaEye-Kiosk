@@ -16,7 +16,9 @@ function setSyncState(id: string, syncState: 'syncing' | 'synced' | 'failed', la
 
 export interface SyncSummary { synced: number; failed: number; skipped: number }
 
-export async function syncPendingRecords(): Promise<SyncSummary> {
+let activeSync: Promise<SyncSummary> | null = null
+
+async function runPendingSync(): Promise<SyncSummary> {
   if (!isSupabaseConfigured()) throw new Error('Supabase is not configured. Add the Vite environment variables first.')
   if (!navigator.onLine) throw new Error('No internet connection. Records remain pending.')
   const supabase = getSupabase()
@@ -71,6 +73,11 @@ export async function syncPendingRecords(): Promise<SyncSummary> {
     }
   }
   return summary
+}
+
+export function syncPendingRecords(): Promise<SyncSummary> {
+  activeSync ??= runPendingSync().finally(() => { activeSync = null })
+  return activeSync
 }
 
 export async function fetchCloudRecords(): Promise<GradingRecord[]> {

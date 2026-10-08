@@ -14,7 +14,7 @@ export interface GradingRecord {
   capturedImage?: string
   capturedImageId?: string
   remoteImagePath?: string
-  result?: { status: string; originalGrade: string | null; originalConfidence: number | null; overrideGrade: string | null; overrideReason: string }
+  result?: { status: string; originalGrade: string | null; originalConfidence: number | null; overrideGrade: string | null; overrideReason: string; inferenceId?: string; captureId?: string; scores?: Record<string, number> }
   transaction?: { currency: string; amount: number | null; syncState: SyncState; lastSyncError?: string }
 }
 

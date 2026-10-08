@@ -1,5 +1,52 @@
 # TunaEye Layout Refinement: Weight Entry, Analysis, & Thermal Receipt Printing
 
+## Master Kiosk UI/UX QA + Branding Overhaul — 2026-10-09
+
+- [ ] Audit shared kiosk layout, branding tokens, affected screens, dialogs, and current responsive tests.
+- [ ] Remove the kiosk navbar and its reserved height while preserving contextual navigation.
+- [ ] Apply the royal-blue/white design system without changing public marketing or admin behavior unnecessarily.
+- [ ] Fix role selection, legal dialogs, manual override, fish association, weight entry, and image review layouts.
+- [ ] Add bounding-box, overflow, modal, and workflow assertions at 1280×800, 1024×600, 1024×768, and 800×1280.
+- [ ] Visually inspect captured screenshots, repair regressions, run the full Playwright suite, and run the production build.
+
+### Review
+
+- Pending implementation and verification.
+
+## Image Upload Option + Raspberry Pi V2 Audit — 2026-10-09
+
+- [x] Audit the supplied Pi V2 requirements against the locally available kiosk contract and record unavailable Pi evidence honestly.
+- [x] Add a validated image-upload option to the existing camera screen without duplicating capture, review, inference, persistence, or sync logic.
+- [x] Verify an uploaded Sashibo Core image uses the selected model contract and retains normalized JPEG evidence; existing sample routing supplies `tailcut` for Tail-Cut.
+- [x] Treat the supplied PostgreSQL password as a server-side audit credential only; never commit or expose it to Vite.
+- [x] Create a dedicated Markdown audit report with findings, severity, required Pi changes, and PASS/FAIL/UNVERIFIED checklist.
+- [x] Run focused Playwright upload verification, full browser suite, and production build.
+
+### Review
+
+- Upload flow passed at 1024×600 with no console errors, failed requests, or horizontal overflow.
+- Uploaded PNG evidence was decoded and stored as JPEG, then sent through the existing multipart Pi inference path.
+- Full Playwright suite passed: 16 tests; one live-credential Supabase test skipped as designed.
+- Production build passed (`tsc -b && vite build`).
+- Physical Pi/backend/model/hotspot findings remain UNVERIFIED because `/home/tunarpi/rpi-cam-demo/` was not available in this workspace.
+
+## Raspberry Pi 5 + Shared Supabase Integration — 2026-10-09
+
+- [x] Audit camera, inference, persistence, sync, schema, admin, PWA, and tests.
+- [x] Add one reusable Pi client for health, stream, snapshot/capture, and grading with timeout/retry validation.
+- [x] Replace tablet camera/demo inference with the Pi USB camera and exact captured-frame grading flow.
+- [x] Preserve local records, stable IDs, receipt/QR flow, and manual/automatic Supabase sync.
+- [x] Configure the supplied publishable Supabase project values without exposing database credentials.
+- [x] Update the shared contract and create a complete implementation report (`to do`, `done`, and remaining blockers).
+- [x] Run typecheck/build and Playwright user-flow verification, including console/network checks and tablet viewports.
+
+### Review
+
+- Production build passed (`tsc -b && vite build`).
+- Full Playwright suite passed: 15 tests; the live-credential Supabase test was skipped as designed.
+- Focused Pi browser flow passed with mocked ustreamer snapshot and Flask inference, including multipart model selection and saved backend IDs.
+- Real Pi camera/models, live Supabase schema/RLS, and HTTPS-to-local-network behavior remain hardware/deployment verification items documented in `RASPBERRY_PI_SUPABASE_INTEGRATION.md`.
+
 ## Landscape Tablet QA Fixes — 2026-10-07
 
 - [x] Move the role help control to the right with a 48px target.
