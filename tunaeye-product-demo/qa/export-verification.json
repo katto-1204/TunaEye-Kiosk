@@ -1,0 +1,225 @@
+{
+  "checkedAt": "2026-10-09T21:37:38.569Z",
+  "passed": true,
+  "status": "passed",
+  "requirements": {
+    "durationSeconds": 90,
+    "sampleRate": 48000,
+    "channels": 2,
+    "integratedLufs": -14,
+    "lufsTolerance": 1,
+    "maximumTruePeakDbfs": 0
+  },
+  "files": [
+    {
+      "file": "tunaeye-kiosk-demo.mp4",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "aac",
+        "sampleRate": 48000,
+        "channels": 2,
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "width": 1920,
+        "height": 1080,
+        "fps": 60,
+        "decodedFrames": 5400
+      },
+      "audio": {
+        "integratedLufs": -14,
+        "truePeakDbfs": -1.5,
+        "samplePeakDbfs": -1.478068,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "tunaeye-kiosk-demo-no-narration.mp4",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "aac",
+        "sampleRate": 48000,
+        "channels": 2,
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "width": 1920,
+        "height": 1080,
+        "fps": 60,
+        "decodedFrames": 5400
+      },
+      "audio": {
+        "integratedLufs": -13.5,
+        "truePeakDbfs": -1.1,
+        "samplePeakDbfs": -1.081017,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "tunaeye-kiosk-preview.mp4",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "aac",
+        "sampleRate": 48000,
+        "channels": 2,
+        "videoCodec": "h264",
+        "pixelFormat": "yuv420p",
+        "width": 1280,
+        "height": 720,
+        "fps": 30,
+        "decodedFrames": 2700
+      },
+      "audio": {
+        "integratedLufs": -14,
+        "truePeakDbfs": -1.3,
+        "samplePeakDbfs": -1.308184,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "narration.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s24le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -17.4,
+        "truePeakDbfs": -6,
+        "samplePeakDbfs": -6.003499,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "music.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s16le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -30.4,
+        "truePeakDbfs": -16.9,
+        "samplePeakDbfs": -16.881839,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "sfx.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s16le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -35.3,
+        "truePeakDbfs": -13.5,
+        "samplePeakDbfs": -13.534535,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "final_mix.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s24le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -14,
+        "truePeakDbfs": -1.5,
+        "samplePeakDbfs": -1.499116,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "public/audio/no_narration_mix.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s16le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -13.5,
+        "truePeakDbfs": -1.2,
+        "samplePeakDbfs": -1.185627,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "public/audio/narration.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s24le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -17.4,
+        "truePeakDbfs": -6,
+        "samplePeakDbfs": -6.003499,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "public/audio/music.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s16le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -30.4,
+        "truePeakDbfs": -16.9,
+        "samplePeakDbfs": -16.881839,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "public/audio/sfx.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s16le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -35.3,
+        "truePeakDbfs": -13.5,
+        "samplePeakDbfs": -13.534535,
+        "invalidSamples": 0
+      }
+    },
+    {
+      "file": "public/audio/final_mix.wav",
+      "status": "passed",
+      "media": {
+        "durationSeconds": 90,
+        "audioCodec": "pcm_s24le",
+        "sampleRate": 48000,
+        "channels": 2
+      },
+      "audio": {
+        "integratedLufs": -14,
+        "truePeakDbfs": -1.5,
+        "samplePeakDbfs": -1.499116,
+        "invalidSamples": 0
+      }
+    }
+  ]
+}

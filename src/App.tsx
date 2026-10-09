@@ -4,7 +4,7 @@ import ProductLanding, { type MarketingPage } from './MarketingLanding'
 import { PaymentReceiptPrinter } from './components/ui/payment-receipt-printer'
 import { getCapturedEvidence, saveCapturedEvidence } from './evidenceStorage'
 import { fetchCloudRecords, syncPendingRecords, syncPriceSchedule } from './cloudSync'
-import { getSupabase, hasAdminProfile, isSupabaseConfigured, sendAdminMagicLink } from './supabase'
+import { checkCloudConnection, CLOUD_CONNECTION_EVENT, CloudUnavailableError, getSupabase, hasAdminProfile, isSupabaseConfigured, reportCloudConnection, sendAdminMagicLink } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
 import { getDemoPreviewUrl, initDemoMode, isDemoMode, parseDemoGradeFromFilename, setDemoGradeHint } from './demoMode'
 import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage, PI_CONNECTION_GUIDANCE, PiIntegrationError } from './piClient'
@@ -27,9 +27,21 @@ const screenForPath = (path: string): Screen => { if (path === '/select-role') r
 const marketingPageForPath = (path: string): MarketingPage => { const page = path.replace(/^\//, '') as MarketingPage; return ['features', 'about', 'team', 'faq', 'terms', 'privacy'].includes(page) ? page : 'home' }
 const requiresHostedAdminAuth = () => isSupabaseConfigured() && !['localhost', '127.0.0.1'].includes(window.location.hostname)
 const unfinishedScreens = new Set<Screen>(['sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print'])
-const wasReloaded = () => (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'reload'
 const KIOSK_ACTIVITY_KEY = 'tunaeye-last-activity'
+const KIOSK_RELOAD_MARKER_KEY = 'tunaeye-reload-marker'
 const KIOSK_IDLE_RESET_MS = 30 * 60 * 1000
+const wasReloaded = () => {
+  const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+  const marker = sessionStorage.getItem(KIOSK_RELOAD_MARKER_KEY) === 'true'
+  if (navigation?.type === 'reload' || marker) {
+    sessionStorage.removeItem(KIOSK_RELOAD_MARKER_KEY)
+    return true
+  }
+  const referrerPath = document.referrer ? new URL(document.referrer, window.location.href).pathname : ''
+  const samePageReferrer = referrerPath === window.location.pathname && referrerPath !== ''
+  if (samePageReferrer) return true
+  return false
+}
 const isAndroidChrome = () => /Android/i.test(navigator.userAgent) && /Chrome\/\d+/i.test(navigator.userAgent) && !/EdgA|OPR\//i.test(navigator.userAgent)
 const nativeKiosk = () => (window as Window & { TunaEyeKiosk?: { exitLockTask?: () => void } }).TunaEyeKiosk
 const isNativeAndroidKiosk = () => Boolean(nativeKiosk())
@@ -108,6 +120,48 @@ function StoredEvidenceImage({ evidenceId, legacySource, className, alt }: { evi
   }, [evidenceId, legacySource])
   if (status === 'loading') return <div className={`${className ?? ''} stored-evidence--missing`} role="status">Loading image…</div>
   return source ? <img className={className} src={source} alt={alt} /> : <div className={`${className ?? ''} stored-evidence--missing`} role="status">Image unavailable</div>
+}
+function ImageSyncLabel({ record }: { record: GradingRecord }) {
+  if (!record.capturedImageId && !record.capturedImage && !record.remoteImagePath) return null
+  const state = record.transaction?.syncState ?? 'pending'
+  return <span className={`image-sync-label image-sync-label--${state}`}>{state === 'synced' ? 'Synced' : state === 'syncing' ? 'Syncing…' : state === 'failed' ? 'Sync needs retry' : 'Saved locally'}</span>
+}
+function InternetRecoveryToast({ active }: { active: boolean }) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    setVisible(false)
+    if (!active || !isSupabaseConfigured()) return
+    let previous: boolean | null = null
+    let dismissTimer: number | undefined
+    const connectionChanged = (event: Event) => {
+      const available = (event as CustomEvent<boolean>).detail
+      if (previous === false && available) {
+        setVisible(true)
+        window.clearTimeout(dismissTimer)
+        dismissTimer = window.setTimeout(() => setVisible(false), 8000)
+      } else if (!available) setVisible(false)
+      previous = available
+    }
+    const check = () => { if (document.visibilityState === 'visible') void checkCloudConnection() }
+    const offline = () => reportCloudConnection(false)
+    window.addEventListener(CLOUD_CONNECTION_EVENT, connectionChanged)
+    window.addEventListener('online', check)
+    window.addEventListener('offline', offline)
+    window.addEventListener('focus', check)
+    document.addEventListener('visibilitychange', check)
+    check()
+    const interval = window.setInterval(check, 15000)
+    return () => {
+      window.clearInterval(interval)
+      window.clearTimeout(dismissTimer)
+      window.removeEventListener(CLOUD_CONNECTION_EVENT, connectionChanged)
+      window.removeEventListener('online', check)
+      window.removeEventListener('offline', offline)
+      window.removeEventListener('focus', check)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [active])
+  return active && visible ? <div className="capture-toast internet-toast" role="status" aria-live="polite"><span className="capture-toast__ring"><Icon name="check" size={22} /></span><span><strong>Internet is back</strong><small>You can sync your saved images now.</small></span><button className="icon-button" aria-label="Dismiss internet message" onClick={() => setVisible(false)}>×</button></div> : null
 }
 function TutorialModal({ onClose, title = 'Guided tutorial' }: { onClose: () => void; title?: string }) { return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}><div className="modal-card"><div className="modal-card__header"><div><span className="eyebrow">{title}</span><h2>Three quick checks before capture</h2></div><button className="icon-button" aria-label="Close tutorial" onClick={onClose}>×</button></div><div className="tutorial-list"><div><span>01</span><div><strong>Pull the tray out</strong><p>Use the chamber handle and keep the sample surface clean.</p></div></div><div><span>02</span><div><strong>Place the tuna flat</strong><p>Keep the selected sample centered in the blue guide.</p></div></div><div><span>03</span><div><strong>Check the view</strong><p>When the image is clear, press Capture once.</p></div></div></div><Button onClick={onClose} icon="check">Got it</Button></div></div> }
 function LegalModal({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () => void }) { const privacy = kind === 'privacy'; return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={privacy ? 'Privacy policy' : 'Terms and conditions'}><div className="modal-card legal-modal"><div className="modal-card__header"><div><span className="eyebrow">TunaEye</span><h2>{privacy ? 'Privacy policy' : 'Terms and conditions'}</h2></div><button className="icon-button" aria-label="Close" onClick={onClose}>×</button></div><div className="legal-modal__body"><p>{privacy ? 'TunaEye stores grading evidence, grader identity, device events, and audit records for operational traceability. Authorized administrators control retention and cloud synchronization through the configured services.' : 'TunaEye supports trained tuna graders and does not replace required regulatory, safety, or purchasing review. Operators remain responsible for confirming the sample, fish association, and final decision.'}</p></div><div className="legal-modal__actions"><Button onClick={onClose}>Close</Button></div></div></div> }
@@ -209,7 +263,7 @@ function WelcomeScreen({ onStart, onInstall, onTutorial, onGoMain, installed }: 
     </div>
   )
 }
-function SelectRoleScreen({ onRole }: { onRole: (role: Role) => void }) {
+function SelectRoleScreen({ onRole, onBack }: { onRole: (role: Role) => void; onBack?: () => void }) {
   return (
     <div className="screen-stack screen-stack--role screen-stack--role-v2">
       <div className="role-heading-v3"><span className="eyebrow">Choose your workspace</span><h1 className="role-title-v2">Who's grading?</h1><p>Open the tools designed for your role at this station.</p></div>
@@ -228,6 +282,7 @@ function SelectRoleScreen({ onRole }: { onRole: (role: Role) => void }) {
         </button>
       </div>
       <div className="role-bottom role-bottom--v2" aria-hidden="true" />
+      <BottomBar onBack={onBack} />
     </div>
   )
 }
@@ -321,16 +376,18 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
     setSyncing(true)
     try {
       const summary = await syncPendingRecords()
-      setRecords(await fetchCloudRecords())
-      const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-      setLastSync(syncedAt)
-      localStorage.setItem('tunaeye-last-sync', syncedAt)
+      if (!summary.waiting) setRecords(await fetchCloudRecords())
+      if (summary.synced) {
+        const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+        setLastSync(syncedAt)
+        localStorage.setItem('tunaeye-last-sync', syncedAt)
+      }
       audit('Admin', 'Manual sync', `${summary.synced} records synchronized; ${summary.failed} failed`)
-      onNotice?.({ title: summary.failed ? 'Sync completed with errors' : 'Sync complete', message: `${summary.synced} records synchronized. ${summary.failed} remain available for retry.${summary.firstError ? ` ${summary.firstError}` : ''}`, icon: 'refresh' })
+      onNotice?.({ title: summary.waiting ? 'Waiting for internet' : summary.failed ? 'Sync completed with errors' : 'Sync complete', message: `${summary.synced} records synchronized. ${summary.waiting ? `${summary.waiting} waiting for internet. ` : ''}${summary.failed} remain available for retry.${summary.firstError ? ` ${summary.firstError}` : ''}`, icon: 'refresh' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Synchronization failed.'
       audit('Admin', 'Manual sync failed', message)
-      onNotice?.({ title: 'Sync unavailable', message, icon: 'help' })
+      onNotice?.({ title: error instanceof CloudUnavailableError ? 'Waiting for internet' : 'Sync unavailable', message, icon: 'help' })
     } finally { setSyncing(false) }
   }
   const testRpi = async () => { setRpiStatus('Checking'); try { const health = await checkPiHealth(connections.rpiUrl); const models = health.models ? Object.entries(health.models).filter(([, ready]) => ready).map(([name]) => name).join(' + ') : health.model; if (models) setConnections(current => ({ ...current, modelName: models })); setRpiStatus('Connected'); audit('Admin', 'RPi connection test', `Connected to ${connections.rpiUrl}`) } catch (error) { console.error('RPi status check failed', error); setRpiStatus('Unavailable'); audit('Admin', 'RPi connection test', `Unable to reach ${connections.rpiUrl}`) } }
@@ -348,7 +405,8 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
 }
 function AdminRecords({ records, compact = false, onViewAll }: { records: GradingRecord[]; compact?: boolean; onViewAll?: () => void }) {
   const [page, setPage] = useState(1)
-  const [selectedRecord, setSelectedRecord] = useState<GradingRecord | null>(null)
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null)
+  const selectedRecord = records.find(record => record.id === selectedRecordId)
   const pageSize = 8
   const totalPages = Math.max(1, Math.ceil(records.length / pageSize))
   const safePage = Math.min(page, totalPages)
@@ -374,10 +432,10 @@ function AdminRecords({ records, compact = false, onViewAll }: { records: Gradin
           <span>Status</span>
         </div>
         {displayed.map(record => (
-          <div key={record.id} className="grader-record-item" role="button" tabIndex={0} onClick={() => setSelectedRecord(record)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') setSelectedRecord(record) }}>
+          <div key={record.id} className="grader-record-item" role="button" tabIndex={0} onClick={() => setSelectedRecordId(record.id)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') setSelectedRecordId(record.id) }}>
             <span><strong>{record.id}</strong><small>{record.time}</small></span>
             <span>{record.grader}</span>
-            <span className="record-sample-cell"><StoredEvidenceImage evidenceId={record.capturedImageId} legacySource={record.capturedImage} alt={`Captured ${record.sample}`} /><strong>{record.sample}</strong><small>{record.fish} · {record.result?.originalConfidence ? `${record.result.originalConfidence}% confidence` : 'Result saved'}</small></span>
+            <span className="record-sample-cell"><StoredEvidenceImage evidenceId={record.capturedImageId} legacySource={record.capturedImage} alt={`Captured ${record.sample}`} /><strong>{record.sample}</strong><small>{record.fish} · {record.result?.originalConfidence ? `${record.result.originalConfidence}% confidence` : 'Result saved'}</small><ImageSyncLabel record={record} /></span>
             <span>{record.weight}</span>
             <span className={`table-grade table-grade--${record.grade}`}>{record.grade}</span>
             <span className={`status-label ${record.status === 'Override' ? 'status-label--uncertain' : 'status-label--valid'}`}>{record.status}</span>
@@ -394,7 +452,7 @@ function AdminRecords({ records, compact = false, onViewAll }: { records: Gradin
           </div>
         </div>
       )}
-      {selectedRecord && <div className="record-review-backdrop" role="dialog" aria-modal="true" aria-label={`Record ${selectedRecord.id}`} onClick={() => setSelectedRecord(null)}><article className="record-review" onClick={event => event.stopPropagation()}><header><div><span className="eyebrow">Captured tuna record</span><h2>{selectedRecord.id}</h2><p>{selectedRecord.time} · {selectedRecord.grader}</p></div><button className="icon-button" onClick={() => setSelectedRecord(null)} aria-label="Close record">×</button></header>{selectedRecord.capturedImageId || selectedRecord.capturedImage ? <StoredEvidenceImage className="record-review__image" evidenceId={selectedRecord.capturedImageId} legacySource={selectedRecord.capturedImage} alt={`Captured ${selectedRecord.sample}`} /> : <div className="record-review__missing">Captured image unavailable for this older record.</div>}<div className="record-review__grade"><span>Final result</span><strong>Grade {selectedRecord.grade}</strong><small>{selectedRecord.result?.originalConfidence ?? '—'}% original confidence</small></div><dl><div><dt>Sample</dt><dd>{selectedRecord.sample}</dd></div><div><dt>Fish association</dt><dd>{selectedRecord.fish}</dd></div><div><dt>Weight</dt><dd>{selectedRecord.weight}</dd></div><div><dt>Fish value</dt><dd>{peso(selectedRecord.transaction?.amount)}</dd></div><div><dt>Model result</dt><dd>{selectedRecord.result?.originalGrade ? `Grade ${selectedRecord.result.originalGrade}` : selectedRecord.result?.status ?? selectedRecord.status}</dd></div><div><dt>Sync status</dt><dd>{selectedRecord.transaction?.syncState ?? 'Pending'}</dd></div></dl>{selectedRecord.result?.overrideReason && <p className="record-review__reason"><strong>Override reason:</strong> {selectedRecord.result.overrideReason}</p>}</article></div>}
+      {selectedRecord && <div className="record-review-backdrop" role="dialog" aria-modal="true" aria-label={`Record ${selectedRecord.id}`} onClick={() => setSelectedRecordId(null)}><article className="record-review" onClick={event => event.stopPropagation()}><header><div><span className="eyebrow">Captured tuna record</span><h2>{selectedRecord.id}</h2><p>{selectedRecord.time} · {selectedRecord.grader}</p></div><button className="icon-button" onClick={() => setSelectedRecordId(null)} aria-label="Close record">×</button></header>{selectedRecord.capturedImageId || selectedRecord.capturedImage ? <StoredEvidenceImage className="record-review__image" evidenceId={selectedRecord.capturedImageId} legacySource={selectedRecord.capturedImage} alt={`Captured ${selectedRecord.sample}`} /> : <div className="record-review__missing">Captured image unavailable for this older record.</div>}<ImageSyncLabel record={selectedRecord} /><div className="record-review__grade"><span>Final result</span><strong>Grade {selectedRecord.grade}</strong><small>{selectedRecord.result?.originalConfidence ?? '—'}% original confidence</small></div><dl><div><dt>Sample</dt><dd>{selectedRecord.sample}</dd></div><div><dt>Fish association</dt><dd>{selectedRecord.fish}</dd></div><div><dt>Weight</dt><dd>{selectedRecord.weight}</dd></div><div><dt>Fish value</dt><dd>{peso(selectedRecord.transaction?.amount)}</dd></div><div><dt>Model result</dt><dd>{selectedRecord.result?.originalGrade ? `Grade ${selectedRecord.result.originalGrade}` : selectedRecord.result?.status ?? selectedRecord.status}</dd></div><div><dt>Sync status</dt><dd>{selectedRecord.transaction?.syncState === 'synced' ? 'Synced' : selectedRecord.transaction?.syncState === 'syncing' ? 'Syncing' : selectedRecord.transaction?.syncState === 'failed' ? 'Sync needs retry' : 'Saved locally'}</dd></div></dl>{selectedRecord.result?.overrideReason && <p className="record-review__reason"><strong>Override reason:</strong> {selectedRecord.result.overrideReason}</p>}</article></div>}
     </div>
   )
 }
@@ -413,7 +471,11 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
   const [rpiInfo, setRpiInfo] = useState(`Gateway endpoint: ${rpiUrl}`)
 
   const [storageInfo, setStorageInfo] = useState('Checking IndexedDB storage quota…')
-  const [networkInfo, setNetworkInfo] = useState(navigator.onLine ? 'Network online · Station cloud sync ready' : 'Station offline mode active')
+  const [networkInfo, setNetworkInfo] = useState(navigator.onLine ? 'Network connected · Internet access not verified' : 'Station offline mode active')
+  const testNetwork = async () => {
+    setNetworkInfo('Checking internet…')
+    setNetworkInfo(await checkCloudConnection() ? 'Internet available · Ready to sync' : 'Waiting for internet · Local grading is available')
+  }
 
   const testCamera = async () => {
     setCameraStatus('Checking')
@@ -513,7 +575,7 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
   const runAllDiagnostics = async () => {
     setRunning(true)
     await Promise.all([testCamera(), testRpi(), testStorage()])
-    setNetworkInfo(navigator.onLine ? 'Network online · Station cloud sync ready' : 'Station offline mode active')
+    setNetworkInfo(navigator.onLine ? 'Network connected · Internet access not verified' : 'Station offline mode active')
     setRunning(false)
     audit('Admin', 'Full Diagnostics', 'Executed comprehensive empirical device health checks')
   }
@@ -607,9 +669,9 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
           </span>
           <div className="device-actions">
             <b className={`status-label ${navigator.onLine ? 'status-label--valid' : 'status-label--uncertain'}`}>
-              {navigator.onLine ? 'Online' : 'Offline'}
+              {navigator.onLine ? 'Connected' : 'Offline'}
             </b>
-            <button className="device-btn" onClick={() => setNetworkInfo(navigator.onLine ? 'Network online · Station cloud sync ready' : 'Station offline mode active')}>Check network</button>
+            <button className="device-btn" onClick={() => void testNetwork()}>Check network</button>
           </div>
         </article>
       </div>
@@ -654,16 +716,18 @@ function GraderDashboard({ name, onStart, onLogout, onNotice }: { name: string; 
     setSyncing(true)
     try {
       const summary = await syncPendingRecords()
-      const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
       setRecords(getRelevantRecords())
-      setLastSync(syncedAt)
-      localStorage.setItem('tunaeye-last-sync', syncedAt)
+      if (summary.synced) {
+        const syncedAt = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+        setLastSync(syncedAt)
+        localStorage.setItem('tunaeye-last-sync', syncedAt)
+      }
       audit(graderName, 'Manual sync', `${summary.synced} records synchronized; ${summary.failed} failed`)
-      onNotice({ title: summary.failed ? `${graderName}'s sync needs attention` : `${graderName}'s records are synced`, message: `${summary.synced} new record${summary.synced === 1 ? '' : 's'} synchronized. ${summary.failed} remain available for retry.${summary.firstError ? ` ${summary.firstError}` : ''}`, icon: 'refresh' })
+      onNotice({ title: summary.waiting ? 'Waiting for internet' : summary.failed ? `${graderName}'s sync needs attention` : `${graderName}'s records are synced`, message: `${summary.synced} new record${summary.synced === 1 ? '' : 's'} synchronized. ${summary.waiting ? `${summary.waiting} waiting for internet. ` : ''}${summary.failed} remain available for retry.${summary.firstError ? ` ${summary.firstError}` : ''}`, icon: 'refresh' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Synchronization failed.'
       audit(graderName, 'Manual sync failed', message)
-      onNotice({ title: 'Sync unavailable', message, icon: 'help' })
+      onNotice({ title: error instanceof CloudUnavailableError ? 'Waiting for internet' : 'Sync unavailable', message, icon: 'help' })
     } finally { setSyncing(false) }
   }
   return (
@@ -1219,12 +1283,18 @@ function App() {
   const [legalKind, setLegalKind] = useState<'terms' | 'privacy' | null>(null)
   const [installed, setInstalled] = useState(() => window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem('tunaeye-installed') === 'true')
   const [androidFullscreenLocked, setAndroidFullscreenLocked] = useState(() => (isAndroidChrome() || isNativeAndroidKiosk()) && localStorage.getItem('tunaeye-fullscreen-unlocked') !== 'true')
+  useEffect(() => {
+    const markReload = () => sessionStorage.setItem(KIOSK_RELOAD_MARKER_KEY, 'true')
+    window.addEventListener('beforeunload', markReload)
+    return () => window.removeEventListener('beforeunload', markReload)
+  }, [])
   const [refreshRecovery] = useState(() => {
     const previousScreen = screenForPath(window.location.pathname)
     const lastActivity = Number(localStorage.getItem(KIOSK_ACTIVITY_KEY) ?? 0)
     const stale = installed && wasReloaded() && lastActivity > 0 && Date.now() - lastActivity >= KIOSK_IDLE_RESET_MS
-    const active = installed && wasReloaded() && unfinishedScreens.has(previousScreen) && !stale
-    return { active, stale, unfinished: active && unfinishedScreens.has(previousScreen) }
+    const resetToRole = installed && wasReloaded() && !stale
+    const active = resetToRole && unfinishedScreens.has(previousScreen)
+    return { active, stale, resetToRole, unfinished: active && unfinishedScreens.has(previousScreen) }
   })
   const [noticeModal, setNoticeModal] = useState<NoticeModalData | null>(() => refreshRecovery.unfinished ? {
     title: "Session wasn't saved",
@@ -1237,12 +1307,12 @@ function App() {
   const [isPrinting, setIsPrinting] = useState(false)
   const [isInstalling, setIsInstalling] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [currentPathScreen] = useState<Screen>(() => refreshRecovery.active ? 'select-role' : refreshRecovery.stale ? 'welcome' : screenForPath(window.location.pathname))
+  const [currentPathScreen] = useState<Screen>(() => refreshRecovery.resetToRole ? 'select-role' : refreshRecovery.stale ? 'welcome' : screenForPath(window.location.pathname))
   const gradingSessionRef = useRef({ id: createId(), timestamp: Date.now() })
   useEffect(() => { initDemoMode() }, [])
   useEffect(() => { if (refreshRecovery.active) { setBooting(false); return }; const timeout = window.setTimeout(() => setBooting(false), 750); return () => window.clearTimeout(timeout) }, [refreshRecovery.active])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
-  useEffect(() => { if (refreshRecovery.active) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (refreshRecovery.stale) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'welcome' }); window.history.replaceState({}, '', '/kiosk/') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.active, refreshRecovery.stale])
+  useEffect(() => { if (refreshRecovery.resetToRole) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (refreshRecovery.stale) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'welcome' }); window.history.replaceState({}, '', '/kiosk/') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.resetToRole, refreshRecovery.stale])
   useEffect(() => {
     const markActivity = () => localStorage.setItem(KIOSK_ACTIVITY_KEY, String(Date.now()))
     markActivity()
@@ -1256,12 +1326,6 @@ function App() {
       if (isAdmin) dispatch({ type: 'adminAuthenticated' })
     }).catch(error => console.error('[TunaEye] Hosted admin session check failed:', error))
   }, [currentPathScreen])
-  useEffect(() => {
-    const syncOnReconnect = () => { if (isSupabaseConfigured() && navigator.onLine && loadRecords().some(record => record.transaction?.syncState === 'pending' || record.transaction?.syncState === 'failed')) void syncPendingRecords().catch(() => undefined) }
-    syncOnReconnect()
-    window.addEventListener('online', syncOnReconnect)
-    return () => window.removeEventListener('online', syncOnReconnect)
-  }, [])
   const go = useCallback((screen: Screen) => { dispatch({ type: 'navigate', screen }); window.history.pushState({}, '', pathForScreen(screen)) }, [])
   const goHome = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
   const graderHome = useCallback(() => { clearCapturedEvidence(); dispatch({ type: 'navigate', screen: 'grader-dashboard' }); window.history.pushState({}, '', pathForScreen('grader-dashboard')) }, [])
@@ -1334,12 +1398,6 @@ function App() {
     if (!completed.length) return
     const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id)
     saveRecords([...completed, ...previous])
-    if (isSupabaseConfigured() && navigator.onLine) {
-      void syncPendingRecords().catch(error => {
-        console.error('[TunaEye] Automatic record sync failed:', error)
-        setNoticeModal({ title: 'Record saved locally', message: error instanceof Error ? error.message : 'Cloud sync failed. Use Sync now when the connection is available.', icon: 'help' })
-      })
-    }
   }, [session.results, session.graderName])
   const openRole = (role: Role) => { gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
@@ -1398,7 +1456,7 @@ function App() {
   const renderScreen = () => {
     switch (session.screen) {
       case 'welcome': return <WelcomeScreen onStart={() => { enterFullscreen(); go('select-role') }} onInstall={installApp} installed={installed} onTutorial={() => setTutorialOpen(true)} onGoMain={() => { setMarketingPage('home'); setPublicLandingRequested(true); window.history.pushState({}, '', '/') }} />
-      case 'select-role': return <SelectRoleScreen onRole={openRole} />
+      case 'select-role': return <SelectRoleScreen onRole={openRole} onBack={back} />
       case 'admin': return adminCloudAuthRequired ? <AdminMagicLinkScreen onBack={() => { setAdminCloudAuthRequired(false); back() }} /> : <AdminPinScreen value={session.adminPin} error={session.adminError} onChange={value => dispatch({ type: 'setAdminPin', value })} onContinue={() => { if (session.adminPin === ADMIN_PIN) { audit('Admin', 'Login', 'Administrator authenticated at the kiosk'); if (requiresHostedAdminAuth()) void hasAdminProfile().then(isAdmin => { if (isAdmin) dispatch({ type: 'adminAuthenticated' }); else setAdminCloudAuthRequired(true) }).catch(error => setNoticeModal({ title: 'Hosted admin login unavailable', message: error instanceof Error ? error.message : 'Supabase admin access could not be checked.', icon: 'help' })); else dispatch({ type: 'adminAuthenticated' }) } else { audit('Unknown', 'Failed admin login', 'Incorrect admin PIN'); dispatch({ type: 'adminError', message: 'Incorrect admin PIN.' }) } }} onBack={back} />
       case 'admin-dashboard': return <AdminDashboard onExit={goHome} onNotice={setNoticeModal} onStartGrading={() => { dispatch({ type: 'setRole', role: 'expert' }); go(session.graderName ? 'grader-dashboard' : 'grader') }} />
       case 'grader': return <GraderEntryScreen name={session.graderName} remember={session.rememberName} onName={value => dispatch({ type: 'setGraderName', value })} onRemember={value => dispatch({ type: 'setRememberName', value })} onContinue={() => go('sample')} onBack={back} onLegal={setLegalKind} />
@@ -1420,7 +1478,7 @@ function App() {
   if ((publicLandingRequested || (!installed && !webIntroDismissed)) && session.screen === 'welcome') return <ProductLanding page={marketingPage} onInstall={installApp} onOpen={() => { setPublicLandingRequested(false); setWebIntroDismissed(true) }} onNavigate={page => { setMarketingPage(page); window.history.pushState({}, '', page === 'home' ? '/' : `/${page}`) }} />
   const isLanding = session.screen === 'welcome'
   const showGraderHome = session.role === 'expert' && !['welcome', 'select-role', 'grader', 'grader-dashboard', 'complete'].includes(session.screen)
-  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{showGraderHome && <button className="grader-home-shortcut" onClick={requestGraderHome} aria-label="View grading history" title="View grading history"><Icon name="home" size={18} /></button>}{(isAndroidChrome() || isNativeAndroidKiosk()) && androidFullscreenLocked && <button className="android-fullscreen-lock" onClick={unlockAndroidFullscreen} aria-label="Disable fullscreen" title="Disable fullscreen"><Icon name="lock" size={12} /></button>}{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason, actor: session.graderName || 'Guest grader', timestamp: new Date().toISOString() }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
+  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{showGraderHome && <button className="grader-home-shortcut" onClick={requestGraderHome} aria-label="View grading history" title="View grading history"><Icon name="home" size={18} /></button>}{(isAndroidChrome() || isNativeAndroidKiosk()) && androidFullscreenLocked && <button className="android-fullscreen-lock" onClick={unlockAndroidFullscreen} aria-label="Disable fullscreen" title="Disable fullscreen"><Icon name="lock" size={12} /></button>}{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason, actor: session.graderName || 'Guest grader', timestamp: new Date().toISOString() }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}<InternetRecoveryToast active={installed && !booting && !isLanding} />{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
 }
 
 export default App

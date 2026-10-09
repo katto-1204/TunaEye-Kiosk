@@ -1,0 +1,31 @@
+{
+  "voice": "en-US-GuyNeural",
+  "duration": 90,
+  "sampleRate": 48000,
+  "channels": 2,
+  "musicDucking": "6:1 sidechain compression keyed by narration; 25ms attack / 450ms release",
+  "firstPass": {
+    "input_i": "-17.63",
+    "input_tp": "-5.38",
+    "input_lra": "15.10",
+    "input_thresh": "-29.85",
+    "output_i": "-14.99",
+    "output_tp": "-1.50",
+    "output_lra": "9.50",
+    "output_thresh": "-26.14",
+    "normalization_type": "dynamic",
+    "target_offset": "0.99"
+  },
+  "secondPass": {
+    "input_i": "-17.63",
+    "input_tp": "-5.38",
+    "input_lra": "15.10",
+    "input_thresh": "-29.85",
+    "output_i": "-14.04",
+    "output_tp": "-1.50",
+    "output_lra": "9.40",
+    "output_thresh": "-25.19",
+    "normalization_type": "dynamic",
+    "target_offset": "0.04"
+  }
+}

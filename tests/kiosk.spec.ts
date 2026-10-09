@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/auth/v1/health', route => route.fulfill({ contentType: 'application/json', body: '{"name":"GoTrue"}' }))
+})
+
 test('uninstalled visitors see the public landing after loading and can scroll', async ({ page }) => {
   const browserErrors: string[] = []
   const failedRequests: string[] = []

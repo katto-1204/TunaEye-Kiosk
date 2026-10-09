@@ -1,0 +1,16 @@
+{
+  "offline_audio": {
+    "duration_seconds": 90,
+    "sample_rate": 48000,
+    "channels": 2,
+    "codec": "pcm_s16le",
+    "music": "Original deterministic procedural instrumental; 124 BPM; D, B minor, G, A progression",
+    "sfx": "35 actual capture-timeline interactions; result and completion confirmations tied to captured screenshot timestamps",
+    "no_narration_mix": {
+      "measured_integrated_lufs": -13.52,
+      "measured_true_peak_dbfs": -1.19,
+      "measured_loudness_range_lu": 2.20
+    },
+    "self_checks": "All stems exactly 4320000 samples; 2 channels; 48000 Hz; all event timestamps within 90 seconds"
+  }
+}

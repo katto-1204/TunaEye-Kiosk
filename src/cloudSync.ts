@@ -1,6 +1,6 @@
 import { deleteCapturedEvidence, getCapturedEvidence, markEvidenceSynced, updateEvidenceSyncState } from './evidenceStorage'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
-import { ensureSupabaseUser, getSupabase, isSupabaseConfigured, type Database } from './supabase'
+import { CloudUnavailableError, ensureSupabaseUser, getSupabase, isCloudNetworkError, isSupabaseConfigured, reportCloudConnection, requireCloudConnection, type Database } from './supabase'
 
 const BUCKET = 'grading-images'
 const sampleType = (sample: string) => sample === 'Tail cut' ? 'tail_cut' as const : 'sashibo_core' as const
@@ -8,7 +8,7 @@ const grade = (record: GradingRecord) => ['A', 'B', 'C'].includes(record.grade) 
 const imageExtension = (mimeType: string) => ({ 'image/png': 'png', 'image/webp': 'webp' }[mimeType] ?? 'jpg')
 const RETAIN_SYNCED_RECORDS = 200
 
-function setSyncState(id: string, syncState: 'syncing' | 'synced' | 'failed', lastSyncError?: string, remoteImagePath?: string) {
+function setSyncState(id: string, syncState: 'pending' | 'syncing' | 'synced' | 'failed', lastSyncError?: string, remoteImagePath?: string) {
   saveRecords(loadRecords().map(record => record.id === id ? {
     ...record,
     remoteImagePath: remoteImagePath ?? record.remoteImagePath,
@@ -16,7 +16,7 @@ function setSyncState(id: string, syncState: 'syncing' | 'synced' | 'failed', la
   } : record))
 }
 
-export interface SyncSummary { synced: number; failed: number; skipped: number; firstError?: string }
+export interface SyncSummary { synced: number; failed: number; skipped: number; waiting: number; firstError?: string }
 
 let activeSync: Promise<SyncSummary> | null = null
 
@@ -54,11 +54,12 @@ async function pruneVerifiedLocalRecords() {
 
 async function runPendingSync(): Promise<SyncSummary> {
   if (!isSupabaseConfigured()) throw new Error('Supabase is missing from this build. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then redeploy or rebuild the kiosk.')
-  if (!navigator.onLine) throw new Error('No internet connection. Records remain pending.')
+  const pending = loadRecords().filter(record => record.transaction?.syncState !== 'synced')
+  const summary: SyncSummary = { synced: 0, failed: 0, skipped: 0, waiting: 0 }
+  if (!pending.length) return summary
+  await requireCloudConnection()
   const supabase = getSupabase()
   const user = await ensureSupabaseUser()
-  const pending = loadRecords().filter(record => record.transaction?.syncState !== 'synced')
-  const summary: SyncSummary = { synced: 0, failed: 0, skipped: 0 }
 
   for (const record of pending) {
     setSyncState(record.id, 'syncing')
@@ -124,6 +125,14 @@ async function runPendingSync(): Promise<SyncSummary> {
       setSyncState(record.id, 'synced', undefined, imagePath ?? undefined)
       summary.synced += 1
     } catch (error) {
+      if (isCloudNetworkError(error)) {
+        reportCloudConnection(false)
+        if (record.capturedImageId) await updateEvidenceSyncState(record.capturedImageId, 'pending').catch(() => undefined)
+        setSyncState(record.id, 'pending')
+        summary.waiting = pending.length - summary.synced - summary.failed
+        summary.firstError = new CloudUnavailableError().message
+        break
+      }
       const message = errorMessage(error)
       if (record.capturedImageId) await updateEvidenceSyncState(record.capturedImageId, 'failed').catch(() => undefined)
       setSyncState(record.id, 'failed', message)
@@ -142,18 +151,20 @@ export function syncPendingRecords(): Promise<SyncSummary> {
 
 export async function syncPriceSchedule(prices: Record<'A' | 'B' | 'C', number>) {
   if (!isSupabaseConfigured()) throw new Error('Supabase is missing from this build.')
-  if (!navigator.onLine) throw new Error('No internet connection. The price schedule remains saved on this device.')
+  await requireCloudConnection()
   const user = await ensureSupabaseUser()
   const stationId = localStorage.getItem('tunaeye-station') ?? 'TunaEye Station 01'
   const rows: Database['public']['Tables']['price_schedules']['Insert'][] = (['A', 'B', 'C'] as const).map(item => ({ user_id: user.id, station_id: stationId, grade: item, currency_code: 'PHP', price_per_kg: prices[item], updated_at: new Date().toISOString() }))
   const supabase = getSupabase()
   const { error } = await supabase.from('price_schedules').upsert(rows, { onConflict: 'user_id,station_id,grade' })
+  if (isCloudNetworkError(error)) { reportCloudConnection(false); throw new CloudUnavailableError() }
   if (error) throw new Error(`Price schedule sync failed: ${error.message}`)
   const { data: verified, error: verifyError } = await supabase
     .from('price_schedules')
     .select('user_id,station_id,grade,currency_code,price_per_kg')
     .eq('user_id', user.id)
     .eq('station_id', stationId)
+  if (isCloudNetworkError(verifyError)) { reportCloudConnection(false); throw new CloudUnavailableError() }
   if (verifyError) throw new Error(`Price schedule verification failed: ${verifyError.message}`)
   const verifiedByGrade = new Map((verified ?? []).map(row => [row.grade, row]))
   for (const row of rows) {

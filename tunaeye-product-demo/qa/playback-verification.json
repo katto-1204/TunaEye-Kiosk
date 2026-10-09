@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "browser": "Google Chrome through Playwright",
+  "duration": 90,
+  "width": 1920,
+  "height": 1080,
+  "checkedSeconds": [
+    3,
+    9,
+    16,
+    24,
+    33,
+    42,
+    53,
+    61,
+    72,
+    81,
+    88
+  ],
+  "consoleErrors": []
+}

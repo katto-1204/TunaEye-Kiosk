@@ -3,13 +3,20 @@ import { expect, test } from '@playwright/test'
 test('manual Supabase sync uploads evidence, upserts once, verifies, and marks local data synced', async ({ page }) => {
   test.skip(!process.env.VITE_SUPABASE_URL, 'Run with mock Supabase Vite environment variables.')
   let upserts = 0
+  let signups = 0
   let cloudRecord: Record<string, unknown> | null = null
   let cloudPrices: Record<string, unknown>[] = []
   let rejectUpserts = false
+  let disconnectUpserts = false
 
   await page.route('http://supabase.test/**', async route => {
     const url = new URL(route.request().url())
+    if (url.pathname === '/auth/v1/health') {
+      await route.fulfill({ contentType: 'application/json', body: '{"name":"GoTrue"}' })
+      return
+    }
     if (url.pathname === '/auth/v1/signup') {
+      signups += 1
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ access_token: 'test-token', token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: 'test-refresh', user: { id: '11111111-1111-4111-8111-111111111111', aud: 'authenticated', role: 'authenticated', email: '', app_metadata: {}, user_metadata: {}, created_at: new Date().toISOString() } }) })
       return
     }
@@ -30,6 +37,7 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
       return
     }
     if (url.pathname === '/rest/v1/grading_records' && route.request().method() === 'POST') {
+      if (disconnectUpserts) { await route.abort('namenotresolved'); return }
       if (rejectUpserts) {
         await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ message: 'Database rejected test row' }) })
         return
@@ -65,17 +73,27 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
   })
 
   await page.goto('/kiosk/grader-dashboard')
+  await expect(page.getByRole('button', { name: 'Sync now' })).toBeVisible()
+  expect(upserts).toBe(0)
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0].transaction.syncState)).toBe('pending')
+  await expect(page.locator('.image-sync-label')).toHaveText('Saved locally')
+  const originalRecord = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0])
+  await page.getByRole('button', { name: 'Sync now' }).click()
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0].transaction)).toEqual({ currency: 'PHP', unitRatePerKg: 420, amount: 17640, syncState: 'synced' })
   expect(cloudRecord).toMatchObject({ capture_id: 'capture-1', inference_id: 'inference-1', raw_confidence: .96, scores: { GRADE_A: .96, GRADE_B: .02, GRADE_C: .01, INVALID: .01 }, image_type: 'sashibocore', model_source: 'raspberry-pi', override_grade: 'B', override_reason: 'Expert review', override_actor: 'Maria Santos', override_at: '2026-10-09T10:00:00.000Z', currency_code: 'PHP', grade_unit_rate_per_kg: 420, total_fish_price: 17640 })
-  await page.getByRole('button', { name: 'Sync now' }).click()
   await expect(page.getByRole('heading', { name: "Maria Santos's records are synced" })).toBeVisible()
   await page.getByRole('button', { name: 'Understood' }).click()
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0].transaction.syncState)).toBe('synced')
+  await expect(page.locator('.image-sync-label')).toHaveText('Synced')
+  await page.locator('.grader-record-item').click()
+  await expect(page.getByRole('dialog').locator('.image-sync-label')).toHaveText('Synced')
+  await page.getByRole('button', { name: 'Close record' }).click()
   expect(await page.evaluate(async () => await new Promise(resolve => { const open = indexedDB.open('tunaeye-offline', 1); open.onsuccess = () => { const get = open.result.transaction('evidence').objectStore('evidence').get('record-1'); get.onsuccess = () => resolve(get.result.syncState) } }))).toBe('synced')
 
   await page.getByRole('button', { name: 'Sync now' }).click()
   await expect(page.getByRole('heading', { name: "Maria Santos's records are synced" })).toBeVisible()
   expect(upserts).toBe(1)
+  expect(signups).toBe(1)
   await page.getByRole('button', { name: 'Understood' }).click()
 
   await page.evaluate(() => {
@@ -84,8 +102,13 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
     localStorage.setItem('tunaeye-records', JSON.stringify(records))
     window.dispatchEvent(new Event('online'))
   })
+  await expect(page.getByRole('button', { name: 'Sync now' })).toBeVisible()
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0].transaction.syncState)).toBe('pending')
+  expect(upserts).toBe(1)
+  await page.getByRole('button', { name: 'Sync now' }).click()
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0].transaction.syncState)).toBe('synced')
   expect(upserts).toBe(2)
+  await page.getByRole('button', { name: 'Understood' }).click()
 
   await page.evaluate(() => {
     const synced = Array.from({ length: 205 }, (_, index) => ({ id: `synced-${index}`, sessionId: 'retention', timestamp: index, time: 'Now', grader: 'Maria Santos', sample: 'Sashibo core', fish: 'Fish 1', weight: '1 kg', grade: 'A', status: 'Complete', transaction: { currency: 'PHP', amount: null, syncState: 'synced' } }))
@@ -121,4 +144,19 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
   await page.getByRole('button', { name: 'Save price schedule' }).click()
   await expect(page.getByRole('heading', { name: 'Price schedule synced' })).toBeVisible()
   expect(cloudPrices).toHaveLength(3)
+  await page.getByRole('button', { name: 'Understood' }).click()
+
+  rejectUpserts = false
+  disconnectUpserts = true
+  await page.evaluate(record => localStorage.setItem('tunaeye-records', JSON.stringify([record])), originalRecord)
+  await page.goto('/kiosk/grader-dashboard')
+  await page.getByRole('button', { name: 'Sync now' }).click()
+  await expect(page.getByRole('heading', { name: 'Waiting for internet' })).toBeVisible()
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0].transaction.syncState)).toBe('pending')
+  await expect(page.locator('.image-sync-label')).toHaveText('Saved locally')
+  await page.getByRole('button', { name: 'Understood' }).click()
+  disconnectUpserts = false
+  await page.getByRole('button', { name: 'Sync now' }).click()
+  await expect(page.getByRole('heading', { name: "Maria Santos's records are synced" })).toBeVisible()
+  await expect(page.locator('.image-sync-label')).toHaveText('Synced')
 })

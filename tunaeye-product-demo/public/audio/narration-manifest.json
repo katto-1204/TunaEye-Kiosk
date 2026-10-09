@@ -1,0 +1,105 @@
+{
+  "voice": "en-US-GuyNeural",
+  "service": "Microsoft Edge online neural TTS",
+  "scenes": [
+    {
+      "start": 0,
+      "end": 6,
+      "text": "Meet Tuna Eye. Your AI-assisted tuna quality grading kiosk.",
+      "file": "voice-01.mp3",
+      "duration": 5.904,
+      "delay": 0.35,
+      "tempo": 1.0933333333333333
+    },
+    {
+      "start": 6,
+      "end": 12,
+      "text": "Start by identifying the expert grader handling the session.",
+      "file": "voice-02.mp3",
+      "duration": 4.656,
+      "delay": 6.35,
+      "tempo": 1
+    },
+    {
+      "start": 12,
+      "end": 20,
+      "text": "Choose sashibo core, tail-cut, or both. Then identify whether samples belong to the same fish.",
+      "file": "voice-03.mp3",
+      "duration": 7.776,
+      "delay": 12.35,
+      "tempo": 1.0508108108108107
+    },
+    {
+      "start": 20,
+      "end": 27,
+      "text": "Follow the sample placement guide, then enter the tuna's measured weight.",
+      "file": "voice-04.mp3",
+      "duration": 4.848,
+      "delay": 20.35,
+      "tempo": 1
+    },
+    {
+      "start": 27,
+      "end": 38,
+      "text": "Capture or upload the sashibo-core image, review it, and confirm before analysis.",
+      "file": "voice-05.mp3",
+      "duration": 5.832,
+      "delay": 27.35,
+      "tempo": 1
+    },
+    {
+      "start": 38,
+      "end": 46,
+      "text": "Tuna Eye sends the image to Raspberry Pi for analysis, then displays a grade recommendation with confidence.",
+      "file": "voice-06.mp3",
+      "duration": 7.008,
+      "delay": 38.35,
+      "tempo": 1
+    },
+    {
+      "start": 46,
+      "end": 57,
+      "text": "Repeat the process for tail-cut. Each sample receives its own grading result.",
+      "file": "voice-07.mp3",
+      "duration": 6.552,
+      "delay": 46.35,
+      "tempo": 1
+    },
+    {
+      "start": 57,
+      "end": 67,
+      "text": "Expert graders can review or override recommendations, with their decisions reflected in the grading record.",
+      "file": "voice-08.mp3",
+      "duration": 6.912,
+      "delay": 57.35,
+      "tempo": 1
+    },
+    {
+      "start": 67,
+      "end": 77,
+      "text": "Review the grading summary, prepare a printable receipt, and complete the session.",
+      "file": "voice-09.mp3",
+      "duration": 5.496,
+      "delay": 67.35,
+      "tempo": 1
+    },
+    {
+      "start": 77,
+      "end": 85,
+      "text": "Completed results remain available in local records, with synchronization supported when configured.",
+      "file": "voice-10.mp3",
+      "duration": 6.6,
+      "delay": 77.35,
+      "tempo": 1
+    },
+    {
+      "start": 85,
+      "end": 90,
+      "text": "Tuna Eye. Sea Beyond the Cut.",
+      "file": "voice-11.mp3",
+      "duration": 4.152,
+      "delay": 85.35,
+      "tempo": 1
+    }
+  ]
+}

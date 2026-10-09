@@ -37,3 +37,10 @@
 - When the user says an element should be removed, delete it from the render tree; styling it differently does not satisfy the request.
 - Numeric limits must validate and explain the entered value, never silently rewrite it to the maximum.
 - Pagination that only renders after a hidden threshold looks missing during normal QA; keep the controls visible with an explicit page and record count.
+- Never auto-trigger Supabase sync on kiosk startup or reconnect; local grading records should stay pending until the user explicitly chooses Sync now, or the app will falsely mark work as in progress before the user has acted.
+
+- VITE_DEMO_MODE=false must be an absolute gate: URL demo requests and saved browser flags must never enable simulated capture or grading when the build disables demo mode. Verify stale storage and query activation together against actual Pi request paths.
+
+- A Pi hotspot connection does not prove internet or Supabase availability. Treat navigator.onLine as network connectivity only; keep cloud sync manual and preserve pending records when DNS or cloud authentication fails.
+
+- Offline sync feedback must describe waiting for internet, identify captured images as saved locally until verified synced, and announce confirmed internet recovery without treating a Wi-Fi event as cloud availability.

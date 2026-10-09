@@ -5,22 +5,28 @@ import { createId } from './id'
 const DEMO_FLAG = 'tunaeye-demo-mode'
 const gradeHints = new Map<SampleType, Grade>()
 const demoAvailable = import.meta.env.VITE_DEMO_MODE === 'true'
-let enabled = demoAvailable
+let enabled = false
 
 export function initDemoMode() {
   if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search)
+  const requested = params.get('demo') === '1'
+  const stored = localStorage.getItem(DEMO_FLAG) === '1'
+
   if (!demoAvailable) {
     enabled = false
     localStorage.removeItem(DEMO_FLAG)
     return
   }
-  const params = new URLSearchParams(window.location.search)
-  if (params.get('demo') === '1') {
+
+  if (requested || stored) {
     enabled = true
     localStorage.setItem(DEMO_FLAG, '1')
-  } else if (localStorage.getItem(DEMO_FLAG) === '1') {
-    enabled = true
+    return
   }
+
+  enabled = false
+  localStorage.removeItem(DEMO_FLAG)
 }
 
 export function isDemoMode() {

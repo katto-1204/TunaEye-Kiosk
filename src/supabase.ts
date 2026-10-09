@@ -55,6 +55,43 @@ let client: SupabaseClient<Database> | null = null
 
 export const isSupabaseConfigured = () => Boolean(url && anonKey)
 
+export const CLOUD_CONNECTION_EVENT = 'tunaeye-cloud-connection'
+export class CloudUnavailableError extends Error {
+  constructor() {
+    super('Sync is waiting for internet. Tuna RPi Wi-Fi can provide camera and grading access without internet. Your captured images and records are saved on this device. Use Sync now when internet is available.')
+    this.name = 'CloudUnavailableError'
+  }
+}
+
+export function isCloudNetworkError(error: unknown) {
+  return error instanceof CloudUnavailableError || (error instanceof Error && error.name === 'AuthRetryableFetchError') || /failed to fetch|fetch failed|networkerror|network request failed|load failed/i.test(error && typeof error === 'object' && 'message' in error ? String(error.message) : '')
+}
+
+export function reportCloudConnection(available: boolean) {
+  window.dispatchEvent(new CustomEvent(CLOUD_CONNECTION_EVENT, { detail: available }))
+}
+
+let connectionCheck: Promise<boolean> | null = null
+export function checkCloudConnection(): Promise<boolean> {
+  connectionCheck ??= (async () => {
+    let available = false
+    if (isSupabaseConfigured() && navigator.onLine) {
+      try {
+        const response = await fetch(`${url!.replace(/\/$/, '')}/auth/v1/health`, { headers: { apikey: anonKey! }, cache: 'no-store', signal: AbortSignal.timeout(5000) })
+        // Cloud responses keep authentication failures separate from lost connectivity.
+        available = navigator.onLine && !response.redirected && response.status >= 200
+      } catch { /* Network failure leaves saved records available locally. */ }
+    }
+    reportCloudConnection(available)
+    return available
+  })().finally(() => { connectionCheck = null })
+  return connectionCheck
+}
+
+export async function requireCloudConnection() {
+  if (!await checkCloudConnection()) throw new CloudUnavailableError()
+}
+
 export function getSupabase(): SupabaseClient<Database> {
   if (!url || !anonKey) throw new Error('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
   client ??= createClient<Database>(url, anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } })
@@ -63,9 +100,12 @@ export function getSupabase(): SupabaseClient<Database> {
 
 export async function ensureSupabaseUser() {
   const supabase = getSupabase()
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  if (isCloudNetworkError(sessionError)) { reportCloudConnection(false); throw new CloudUnavailableError() }
+  if (sessionError) throw sessionError
   if (session?.user) return session.user
   const { data, error } = await supabase.auth.signInAnonymously()
+  if (isCloudNetworkError(error)) { reportCloudConnection(false); throw new CloudUnavailableError() }
   if (error || !data.user) throw error ?? new Error('Supabase authentication failed.')
   return data.user
 }

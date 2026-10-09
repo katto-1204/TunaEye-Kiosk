@@ -71,20 +71,21 @@ function requirePiSettings(stage: PiStage): PiSettings {
 
 async function request(url: string, stage: PiStage, init?: RequestInit, attempts = 2): Promise<Response> {
   if (window.location.protocol === 'https:' && url.startsWith('http://')) throw new PiIntegrationError(stage, PI_CONNECTION_GUIDANCE)
+  const label = stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'
   let lastError: unknown
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
       const response = await fetch(url, { ...init, credentials: url.startsWith('https://') ? 'include' : init?.credentials, signal: AbortSignal.timeout(TIMEOUT_MS) })
       if (!response.ok) throw new PiIntegrationError(stage, response.status === 401 || response.status === 403
         ? `TunaEye gateway authentication failed (HTTP ${response.status}). Sign in to the gateway, then reconnect.`
-        : `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} failed: HTTP ${response.status}.`, response.status)
+        : `${label} failed: HTTP ${response.status}${stage === 'snapshot' ? '' : '.'}`, response.status)
       return response
     } catch (error) {
       lastError = error instanceof PiIntegrationError
         ? error
         : new PiIntegrationError(stage, error instanceof DOMException && error.name === 'TimeoutError'
-          ? `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} request timed out after ${TIMEOUT_MS / 1000} seconds.`
-          : `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} request failed. ${url.startsWith('https://') ? 'Check gateway authentication, CORS, and Private Network Access.' : 'Check the configured URL and browser CORS.'}`, undefined, { cause: error })
+          ? `${label} request timed out after ${TIMEOUT_MS / 1000} seconds.`
+          : `${label} request failed. ${url.startsWith('https://') ? 'Check gateway authentication, CORS, and Private Network Access.' : 'Check the configured URL and browser CORS.'}`, undefined, { cause: error })
       if (attempt + 1 < attempts) await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)))
     }
   }
