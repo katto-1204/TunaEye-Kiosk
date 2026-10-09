@@ -1,4 +1,4 @@
-const CACHE = 'tunaeye-v4-admin-tablet'
+const CACHE = 'tunaeye-v5-pi-hosting'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',
@@ -28,10 +28,10 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return
-  const url = event.request.url
-  if (!url.startsWith('http://') && !url.startsWith('https://')) return
-  if (url.startsWith('http://10.42.0.1:')) return
-  if (url.includes('/@vite/') || url.includes('/@react-refresh') || url.includes('hot-update')) return
+  const url = new URL(event.request.url)
+  if (!['http:', 'https:'].includes(url.protocol)) return
+  if (['/status', '/snapshot', '/stream', '/grade'].includes(url.pathname)) return
+  if (url.pathname.includes('/@vite/') || url.pathname.includes('/@react-refresh') || url.pathname.includes('hot-update')) return
 
   event.respondWith(
     fetch(event.request)

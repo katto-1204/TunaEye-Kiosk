@@ -8,6 +8,7 @@ import { getSupabase, isSupabaseConfigured } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
 import { getDemoPreviewUrl, initDemoMode, isDemoMode, parseDemoGradeFromFilename, setDemoGradeHint } from './demoMode'
 import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage, PiIntegrationError } from './piClient'
+import { createId } from './id'
 
 const ADMIN_PIN = '1234'
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
@@ -17,7 +18,7 @@ const existingGraders = ['Maria Santos', 'Jose Dela Cruz', 'Ana Mae Lim']
 interface AuditEntry { id: string; timestamp: number; actor: string; action: string; detail: string }
 const AUDIT_KEY = 'tunaeye-audit-log'
 const loadAudit = (): AuditEntry[] => { try { return JSON.parse(localStorage.getItem(AUDIT_KEY) ?? '[]') as AuditEntry[] } catch { return [] } }
-const audit = (actor: string, action: string, detail: string) => { const entry = { id: crypto.randomUUID(), timestamp: Date.now(), actor, action, detail }; localStorage.setItem(AUDIT_KEY, JSON.stringify([entry, ...loadAudit()].slice(0, 500))) }
+const audit = (actor: string, action: string, detail: string) => { const entry = { id: createId(), timestamp: Date.now(), actor, action, detail }; localStorage.setItem(AUDIT_KEY, JSON.stringify([entry, ...loadAudit()].slice(0, 500))) }
 const getConnectionSettings = () => ({ rpiUrl: getPiSettings().apiUrl, modelName: localStorage.getItem('tunaeye-model-name') ?? 'TFLite edge model' })
 const allScreens: Screen[] = ['welcome', 'select-role', 'admin', 'admin-dashboard', 'grader', 'grader-dashboard', 'sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print', 'complete']
 const pathForScreen = (screen: Screen) => screen === 'welcome' ? '/' : screen === 'select-role' ? '/select-role' : screen === 'admin' || screen === 'admin-dashboard' ? '/admin' : `/kiosk/${screen}`
@@ -1167,7 +1168,7 @@ function App() {
   const [isInstalling, setIsInstalling] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [currentPathScreen] = useState<Screen>(() => refreshRecovery.active ? 'select-role' : screenForPath(window.location.pathname))
-  const gradingSessionRef = useRef({ id: crypto.randomUUID(), timestamp: Date.now() })
+  const gradingSessionRef = useRef({ id: createId(), timestamp: Date.now() })
   useEffect(() => { initDemoMode() }, [])
   useEffect(() => { if (refreshRecovery.active) { setBooting(false); return }; const timeout = window.setTimeout(() => setBooting(false), 2600); return () => window.clearTimeout(timeout) }, [refreshRecovery.active])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
@@ -1178,10 +1179,10 @@ function App() {
     return () => window.removeEventListener('online', syncOnReconnect)
   }, [])
   const go = useCallback((screen: Screen) => { dispatch({ type: 'navigate', screen }); window.history.pushState({}, '', pathForScreen(screen)) }, [])
-  const goHome = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
+  const goHome = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
   const graderHome = useCallback(() => { clearCapturedEvidence(); dispatch({ type: 'navigate', screen: 'grader-dashboard' }); window.history.pushState({}, '', pathForScreen('grader-dashboard')) }, [])
   const graderLogout = useCallback(() => { clearCapturedEvidence(); localStorage.removeItem('tunaeye-grader-name'); dispatch({ type: 'reset' }); window.history.pushState({}, '', '/') }, [])
-  const gradeAnother = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'gradeAnother' }); window.history.pushState({}, '', pathForScreen('sample')) }, [])
+  const gradeAnother = useCallback(() => { clearCapturedEvidence(); gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'gradeAnother' }); window.history.pushState({}, '', pathForScreen('sample')) }, [])
   const back = () => { const previous: Partial<Record<Screen, Screen>> = { 'select-role': 'welcome', admin: 'select-role', 'admin-dashboard': 'select-role', grader: 'select-role', 'grader-dashboard': 'grader', sample: 'grader-dashboard', association: 'sample', tutorial: selected.length === 1 ? 'sample' : 'association', weight: 'tutorial', camera: 'weight', review: 'camera', analysis: 'review', 'individual-result': 'review', overview: 'individual-result', print: 'overview' }; const target = previous[session.screen]; target ? go(target) : goHome() }
   const selected = session.selectedSamples.length ? session.selectedSamples : ['Sashibo core'] as SampleType[]
   const sample = currentSample(session)
@@ -1228,7 +1229,7 @@ function App() {
   }, [session.screen, sample, go])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
   useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
-  const openRole = (role: Role) => { gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
+  const openRole = (role: Role) => { gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {
     if (isPrinting) return

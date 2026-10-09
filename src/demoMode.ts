@@ -1,5 +1,6 @@
 import type { DemoOutcome, Grade, SampleType } from './kioskState'
 import type { PiGradeResult } from './piClient'
+import { createId } from './id'
 
 const DEMO_FLAG = 'tunaeye-demo-mode'
 const gradeHints = new Map<SampleType, Grade>()
@@ -76,8 +77,8 @@ export async function gradeDemoImage(sample: SampleType): Promise<PiGradeResult>
   const confidence = grade === 'A' ? 96.3 : grade === 'B' ? 91.2 : 78.5
   const outcome: DemoOutcome = confidence < 70 ? 'uncertain' : 'valid'
   return {
-    id: `demo-${crypto.randomUUID()}`,
-    captureId: `demo-capture-${crypto.randomUUID()}`,
+    id: `demo-${createId()}`,
+    captureId: `demo-capture-${createId()}`,
     imageType: sample === 'Tail cut' ? 'tailcut' : 'sashibocore',
     modelSource: 'demo',
     outcome,

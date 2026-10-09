@@ -1,3 +1,22 @@
+# Raspberry Pi Local Flask Hosting — 2026-10-09
+
+- [x] Audit Pi URL selection, Vite builds, service worker, environment variables, manifest, and Vercel configuration.
+- [x] Add a separate same-origin local-hosted mode and keep the normal Vercel build unchanged.
+- [x] Route status, snapshot, stream, and grade through Flask port 5000 in local mode.
+- [x] Prevent the service worker from caching live Pi endpoints while retaining app-shell/runtime caching.
+- [x] Add an HTTP-safe UUID fallback and document secure-context limitations.
+- [x] Verify the Pi-mode build, same-origin browser requests, normal regression suite, and final `dist/` output.
+
+### Review
+
+- `npm run build` passed and preserved the existing Vercel configuration.
+- Pi-mode Playwright passed and observed only same-origin `/snapshot` and `/grade` requests.
+- Full normal-deployment Playwright regression passed: 29 tests; the Pi-mode and live Supabase tests skipped under their intended environment guards.
+- Final `npm run build:pi` passed and left 35 files in `dist/`; compiled assets contain no `10.42.0.1:5000` or `:8080` URL.
+- Flask routing, transfer commands, endpoint requirements, and HTTP secure-context limitations are documented in `RASPBERRY_PI_LOCAL_HOSTING.md`.
+
+---
+
 # Raspberry Pi Camera, Inference & Synchronization — 2026-10-09
 
 - [x] Audit the Pi client, camera/upload paths, local evidence storage, result records, sync, and tests.

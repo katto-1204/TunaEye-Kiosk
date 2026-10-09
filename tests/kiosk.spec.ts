@@ -398,6 +398,32 @@ test('Pi client validates status, model selection, four classes, and malformed p
   expect(overridden).toMatchObject({ originalGrade: 'A', originalConfidence: 96.3, rawConfidence: .963, inferenceId: 'result-A', captureId: 'capture-A', overrideGrade: 'C', overrideReason: 'Expert visual inspection' })
 })
 
+test('local Raspberry Pi hosting uses same-origin API and camera routes', async ({ page }) => {
+  test.skip(process.env.VITE_PI_LOCAL_HOSTED !== 'true', 'Only runs for the Raspberry Pi local-hosted build mode.')
+  const requests: string[] = []
+  await page.route('**/snapshot', route => { requests.push(route.request().url()); return route.fulfill({ contentType: 'image/jpeg', body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }) })
+  await page.route('**/grade', route => { requests.push(route.request().url()); return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id: 'local-result', capture_id: 'local-capture', image_type: 'sashibocore', grade: 'GRADE_A', confidence: .96, scores: { GRADE_A: .96, GRADE_B: .02, GRADE_C: .01, INVALID: .01 } }) }) })
+  await page.goto('/')
+  const result = await page.evaluate(async () => {
+    // @ts-expect-error Vite serves this browser-only integration module during Playwright tests.
+    const client = await import('/src/piClient.ts')
+    const settings = client.getPiSettings()
+    const image = await client.capturePiImage('Sashibo core')
+    const grade = await client.gradePiImage(image, 'Sashibo core')
+    return { settings, grade }
+  })
+  const fallbackId = await page.evaluate(async () => {
+    // @ts-expect-error Vite serves this browser-only utility during Playwright tests.
+    const { createId } = await import('/src/id.ts')
+    Object.defineProperty(crypto, 'randomUUID', { configurable: true, value: undefined })
+    return createId()
+  })
+  expect(result.settings).toEqual({ apiUrl: '', cameraUrl: '', streamUrl: '/stream', snapshotUrl: '/snapshot' })
+  expect(result.grade).toMatchObject({ grade: 'A', imageType: 'sashibocore' })
+  expect(fallbackId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
+  expect(requests).toEqual(['http://127.0.0.1:4178/snapshot', 'http://127.0.0.1:4178/grade'])
+})
+
 test('printing failure stays on receipt and offers retry', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('tunaeye-installed', 'true')

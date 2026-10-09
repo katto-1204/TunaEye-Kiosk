@@ -36,6 +36,9 @@ export class PiIntegrationError extends Error {
 }
 
 export const getPiSettings = () => {
+  if (import.meta.env.VITE_PI_LOCAL_HOSTED === 'true') {
+    return { apiUrl: '', cameraUrl: '', streamUrl: '/stream', snapshotUrl: '/snapshot' }
+  }
   const apiUrl = (localStorage.getItem('tunaeye-rpi-url') || import.meta.env.VITE_PI_API_URL || DEFAULT_API_URL).replace(/\/$/, '')
   const cameraUrl = (localStorage.getItem('tunaeye-camera-url') || import.meta.env.VITE_PI_CAMERA_URL || DEFAULT_CAMERA_URL).replace(/\/$/, '')
   return { apiUrl, cameraUrl, streamUrl: `${cameraUrl}/stream`, snapshotUrl: `${cameraUrl}/snapshot` }
