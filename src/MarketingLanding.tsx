@@ -416,8 +416,8 @@ function Home({
         <div className="site-hero__copy">
           <span className="site-kicker">Expert grading, extended</span>
           <h1>
-            TunaEye.<br />
-            <em>Sea Beyond the Cut.</em>
+            Sea<br />
+            <em>Beyond the Cut.</em>
           </h1>
           <p className="site-hero__quote">We don't replace the expert eye. We extend its reach.</p>
           <p className="site-hero__support">Built on expert knowledge. Enhanced by computer vision.</p>

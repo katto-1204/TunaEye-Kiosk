@@ -2,7 +2,7 @@
   <img src="public/tunaeye-logo.svg" width="92" alt="TunaEye logo" />
 </p>
 
-<h1 align="center">TunaEye. Sea Beyond the Cut.</h1>
+<h1 align="center">Sea Beyond the Cut.</h1>
 
 <p align="center">
   <strong>We don't replace the expert eye. We extend its reach.</strong>

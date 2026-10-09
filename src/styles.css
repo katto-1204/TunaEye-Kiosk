@@ -1620,3 +1620,17 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 @media(min-width:681px) and (max-height:850px) and (orientation:landscape){.screen-stack--grader .grader-entry{grid-template-columns:minmax(260px,.78fr) minmax(390px,1.22fr);padding:20px 26px;gap:28px}.grader-entry__form{padding:22px 26px!important}.grader-entry__form-heading{margin-bottom:18px}.grader-entry__form-icon{width:50px;height:50px;flex-basis:50px;border-radius:15px}.grader-entry__form-heading strong{font-size:21px}.grader-entry__form .field-label input{min-height:64px!important}.grader-entry__form .remember-row{margin-top:12px}.grader-entry__form .legal-links{margin-top:12px;padding-top:10px}}
 @media(min-width:681px) and (max-width:1000px) and (orientation:portrait){.screen-stack--grader .grader-entry{grid-template-columns:1fr!important;gap:24px}.grader-entry__form{width:min(620px,100%);justify-self:center}}
 @media(max-width:680px){.screen-stack--grader .grader-entry{grid-template-columns:1fr;gap:22px}.grader-entry__form{padding:22px!important;border-radius:22px}.grader-entry__form-heading{margin-bottom:22px}.grader-entry__form .field-label input{min-height:66px!important;font-size:19px}.grader-entry__form .remember-row{font-size:16px}}
+
+/* Visible loading states: spinners on busy buttons, notes, and toasts. */
+.btn.is-loading{cursor:progress}
+.spinner--on-btn{width:23px;height:23px;flex:none;border-width:2.5px;border-color:currentColor transparent transparent currentColor;opacity:.85}
+.btn--primary .spinner--on-btn,.btn--danger .spinner--on-btn{border-color:#fff transparent transparent #fff}
+.camera-upload-note--busy{display:flex;align-items:center;gap:8px;color:var(--blue);font-weight:600}
+.camera-upload-note--busy .spinner{width:15px;height:15px;flex:none}
+.capture-toast__ring.is-spinning{position:relative}
+.capture-toast__ring.is-spinning::after{content:'';position:absolute;inset:-4px;border-radius:inherit;border:2px solid rgba(169,214,255,.28);border-top-color:#a9d6ff;animation:spin .9s linear infinite}
+@media(prefers-reduced-motion:reduce){.spinner,.capture-toast__ring.is-spinning::after{animation-duration:0s!important}}
+
+/* Sample selector: keep the sample art pinned to the top of the card instead of floating centered. */
+.screen-stack--sample-selector .selector-card{align-content:flex-start!important;justify-content:flex-start!important}
+.screen-stack--sample-selector .section-heading h1{font-size:clamp(46px,5.4vw,70px)!important}
