@@ -1534,10 +1534,206 @@
   height: 22px;
 }
 
-/* ─── ADVISER CARD SVG ICON ──────────────────────────────────────────── */
+/* ─── TEAM ROSTER (dark card lineup) ──────────────────────────────────── */
+.site-inner section.roster-section {
+  display: block;
+  grid-template-columns: none;
+  padding: clamp(56px, 7vw, 96px) clamp(20px, 6vw, 100px);
+  background: radial-gradient(circle at 80% 15%, rgba(59, 140, 255, 0.22), transparent 32%), #08123B;
+  border-radius: 32px;
+  color: #fff;
+}
+.roster-section__heading { text-align: center; margin-bottom: clamp(32px, 5vw, 52px); }
+.roster-section__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7FB0FF;
+}
+.roster-section__heading h2 {
+  margin: 10px 0 0;
+  font-size: clamp(32px, 4vw, 48px);
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+.roster-cards {
+  display: flex;
+  gap: 16px;
+}
+.roster-cards > .scroll-reveal {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  transition: flex-grow 0.32s ease, opacity 0.5s ease, transform 0.5s ease;
+}
+.roster-cards > .scroll-reveal:has(.roster-card.is-expanded) { flex-grow: 1.7; }
+.roster-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: clamp(360px, 46vh, 460px);
+  width: 100%;
+  padding: 0;
+  border: 1px solid rgba(127, 176, 255, 0.18);
+  border-radius: 22px;
+  background: #0d1a4a;
+  overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.roster-card:hover,
+.roster-card:focus-visible {
+  border-color: rgba(127, 176, 255, 0.55);
+  box-shadow: 0 20px 46px rgba(5, 15, 50, 0.4);
+  outline: none;
+}
+.roster-card__tag {
+  position: absolute;
+  z-index: 2;
+  left: 16px;
+  top: 16px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #176BFF;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.roster-card__photo { position: absolute; inset: 0; }
+.roster-card__photo img,
+.roster-card__fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.roster-card__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(165deg, #16255f, #0a1538);
+  color: rgba(159, 195, 255, 0.45);
+}
+.roster-card__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 18, 59, 0) 40%, rgba(8, 18, 59, 0.92) 100%);
+}
+.roster-card__caption {
+  position: relative;
+  z-index: 2;
+  padding: 18px 18px 20px;
+}
+.roster-card__caption h3 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+.roster-card__role {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #9CC3FF;
+  line-height: 1.35;
+}
+.roster-card__bio {
+  position: relative;
+  z-index: 2;
+  max-height: 0;
+  padding: 0 18px;
+  overflow: hidden;
+  transition: max-height 0.32s ease, padding 0.32s ease;
+}
+.roster-card.is-expanded .roster-card__bio {
+  max-height: 160px;
+  padding: 0 18px 20px;
+}
+.roster-card__bio-grid {
+  position: absolute;
+  inset: -40px 0 0;
+  background-image:
+    linear-gradient(rgba(127, 176, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(127, 176, 255, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent);
+  pointer-events: none;
+}
+.roster-card__bio p {
+  position: relative;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+}
+@media (max-width: 900px) {
+  .roster-cards { flex-wrap: wrap; }
+  .roster-card { height: 320px; }
+  .roster-cards > .scroll-reveal { flex: 1 1 calc(50% - 8px); }
+  .roster-cards > .scroll-reveal:has(.roster-card.is-expanded) { flex-grow: 1; }
+}
+@media (max-width: 540px) {
+  .roster-cards > .scroll-reveal { flex: 1 1 100%; }
+}
+
+/* ─── PROJECT ADVISER SPOTLIGHT ───────────────────────────────────────── */
+.site-inner section.advisers-section {
+  display: block;
+  grid-template-columns: none;
+  padding: clamp(56px, 7vw, 90px) clamp(20px, 6vw, 100px);
+  background: #f5f8fc;
+}
+.advisers-section .team-section-title { text-align: center; margin-bottom: clamp(28px, 4vw, 40px); }
+.advisers-section .team-section-title h2 {
+  margin: 0;
+  font-size: clamp(28px, 3.4vw, 38px);
+  letter-spacing: -0.03em;
+  color: #0B1E42;
+}
+.adviser-cards { display: flex; justify-content: center; }
+.adviser-card {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  width: min(100%, 680px);
+  padding: 32px clamp(24px, 4vw, 44px);
+  border: 1px solid #d9e4f2;
+  border-radius: 26px;
+  background: linear-gradient(165deg, #ffffff, #f3f7ff);
+  box-shadow: 0 18px 50px rgba(17, 24, 39, 0.07);
+}
+.adviser-card h3 {
+  margin: 0;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  color: #0B1E42;
+}
+.adviser-card__title {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #176BFF;
+}
+.adviser-card p {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #536477;
+}
 .adviser-card__icon {
-  width: 52px;
-  height: 52px;
+  width: 68px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -82,6 +82,15 @@ function IconScale() {
   )
 }
 
+function IconPerson() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <circle cx="24" cy="17" r="9" stroke="currentColor" strokeWidth="2"/>
+      <path d="M7 41c0-8.3 7.6-15 17-15s17 6.7 17 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 function IconMedal() {
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -323,9 +332,6 @@ export default function MarketingLanding({
                 </button>
               )
             )}
-            <button className="site-nav__changelog-btn" onClick={() => setChangelogOpen(true)}>
-              <span className="changelog-spark">✨</span> Changelog
-            </button>
           </nav>
           <button className="site-nav__cta" onClick={onInstall}>
             Install kiosk app
@@ -890,6 +896,43 @@ function Home({
   )
 }
 
+interface RosterMember { name: string; role: string; bio: string; photo: string }
+
+function RosterCard({ member, index }: { member: RosterMember; index: number }) {
+  const [photoFailed, setPhotoFailed] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <button
+      type="button"
+      className={`roster-card ${expanded ? 'is-expanded' : ''}`}
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+      onFocus={() => setExpanded(true)}
+      onBlur={() => setExpanded(false)}
+      onClick={() => setExpanded(value => !value)}
+      aria-expanded={expanded}
+    >
+      <span className="roster-card__tag">P{index + 1}</span>
+      <div className="roster-card__photo">
+        {photoFailed ? (
+          <div className="roster-card__fallback"><IconPerson /></div>
+        ) : (
+          <img src={member.photo} alt={member.name} loading="lazy" onError={() => setPhotoFailed(true)} />
+        )}
+        <div className="roster-card__scrim" />
+      </div>
+      <div className="roster-card__caption">
+        <h3>{member.name}</h3>
+        <span className="roster-card__role">{member.role}</span>
+      </div>
+      <div className="roster-card__bio" aria-hidden={!expanded}>
+        <div className="roster-card__bio-grid" />
+        <p>{member.bio}</p>
+      </div>
+    </button>
+  )
+}
+
 function TeamPage({
   onNavigate,
   onOpen,
@@ -899,43 +942,37 @@ function TeamPage({
 }) {
   const teamMembers = [
     {
-      name: 'Gabriel Alarcon',
-      role: 'Project Lead & Full Stack Architect',
-      initials: 'GA',
+      name: 'ARNADO, Catherine C.',
+      role: 'Project Lead & Full Stack Architect, AI & Computer Vision Lead',
       bio: 'Leads system architecture, dual-cloud sync, PWA development, and port kiosk integrations.',
+      photo: '/assets/team/arnado.jpg',
     },
     {
-      name: 'Dr. Maria Santos',
-      role: 'AI & Computer Vision Lead',
-      initials: 'MS',
-      bio: 'Spearheads deep learning models for tuna meat color classification, Sashibo analysis, and ONNX edge acceleration.',
-    },
-    {
-      name: 'Jason Tan',
+      name: 'PALMA, Xander',
       role: 'Hardware & Embedded Systems',
-      initials: 'JT',
       bio: 'Designs camera enclosures, 5000K CRI 98+ lighting chambers, Raspberry Pi peripherals, and thermal printers.',
+      photo: '/assets/team/palma.jpg',
     },
     {
-      name: 'Elena Rostova',
-      role: 'Quality & Field Operations Specialist',
-      initials: 'ER',
-      bio: 'Bridges port grading practices with digital UI, ensuring compliance with international yellowfin export standards.',
+      name: 'ABING, Eliza Marie',
+      role: 'Documentation & Quality & Field Operations Specialist',
+      bio: 'Keeps project documentation, QA checklists, and field deployment notes aligned with how the station is actually used.',
+      photo: '/assets/team/abing.jpg',
+    },
+    {
+      name: 'SALAZAR, Joey',
+      role: 'Mobile App Developer, QA Lead',
+      bio: 'Builds the companion mobile app and leads quality assurance across the kiosk and mobile surfaces.',
+      photo: '/assets/team/salazar.jpg',
     },
   ]
 
   const advisers = [
     {
-      name: 'Capt. Fernando Cruz',
-      title: 'Senior Fisheries Adviser',
-      affiliation: 'Bureau of Fisheries & Aquatic Resources',
-      expertise: '30+ years in commercial tuna export, port operations, and quality inspection standards.',
-    },
-    {
-      name: 'Prof. Hiroshi Tanaka',
-      title: 'Technical & Research Adviser',
-      affiliation: 'Institute of Marine Robotics & AI',
-      expertise: 'Pioneer in non-destructive agricultural & seafood spectral quality measurement.',
+      name: 'Dr. Owen B. Pilongo, DBM-IS',
+      title: 'Project Adviser',
+      affiliation: 'CET Chairperson, BSIT Program Head',
+      expertise: '',
     },
   ]
 
@@ -949,22 +986,15 @@ function TeamPage({
         </p>
       </header>
 
-      <section className="team-grid">
-        <div className="team-section-title">
-          <h2>Core Project Team</h2>
-          <p>Developers, engineers, and domain experts building TunaEye.</p>
+      <section className="roster-section">
+        <div className="roster-section__heading">
+          <span className="roster-section__kicker">Introducing</span>
+          <h2>Our Team</h2>
         </div>
-        <div className="team-cards">
+        <div className="roster-cards">
           {teamMembers.map((m, i) => (
             <Reveal key={m.name} delay={i * 70}>
-              <div className="team-card">
-                <div className="team-card__avatar">{m.initials}</div>
-                <div className="team-card__info">
-                  <h3>{m.name}</h3>
-                  <span className="team-card__role">{m.role}</span>
-                  <p>{m.bio}</p>
-                </div>
-              </div>
+              <RosterCard member={m} index={i} />
             </Reveal>
           ))}
         </div>
@@ -972,8 +1002,7 @@ function TeamPage({
 
       <section className="advisers-section">
         <div className="team-section-title">
-          <h2>Project Advisers</h2>
-          <p>Guidance from industry veterans and academic leaders in fisheries and computer vision.</p>
+          <h2>Project Adviser</h2>
         </div>
         <div className="adviser-cards">
           {advisers.map((a, i) => (
@@ -982,8 +1011,8 @@ function TeamPage({
                 <div className="adviser-card__icon"><IconMedal /></div>
                 <div>
                   <h3>{a.name}</h3>
-                  <span className="adviser-card__title">{a.title} • {a.affiliation}</span>
-                  <p>{a.expertise}</p>
+                  <span className="adviser-card__title">{a.affiliation}</span>
+                  {a.expertise && <p>{a.expertise}</p>}
                 </div>
               </div>
             </Reveal>
