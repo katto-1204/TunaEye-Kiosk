@@ -822,7 +822,11 @@ function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sam
       const blob = await capturePiImage(sample, index)
       await onCapture(blob, URL.createObjectURL(blob))
     }
-    catch { setCameraError(isDemoMode() ? 'Demo sample could not be loaded.' : 'Camera capture failed. Confirm this tablet is connected to TunaRpi, then reconnect.') }
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error('[TunaEye] Camera capture failed:', error)
+      setCameraError(`Camera capture failed: ${message}`)
+    }
     finally { setBusy(null) }
   }
   const upload = async (file?: File) => {
