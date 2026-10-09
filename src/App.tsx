@@ -7,7 +7,7 @@ import { fetchCloudRecords, syncPendingRecords } from './cloudSync'
 import { getSupabase, isSupabaseConfigured } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
 import { getDemoPreviewUrl, initDemoMode, isDemoMode, parseDemoGradeFromFilename, setDemoGradeHint } from './demoMode'
-import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage, PiIntegrationError } from './piClient'
+import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage, PI_CONNECTION_GUIDANCE, PiIntegrationError } from './piClient'
 import { createId } from './id'
 
 const ADMIN_PIN = '1234'
@@ -717,7 +717,8 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
   const fishIds = Array.from(new Set(selected.map(sample => fishIdForSample({ sameFish } as never, sample))))
   const [activeFishId, setActiveFishId] = useState(fishIds[0] ?? 'Fish 1')
   const overweight = fishIds.some(id => Number(weights[id]) > 200)
-  const valid = fishIds.every(id => Number(weights[id]) > 0 && Number(weights[id]) <= 200)
+  const underweight = fishIds.some(id => Boolean(weights[id]) && Number(weights[id]) < 15)
+  const valid = fishIds.every(id => Number(weights[id]) >= 15 && Number(weights[id]) <= 200)
 
   const handleNumpadPress = (val: string) => {
     const current = weights[activeFishId] ?? ''
@@ -758,8 +759,8 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
               </div>
             ))}
           </div>
-          <span className={`input-status ${valid ? 'is-valid' : overweight ? 'is-error' : ''}`} role={overweight ? 'alert' : undefined}>
-            {valid ? <><Icon name="check" size={16} />Ready to start capture</> : overweight ? 'Maximum fish weight is 200 kg. Enter a lower value.' : 'Enter a weight greater than zero'}
+          <span className={`input-status ${valid ? 'is-valid' : overweight || underweight ? 'is-error' : ''}`} role={overweight || underweight ? 'alert' : undefined}>
+            {valid ? <><Icon name="check" size={16} />Ready to start capture</> : overweight ? 'Maximum fish weight is 200 kg.' : underweight ? 'Minimum fish weight is 15 kg.' : 'Enter 15–200 kg'}
           </span>
         </div>
 
@@ -769,14 +770,14 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
             {fishIds.map(id => (
               <div
                 key={id}
-                className={`weight-input weight-input-display ${activeFishId === id ? 'is-active' : ''} ${Number(weights[id]) > 200 ? 'is-error' : ''}`}
+                className={`weight-input weight-input-display ${activeFishId === id ? 'is-active' : ''} ${weights[id] && (Number(weights[id]) < 15 || Number(weights[id]) > 200) ? 'is-error' : ''}`}
                 onClick={() => setActiveFishId(id)}
               >
                 <input
                   inputMode="decimal"
                   value={weights[id] ?? ''}
-                  aria-invalid={Number(weights[id]) > 200}
-                  aria-describedby={Number(weights[id]) > 200 ? 'weight-limit-error' : undefined}
+                  aria-invalid={Boolean(weights[id]) && (Number(weights[id]) < 15 || Number(weights[id]) > 200)}
+                  aria-describedby={Boolean(weights[id]) && (Number(weights[id]) < 15 || Number(weights[id]) > 200) ? 'weight-limit-error' : undefined}
                   onFocus={() => setActiveFishId(id)}
                   onChange={event => onWeight(id, event.target.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, '').slice(0, 6))}
                   placeholder="0.0"
@@ -787,7 +788,7 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
               </div>
             ))}
           </div>
-          {overweight && <div id="weight-limit-error" className="weight-limit-dialog" role="alert"><Icon name="help" size={20} /><span><strong>Weight exceeds the limit</strong><small>TunaEye accepts up to 200 kg per fish.</small></span></div>}
+          {(overweight || underweight) && <div id="weight-limit-error" className="weight-limit-dialog" role="alert"><Icon name="help" size={20} /><span><strong>Enter 15–200 kg</strong><small>{overweight ? 'The maximum is 200 kg per fish.' : 'The minimum is 15 kg per fish.'}</small></span></div>}
           <div className="numpad-container">
             <div className="numpad-grid">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'].map(key => (
@@ -811,11 +812,12 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
 }
 function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sample: SampleType; index: number; total: number; onCapture: (blob: Blob, previewUrl: string) => Promise<void>; onBack: () => void; onHelp?: () => void }) {
   const uploadRef = useRef<HTMLInputElement>(null)
-  const [cameraError, setCameraError] = useState('')
+  const piSettings = getPiSettings()
+  const demoPreview = isDemoMode() ? getDemoPreviewUrl(sample, index) : null
+  const [cameraError, setCameraError] = useState(() => !demoPreview && !piSettings.configured ? PI_CONNECTION_GUIDANCE : '')
   const [streamKey, setStreamKey] = useState(0)
   const [busy, setBusy] = useState<'capture' | 'upload' | null>(null)
-  const demoPreview = isDemoMode() ? getDemoPreviewUrl(sample, index) : null
-  const streamUrl = `${getPiSettings().streamUrl}?reconnect=${streamKey}`
+  const streamUrl = piSettings.configured ? `${piSettings.streamUrl}?reconnect=${streamKey}` : undefined
   const capture = async () => {
     if (busy) return
     setBusy('capture')
@@ -846,7 +848,7 @@ function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sam
     } catch (error) { console.error('[TunaEye] Uploaded image validation failed:', error); setCameraError('TunaEye could not read this image. Choose another file.') }
     finally { setBusy(null); if (uploadRef.current) uploadRef.current.value = '' }
   }
-  return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera live-camera--demo"><img src={demoPreview ?? streamUrl} alt={demoPreview ? 'Demo specimen preview' : 'Live Raspberry Pi USB camera preview'} onLoad={() => setCameraError('')} onError={() => { if (!demoPreview) setCameraError('Raspberry Pi camera stream is unavailable.') }} /><div className="target-corners"><i /><i /><i /><i /></div>{demoPreview && <span className="camera-demo-badge">Demo specimen</span>}{cameraError && <div className="camera-error" role="alert"><Icon name="camera" size={28} /><span>{cameraError}</span><Button variant="secondary" icon="refresh" onClick={() => { setCameraError(''); setStreamKey(key => key + 1) }}>Reconnect</Button></div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>{demoPreview ? 'Demo video samples' : 'Raspberry Pi USB camera'}</small></span></div><h1>Align the sample in the guide.</h1><p>{demoPreview ? 'Capture uses the demo specimen.' : 'Keep the sample still and fully visible.'}</p><input ref={uploadRef} className="camera-upload-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload specimen image" onChange={event => void upload(event.target.files?.[0])} disabled={Boolean(busy)} />{busy === 'upload' ? <small className="camera-upload-note camera-upload-note--busy" role="status"><Spinner />Saving image…</small> : <small className="camera-upload-note" role="status">JPEG, PNG, or WebP · up to 10 MB</small>}</aside></div><BottomBar onBack={onBack} onHelp={onHelp} secondaryLabel={busy === 'upload' ? 'Uploading…' : 'Upload image'} secondaryLoading={busy === 'upload'} secondaryDisabled={Boolean(busy)} onSecondary={() => uploadRef.current?.click()} primary={() => void capture()} primaryLabel={busy === 'capture' ? 'Capturing…' : 'Capture'} primaryIcon="camera" primaryLoading={busy === 'capture'} primaryDisabled={Boolean(busy)} /></div>
+  return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera live-camera--demo"><img src={demoPreview ?? streamUrl} crossOrigin={piSettings.mode === 'hosted-gateway' ? 'use-credentials' : undefined} alt={demoPreview ? 'Demo specimen preview' : 'Live Raspberry Pi USB camera preview'} onLoad={() => setCameraError('')} onError={() => { if (!demoPreview) setCameraError(piSettings.mode === 'hosted-gateway' ? 'Secure TunaEye gateway stream unavailable. Check gateway sign-in and CORS.' : 'Raspberry Pi camera stream is unavailable.') }} /><div className="target-corners"><i /><i /><i /><i /></div>{demoPreview && <span className="camera-demo-badge">Demo specimen</span>}{cameraError && <div className="camera-error" role="alert"><Icon name="camera" size={28} /><span>{cameraError}</span>{piSettings.configured && <Button variant="secondary" icon="refresh" onClick={() => { setCameraError(''); setStreamKey(key => key + 1) }}>Reconnect</Button>}</div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>{demoPreview ? 'Demo video samples' : 'Raspberry Pi USB camera'}</small></span></div><h1>Align the sample in the guide.</h1><p>{demoPreview ? 'Capture uses the demo specimen.' : 'Keep the sample still and fully visible.'}</p><input ref={uploadRef} className="camera-upload-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload specimen image" onChange={event => void upload(event.target.files?.[0])} disabled={Boolean(busy)} />{busy === 'upload' ? <small className="camera-upload-note camera-upload-note--busy" role="status"><Spinner />Saving image…</small> : <small className="camera-upload-note" role="status">JPEG, PNG, or WebP · up to 10 MB</small>}</aside></div><BottomBar onBack={onBack} onHelp={onHelp} secondaryLabel={busy === 'upload' ? 'Uploading…' : 'Upload image'} secondaryLoading={busy === 'upload'} secondaryDisabled={Boolean(busy)} onSecondary={() => uploadRef.current?.click()} primary={() => void capture()} primaryLabel={busy === 'capture' ? 'Capturing…' : 'Capture'} primaryIcon="camera" primaryLoading={busy === 'capture'} primaryDisabled={Boolean(busy) || (!demoPreview && !piSettings.configured)} /></div>
 }
 function ReviewScreen({ sample, outcome, onRetake, onUse, onBack }: { sample: SampleType; outcome: DemoOutcome; onRetake: () => void; onUse: () => void; onBack: () => void }) { const valid = outcome === 'valid'; return <div className="screen-stack screen-stack--review"><div className="review-layout"><EvidenceFrame sample={sample} mode="sample" frozen /><aside className="review-aside"><span className={`review-badge review-badge--${outcome}`}>{valid ? <Icon name="check" size={17} /> : <Icon name="help" size={17} />}{valid ? 'Image saved' : outcome === 'uncertain' ? 'Check the image' : 'Retake recommended'}</span><h1>{valid ? 'Use this image?' : 'Let’s check the image.'}</h1>{!valid && <p>{outcome === 'uncertain' ? 'Review before continuing.' : 'Needs a clearer view inside the guide.'}</p>}<div className="review-actions"><Button variant="secondary" onClick={onRetake} icon="refresh">Retake</Button><Button onClick={onUse} icon="arrow">Use Image</Button></div></aside></div><BottomBar onBack={onBack} /></div> }
 function AnalysisScreen({ sample }: { sample: SampleType }) {
@@ -1174,7 +1176,8 @@ function App() {
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
   useEffect(() => { if (refreshRecovery.active) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.active])
   useEffect(() => {
-    const syncOnReconnect = () => { if (isSupabaseConfigured()) void syncPendingRecords().catch(() => undefined) }
+    const syncOnReconnect = () => { if (isSupabaseConfigured() && navigator.onLine && loadRecords().some(record => record.transaction?.syncState === 'pending' || record.transaction?.syncState === 'failed')) void syncPendingRecords().catch(() => undefined) }
+    syncOnReconnect()
     window.addEventListener('online', syncOnReconnect)
     return () => window.removeEventListener('online', syncOnReconnect)
   }, [])
@@ -1228,7 +1231,7 @@ function App() {
     return () => { cancelled = true }
   }, [session.screen, sample, go])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
+  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, overrideActor: result.overrideActor, overrideAt: result.overrideAt, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
   const openRole = (role: Role) => { gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {
@@ -1300,7 +1303,8 @@ function App() {
   if (booting) return <LoadingScreen />
   if (!installed && !webIntroDismissed && session.screen === 'welcome') return <ProductLanding page={marketingPage} onInstall={installApp} onOpen={() => setWebIntroDismissed(true)} onNavigate={page => { setMarketingPage(page); window.history.pushState({}, '', page === 'home' ? '/' : `/${page}`) }} />
   const isLanding = session.screen === 'welcome'
-  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
+  const showGraderHome = session.role === 'expert' && !['welcome', 'select-role', 'grader', 'grader-dashboard', 'complete'].includes(session.screen)
+  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{showGraderHome && <button className="grader-home-shortcut" onClick={() => go('grader-dashboard')} aria-label="View grading history" title="View grading history"><Icon name="home" size={18} /></button>}{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason, actor: session.graderName || 'Guest grader', timestamp: new Date().toISOString() }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
 }
 
 export default App

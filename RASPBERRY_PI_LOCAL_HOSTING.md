@@ -23,7 +23,7 @@ The resulting `dist/` uses these same-origin endpoints:
 - `GET /stream`
 - `POST /grade`
 
-The normal `npm run build` and existing `vercel.json` are unchanged for Vercel. Supabase variables remain optional deployment values and are not duplicated in `.env.pi`.
+The normal `npm run build` remains the Vercel build. It never falls back from HTTPS to the Pi's HTTP address. Configure an authenticated `VITE_PI_GATEWAY_URL` as described in `docs/VERCEL_CAMERA_GATEWAY.md`, or the hosted PWA displays connection guidance.
 
 ## Transfer the build
 

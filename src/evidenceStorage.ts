@@ -83,3 +83,12 @@ export async function updateEvidenceSyncState(id: string, syncState: EvidenceRec
     database.close()
   }
 }
+
+export async function deleteCapturedEvidence(id: string): Promise<void> {
+  const database = await openDatabase()
+  try {
+    await requestResult(database.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id))
+  } finally {
+    database.close()
+  }
+}

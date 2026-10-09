@@ -14,7 +14,7 @@ export interface GradingRecord {
   capturedImage?: string
   capturedImageId?: string
   remoteImagePath?: string
-  result?: { status: string; originalGrade: string | null; originalConfidence: number | null; rawConfidence?: number; overrideGrade: string | null; overrideReason: string; inferenceId?: string; captureId?: string; scores?: Record<string, number>; imageType?: 'sashibocore' | 'tailcut'; modelSource?: 'raspberry-pi' | 'demo' }
+  result?: { status: string; originalGrade: string | null; originalConfidence: number | null; rawConfidence?: number; overrideGrade: string | null; overrideReason: string; overrideActor?: string; overrideAt?: string; inferenceId?: string; captureId?: string; scores?: Record<string, number>; imageType?: 'sashibocore' | 'tailcut'; modelSource?: 'raspberry-pi' | 'demo' }
   transaction?: { currency: string; amount: number | null; syncState: SyncState; lastSyncError?: string }
 }
 
@@ -26,7 +26,7 @@ export const loadRecords = (): GradingRecord[] => {
 }
 
 export function saveRecords(records: GradingRecord[]) {
-  localStorage.setItem(RECORDS_KEY, JSON.stringify(records.slice(0, 200)))
+  localStorage.setItem(RECORDS_KEY, JSON.stringify(records))
   window.dispatchEvent(new Event('tunaeye-records-updated'))
 }
 

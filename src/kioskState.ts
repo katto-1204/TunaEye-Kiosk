@@ -32,6 +32,8 @@ export interface SampleResult {
   rawConfidence?: number
   overrideGrade: Grade | null
   overrideReason: string
+  overrideActor?: string
+  overrideAt?: string
   captured: boolean
   weight: string
   inferenceId?: string
@@ -97,7 +99,7 @@ export type Action =
   | { type: 'setAdminPin'; value: string }
   | { type: 'adminError'; message: string }
   | { type: 'adminAuthenticated' }
-  | { type: 'setOverride'; sample: SampleType; grade: Grade; reason: string }
+  | { type: 'setOverride'; sample: SampleType; grade: Grade; reason: string; actor?: string; timestamp?: string }
   | { type: 'nextSample' }
   | { type: 'startPrinting' }
   | { type: 'printed'; sample: SampleType }
@@ -186,7 +188,7 @@ export function reducer(state: Session, action: Action): Session {
     case 'setOverride': {
       const existing = state.results[action.sample]
       if (!existing) return state
-      return { ...state, results: { ...state.results, [action.sample]: { ...existing, status: 'valid', overrideGrade: action.grade, overrideReason: action.reason } } }
+      return { ...state, results: { ...state.results, [action.sample]: { ...existing, status: 'valid', overrideGrade: action.grade, overrideReason: action.reason, overrideActor: action.actor, overrideAt: action.timestamp } } }
     }
     case 'nextSample':
       return { ...state, currentSampleIndex: state.currentSampleIndex + 1, screen: 'camera', demoOutcome: 'valid' }

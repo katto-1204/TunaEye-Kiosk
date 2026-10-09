@@ -1,5 +1,11 @@
 # Lessons
 
+- Recheck live service state immediately after the user says they changed it; distinguish an enabled Supabase Auth setting from a stale Vercel bundle that still needs redeployment.
+
+- Never let an HTTPS deployment inherit HTTP Raspberry Pi defaults: select endpoints by deployment mode, require an authenticated HTTPS gateway for hosted access, and show connection guidance before the browser emits mixed-content requests.
+
+- A local-first sync record is not safely synced until both the full cloud row and its private image object are readable; retention must filter by that verified state and must never use a positional write cap.
+
 - A kiosk form should visually match the importance of its task: use a large touch field, readable label, and clear identity grouping instead of leaving small desktop controls floating in a large panel.
 
 - “Use this color for any blue” means do not preserve a legacy navy tier: use the supplied cobalt for blue surfaces and neutral charcoal for ordinary text that previously used blue-black.

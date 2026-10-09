@@ -1,3 +1,66 @@
+# Weight, grader shortcut, selector scale, and sync diagnosis — 2026-10-09
+
+- [x] Enforce a 15 kg minimum and 200 kg maximum with clear errors.
+- [x] Left-align the weight value inside its input card.
+- [x] Enlarge both sample selector images without changing assets.
+- [x] Add a small grader history/home shortcut during active workflows.
+- [x] Add restrained screen/card/button microtransitions with reduced-motion support.
+- [x] Verify live Supabase anonymous Auth is enabled.
+- [x] Replace the stale generic Vite-variable sync error with rebuild/redeploy guidance.
+- [ ] Run final normal/Pi builds and full Playwright regression.
+
+### Review
+
+- Focused Playwright passed: 3 tests covering range validation, alignment, and grader shortcut.
+- Live Auth settings now report anonymous users enabled and signups allowed.
+- Existing kiosk/PWA records still require a new Vercel deployment before the newly added Vite variables exist in the compiled bundle.
+
+---
+
+# Live Supabase migration and Vercel camera routing — 2026-10-09
+
+- [x] Audit live migration history and table compatibility before cloud writes.
+- [x] Apply the shared grading contract and provenance migrations to live Supabase.
+- [x] Verify migration versions and provenance columns through live REST schema access.
+- [x] Reproduce the Vercel mixed-content camera failure in Chrome.
+- [x] Prevent HTTPS deployments from falling back to HTTP Pi endpoints.
+- [x] Preserve Pi-hosted same-origin status, stream, snapshot, and grade routes.
+- [x] Add authenticated HTTPS gateway configuration and disconnected guidance.
+- [x] Add hosted-gateway and Pi-local browser regressions.
+- [x] Run the final normal-deployment Playwright suite.
+- [ ] Deploy the verified Vercel build after linking/logging in to the existing project.
+
+### Review
+
+- Live Supabase migrations `202610070001` and `202610090002` applied and verified.
+- Chrome reproduced mixed-content failures from Vercel to `http://10.42.0.1:8080`; camera permission was not involved because the app does not use `getUserMedia()`.
+- Pi-local focused test and build passed; hosted HTTPS gateway focused test passed.
+- Final normal regression passed: 30 tests; three environment-gated integration tests skipped and were run separately.
+- Vercel deployment is blocked locally: no `.vercel/project.json` and no CLI credentials. No temporary or unrelated project was created.
+- Supabase anonymous users are disabled; schema is migrated, but pending kiosk records cannot authenticate until that Auth setting is enabled.
+
+---
+
+# Storage persistence hardening — 2026-10-09
+
+- [x] Audit IndexedDB, localStorage, Supabase schema/RLS, sync verification, and identity ownership.
+- [x] Add nullable inference provenance and immutable-original protection through an additive migration.
+- [x] Remove the local 200-record write truncation and retain every unsynced record.
+- [x] Verify complete cloud rows and private image objects before marking local records synced.
+- [x] Prune only older verified records while retaining the newest 200 synced records locally.
+- [x] Start guarded synchronization after authenticated online startup and preserve deterministic retries.
+- [x] Document a safe station identity migration without changing authentication.
+- [x] Run focused sync tests, full Playwright regression, and final production builds.
+
+### Review
+
+- Additive migration prepared; no live Supabase schema was changed from this checkout.
+- Focused storage/sync regression passed: 2 tests, including full provenance, byte verification, idempotent retry, retention, and failed-record preservation.
+- Full Playwright regression passed: 30 tests; the environment-gated mock Supabase and Pi-local tests skipped as intended.
+- Normal and Raspberry Pi TypeScript/Vite production builds passed. Existing bundle-size warning remains.
+
+---
+
 # Raspberry Pi Local Flask Hosting — 2026-10-09
 
 - [x] Audit Pi URL selection, Vite builds, service worker, environment variables, manifest, and Vercel configuration.

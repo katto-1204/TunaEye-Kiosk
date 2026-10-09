@@ -4,6 +4,18 @@ import type { DemoOutcome, Grade, SampleType } from './kioskState'
 const DEFAULT_API_URL = 'http://10.42.0.1:5000'
 const DEFAULT_CAMERA_URL = 'http://10.42.0.1:8080'
 const TIMEOUT_MS = 8_000
+export const PI_CONNECTION_GUIDANCE = 'Connect to the TunaRpi Wi-Fi and open http://10.42.0.1:5000, or configure an authenticated HTTPS TunaEye gateway.'
+
+export type PiDeploymentMode = 'pi-local' | 'hosted-gateway' | 'development-local' | 'unconfigured'
+
+export interface PiSettings {
+  mode: PiDeploymentMode
+  configured: boolean
+  apiUrl: string
+  cameraUrl: string
+  streamUrl: string
+  snapshotUrl: string
+}
 
 export interface PiGradeResult {
   id: string
@@ -37,26 +49,42 @@ export class PiIntegrationError extends Error {
 
 export const getPiSettings = () => {
   if (import.meta.env.VITE_PI_LOCAL_HOSTED === 'true') {
-    return { apiUrl: '', cameraUrl: '', streamUrl: '/stream', snapshotUrl: '/snapshot' }
+    return { mode: 'pi-local', configured: true, apiUrl: '', cameraUrl: '', streamUrl: '/stream', snapshotUrl: '/snapshot' } satisfies PiSettings
+  }
+  const configuredGateway = import.meta.env.VITE_PI_GATEWAY_URL?.trim().replace(/\/$/, '')
+  const savedGateway = localStorage.getItem('tunaeye-rpi-url')?.trim().replace(/\/$/, '')
+  const gatewayUrl = configuredGateway || (savedGateway?.startsWith('https://') ? savedGateway : '')
+  if (configuredGateway || window.location.protocol === 'https:') {
+    if (!gatewayUrl?.startsWith('https://')) return { mode: 'unconfigured', configured: false, apiUrl: '', cameraUrl: '', streamUrl: '', snapshotUrl: '' } satisfies PiSettings
+    return { mode: 'hosted-gateway', configured: true, apiUrl: gatewayUrl, cameraUrl: gatewayUrl, streamUrl: `${gatewayUrl}/stream`, snapshotUrl: `${gatewayUrl}/snapshot` } satisfies PiSettings
   }
   const apiUrl = (localStorage.getItem('tunaeye-rpi-url') || import.meta.env.VITE_PI_API_URL || DEFAULT_API_URL).replace(/\/$/, '')
   const cameraUrl = (localStorage.getItem('tunaeye-camera-url') || import.meta.env.VITE_PI_CAMERA_URL || DEFAULT_CAMERA_URL).replace(/\/$/, '')
-  return { apiUrl, cameraUrl, streamUrl: `${cameraUrl}/stream`, snapshotUrl: `${cameraUrl}/snapshot` }
+  return { mode: 'development-local', configured: true, apiUrl, cameraUrl, streamUrl: `${cameraUrl}/stream`, snapshotUrl: `${cameraUrl}/snapshot` } satisfies PiSettings
+}
+
+function requirePiSettings(stage: PiStage): PiSettings {
+  const settings = getPiSettings()
+  if (!settings.configured) throw new PiIntegrationError(stage, PI_CONNECTION_GUIDANCE)
+  return settings
 }
 
 async function request(url: string, stage: PiStage, init?: RequestInit, attempts = 2): Promise<Response> {
+  if (window.location.protocol === 'https:' && url.startsWith('http://')) throw new PiIntegrationError(stage, PI_CONNECTION_GUIDANCE)
   let lastError: unknown
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
-      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) })
-      if (!response.ok) throw new PiIntegrationError(stage, `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} failed: HTTP ${response.status}.`, response.status)
+      const response = await fetch(url, { ...init, credentials: url.startsWith('https://') ? 'include' : init?.credentials, signal: AbortSignal.timeout(TIMEOUT_MS) })
+      if (!response.ok) throw new PiIntegrationError(stage, response.status === 401 || response.status === 403
+        ? `TunaEye gateway authentication failed (HTTP ${response.status}). Sign in to the gateway, then reconnect.`
+        : `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} failed: HTTP ${response.status}.`, response.status)
       return response
     } catch (error) {
       lastError = error instanceof PiIntegrationError
         ? error
         : new PiIntegrationError(stage, error instanceof DOMException && error.name === 'TimeoutError'
           ? `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} request timed out after ${TIMEOUT_MS / 1000} seconds.`
-          : `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} request failed. Check the configured URL, browser CORS, and HTTPS settings.`, undefined, { cause: error })
+          : `${stage === 'snapshot' ? 'Snapshot' : stage === 'inference' ? 'Inference' : 'Status'} request failed. ${url.startsWith('https://') ? 'Check gateway authentication, CORS, and Private Network Access.' : 'Check the configured URL and browser CORS.'}`, undefined, { cause: error })
       if (attempt + 1 < attempts) await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)))
     }
   }
@@ -64,6 +92,7 @@ async function request(url: string, stage: PiStage, init?: RequestInit, attempts
 }
 
 export async function checkPiHealth(apiUrl = getPiSettings().apiUrl): Promise<PiStatusResponse> {
+  if (!apiUrl) apiUrl = requirePiSettings('status').apiUrl
   apiUrl = apiUrl.replace(/\/$/, '')
   const response = await request(`${apiUrl}/status`, 'status', undefined, 3)
   try {
@@ -77,7 +106,7 @@ export async function checkPiHealth(apiUrl = getPiSettings().apiUrl): Promise<Pi
 
 export async function capturePiImage(sample?: SampleType, sampleIndex = 0): Promise<Blob> {
   if (isDemoMode() && sample) return loadDemoSampleBlob(sample, sampleIndex)
-  const { snapshotUrl } = getPiSettings()
+  const { snapshotUrl } = requirePiSettings('snapshot')
   const blob = await request(snapshotUrl, 'snapshot', undefined, 2).then(response => response.blob())
   if (!blob.type.startsWith('image/') || blob.size === 0) throw new PiIntegrationError('snapshot', 'Snapshot failed: the camera returned an invalid image.')
   return blob
@@ -85,7 +114,7 @@ export async function capturePiImage(sample?: SampleType, sampleIndex = 0): Prom
 
 export async function gradePiImage(blob: Blob, sample: SampleType): Promise<PiGradeResult> {
   if (isDemoMode()) return gradeDemoImage(sample)
-  const { apiUrl } = getPiSettings()
+  const { apiUrl } = requirePiSettings('inference')
   const imageType = sample === 'Tail cut' ? 'tailcut' : 'sashibocore'
   const extension = ({ 'image/png': 'png', 'image/webp': 'webp' } as Record<string, string>)[blob.type] ?? 'jpg'
   const form = new FormData()

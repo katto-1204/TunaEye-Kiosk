@@ -38,6 +38,14 @@ This contract is shared by TunaEye Kiosk, TunaEyePhoneLEGIT, and the Admin Dashb
 | `original_grade` | tuna grade | no | Raspberry Pi model grade before override. |
 | `override_grade` | tuna grade | no | Authorized expert decision. |
 | `override_reason` | text | no | Required by client workflow for overrides. |
+| `override_actor` | text | no | Grader identity recorded when an override is applied. |
+| `override_at` | timestamptz | no | Time the override was applied. |
+| `capture_id` | text | no | Raspberry Pi capture identifier. |
+| `inference_id` | text | no | Raspberry Pi inference identifier. |
+| `raw_confidence` | double precision | no | Unnormalized confidence returned by inference. |
+| `scores` | jsonb | no | Raw `GRADE_A`, `GRADE_B`, `GRADE_C`, and `INVALID` scores. |
+| `image_type` | text | no | Pi model input: `sashibocore` or `tailcut`. |
+| `model_source` | text | no | `raspberry-pi` or explicitly enabled `demo`. |
 | `image_path` | text | no | Private Storage path for the selected sample. |
 | `gradcam_path` | text | no | Private Grad-CAM object path when produced. |
 | `captured_at` | timestamptz | yes | Device capture/session time. |
@@ -61,9 +69,10 @@ Local-only states are `pending`, `syncing`, `synced`, and `failed`. They are not
 3. On manual Sync or the browser `online` event, authenticate with Supabase.
 4. Upload evidence with `upsert: true` to the deterministic path.
 5. Upsert `grading_records` on primary key `id`.
-6. Read the same `id` back to verify cloud persistence.
+6. Read all persisted contract fields back and download the private image to verify both row and object persistence.
 7. Only then mark local evidence and record `synced`.
-8. On any error mark the local item `failed`; retain it for retry.
+8. Retain every unsynced record. After verification, retain the newest 200 synced records locally and prune only older verified metadata and evidence.
+9. On any error mark the local item `failed`; retain it for retry.
 
 No polling and no Supabase Realtime subscription are part of this contract.
 
@@ -72,7 +81,7 @@ No polling and no Supabase Realtime subscription are part of this contract.
 - The kiosk connects locally to the Pi API at `http://10.42.0.1:5000` and ustreamer at `http://10.42.0.1:8080` by default.
 - The exact snapshot blob saved to IndexedDB is sent to `POST /grade`; the Pi never receives Supabase credentials.
 - Pi `GRADE_A`, `GRADE_B`, `GRADE_C`, and `INVALID` responses map to the existing cloud grade enum. A 0–1 confidence is normalized once to the contract's 0–100 value.
-- Capture IDs, inference IDs, and class scores remain local metadata because the canonical cloud table currently has no matching columns.
+- Capture IDs, inference IDs, confidence values, all four class scores, model input/source, and override audit fields are preserved in the canonical cloud row.
 - An HTTPS-hosted PWA may be blocked from direct HTTP/private-network requests. Production needs an approved secure local gateway or a locally served kiosk origin before hardware support can be claimed.
 
 ## TunaEyePhoneLEGIT requirements

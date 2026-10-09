@@ -71,7 +71,7 @@
 .weight-display-row{display:flex;flex-direction:column;gap:10px}
 .weight-input-display{display:flex;align-items:center;gap:12px;padding:14px 20px;border:2px solid var(--border);border-radius:18px;background:#f8fafc;cursor:pointer;transition:border-color .18s ease,background .18s ease}
 .weight-input-display.is-active{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px var(--blue-soft)}
-.weight-input-display input{flex:1;border:none;background:transparent;font:inherit;font-size:clamp(28px,3.5vw,44px);font-weight:700;color:var(--navy);letter-spacing:-.04em;outline:none;min-width:0;caret-color:var(--blue)}
+.weight-input-display input{flex:0 1 auto;border:none;background:transparent;font:inherit;font-size:clamp(28px,3.5vw,44px);font-weight:700;color:var(--navy);letter-spacing:-.04em;outline:none;min-width:3ch;max-width:8ch;text-align:left;caret-color:var(--blue)}
 .weight-input-display b{color:var(--muted);font-size:clamp(18px,2vw,24px);font-weight:600;flex:none}
 .weight-split__info .weight-entry{display:flex;flex-direction:column;gap:8px}
 .weight-split__info .weight-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);border-radius:14px;background:#f8fafc;cursor:pointer;transition:border-color .18s,background .18s}
@@ -1000,8 +1000,16 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 /* Targeted landscape-tablet QA fixes. */
 .tutorial-heading .tutorial-stage__number{position:static;display:block;margin-bottom:8px;color:#061EAE!important;opacity:1!important;font-size:clamp(64px,8vw,96px)!important;line-height:.8;text-shadow:none}
 .selector-card__art .sample-art{width:auto;height:auto;object-fit:contain}
-.selector-card__art .sample-art--core{max-width:84%;max-height:82%}
-.selector-card__art .sample-art--tail{max-width:72%;max-height:76%}
+.selector-card__art .sample-art--core{max-width:98%;max-height:96%}
+.selector-card__art .sample-art--tail{max-width:94%;max-height:92%}
+
+/* Small, reversible grader shortcut plus low-cost interaction feedback. */
+.grader-home-shortcut{position:fixed;z-index:9;top:calc(12px + var(--safe-top));right:calc(16px + var(--safe-right));width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.94);color:var(--blue);box-shadow:var(--shadow-soft);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.grader-home-shortcut:hover{transform:translateY(-2px);background:#fff;box-shadow:0 12px 28px rgba(17,24,39,.14)}
+.grader-home-shortcut:active{transform:scale(.94)}
+.screen-stack{animation:screen-enter .22s ease-out}.selector-card,.grader-info-card,.weight-input-display{transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease}.selector-card:hover,.grader-info-card:hover{transform:translateY(-2px)}
+@keyframes screen-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.screen-stack{animation:none}.grader-home-shortcut,.selector-card,.grader-info-card,.weight-input-display{transition:none}}
 @media(min-width:701px) and (orientation:landscape){
   .role-bottom--v2{justify-content:flex-end!important;gap:16px!important}
   .role-bottom--v2>.btn{margin-right:auto}
@@ -1634,3 +1642,5 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 /* Sample selector: keep the sample art pinned to the top of the card instead of floating centered. */
 .screen-stack--sample-selector .selector-card{align-content:flex-start!important;justify-content:flex-start!important}
 .screen-stack--sample-selector .section-heading h1{font-size:clamp(46px,5.4vw,70px)!important}
+.weight-input-display{justify-content:flex-start!important}
+.weight-input-display input{text-align:left!important;margin:0!important}

@@ -179,6 +179,23 @@ test('weight numpad entry and touch keypad interaction', async ({ page }) => {
   // Verify weight input has 35.4
   const input = page.locator('.weight-input input').first()
   await expect(input).toHaveValue('35.4')
+  const inputBox = await input.boundingBox()
+  const displayBox = await page.locator('.weight-input-display').first().boundingBox()
+  expect(inputBox!.x - displayBox!.x).toBeLessThanOrEqual(32)
+})
+
+test('grader workflow has a small history shortcut', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/kiosk/select-role')
+  await page.getByRole('button', { name: /Grader/ }).click()
+  await page.getByLabel('Your name').fill('Maria Santos')
+  await page.getByRole('button', { name: 'Start grading' }).click()
+  const shortcut = page.getByRole('button', { name: 'View grading history' })
+  await expect(shortcut).toBeVisible()
+  expect((await shortcut.boundingBox())!.width).toBeLessThanOrEqual(44)
+  await shortcut.click()
+  await expect(page).toHaveURL(/\/kiosk\/grader-dashboard$/)
+  await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible()
 })
 
 test('kiosk navbar is removed and contextual navigation remains', async ({ page }) => {
@@ -398,6 +415,20 @@ test('Pi client validates status, model selection, four classes, and malformed p
   expect(overridden).toMatchObject({ originalGrade: 'A', originalConfidence: 96.3, rawConfidence: .963, inferenceId: 'result-A', captureId: 'capture-A', overrideGrade: 'C', overrideReason: 'Expert visual inspection' })
 })
 
+test('local record storage does not silently truncate unsynced records', async ({ page }) => {
+  await page.goto('/')
+  const count = await page.evaluate(async () => {
+    // @ts-expect-error Vite serves this browser-only storage module during Playwright tests.
+    const records = await import('/src/gradingRecords.ts')
+    records.saveRecords(Array.from({ length: 250 }, (_, index) => ({
+      id: `pending-${index}`, sessionId: `session-${index}`, timestamp: index, time: 'Now', grader: 'Tester', sample: 'Sashibo core', fish: 'Fish 1', weight: '1 kg', grade: 'A', status: 'Complete',
+      transaction: { currency: 'PHP', amount: null, syncState: 'pending' },
+    })))
+    return records.loadRecords().length
+  })
+  expect(count).toBe(250)
+})
+
 test('local Raspberry Pi hosting uses same-origin API and camera routes', async ({ page }) => {
   test.skip(process.env.VITE_PI_LOCAL_HOSTED !== 'true', 'Only runs for the Raspberry Pi local-hosted build mode.')
   const requests: string[] = []
@@ -418,10 +449,31 @@ test('local Raspberry Pi hosting uses same-origin API and camera routes', async 
     Object.defineProperty(crypto, 'randomUUID', { configurable: true, value: undefined })
     return createId()
   })
-  expect(result.settings).toEqual({ apiUrl: '', cameraUrl: '', streamUrl: '/stream', snapshotUrl: '/snapshot' })
+  expect(result.settings).toEqual({ mode: 'pi-local', configured: true, apiUrl: '', cameraUrl: '', streamUrl: '/stream', snapshotUrl: '/snapshot' })
   expect(result.grade).toMatchObject({ grade: 'A', imageType: 'sashibocore' })
   expect(fallbackId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
   expect(requests).toEqual(['http://127.0.0.1:4178/snapshot', 'http://127.0.0.1:4178/grade'])
+})
+
+test('hosted deployment uses only the configured authenticated HTTPS gateway', async ({ page }) => {
+  test.skip(!process.env.VITE_PI_GATEWAY_URL, 'Only runs with a hosted HTTPS gateway test URL.')
+  const requests: string[] = []
+  await page.route('https://gateway.test/stream**', route => { requests.push(route.request().url()); return route.fulfill({ contentType: 'image/jpeg', body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }) })
+  await page.route('https://gateway.test/snapshot', route => { requests.push(route.request().url()); return route.fulfill({ contentType: 'image/jpeg', body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }) })
+  await page.route('https://gateway.test/grade', route => { requests.push(route.request().url()); return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id: 'secure-grade', capture_id: 'secure-capture', image_type: 'sashibocore', grade: 'GRADE_A', confidence: .96, scores: { GRADE_A: .96, GRADE_B: .02, GRADE_C: .01, INVALID: .01 } }) }) })
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/kiosk/camera')
+  const result = await page.evaluate(async () => {
+    // @ts-expect-error Vite serves this browser-only integration module during Playwright tests.
+    const client = await import('/src/piClient.ts')
+    const image = await client.capturePiImage('Sashibo core')
+    return { settings: client.getPiSettings(), grade: await client.gradePiImage(image, 'Sashibo core') }
+  })
+  expect(result.settings).toEqual({ mode: 'hosted-gateway', configured: true, apiUrl: 'https://gateway.test', cameraUrl: 'https://gateway.test', streamUrl: 'https://gateway.test/stream', snapshotUrl: 'https://gateway.test/snapshot' })
+  expect(result.grade).toMatchObject({ id: 'secure-grade', captureId: 'secure-capture', modelSource: 'raspberry-pi' })
+  expect(requests.some(url => url.startsWith('http://10.42.0.1'))).toBe(false)
+  expect(requests).toContain('https://gateway.test/snapshot')
+  expect(requests).toContain('https://gateway.test/grade')
 })
 
 test('printing failure stays on receipt and offers retry', async ({ page }) => {
@@ -620,7 +672,7 @@ test('58mm thermal printer receipt preview and print layout', async ({ page }) =
   expect(slipStyle.display).toBe('block')
 })
 
-test('weight entry normalizes leading zero and explains values above 200 kg', async ({ page }) => {
+test('weight entry enforces the 15 to 200 kg range', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
   await page.goto('/kiosk/weight')
   const input = page.locator('.weight-input input').first()
@@ -628,11 +680,13 @@ test('weight entry normalizes leading zero and explains values above 200 kg', as
   await page.getByRole('button', { name: '0', exact: true }).click()
   await page.getByRole('button', { name: '8', exact: true }).click()
   await expect(input).toHaveValue('8')
+  await expect(page.locator('.weight-limit-dialog')).toContainText('minimum is 15 kg')
+  await expect(page.getByRole('button', { name: 'Start capture' })).toBeDisabled()
 
   await page.getByRole('button', { name: 'Clear' }).click()
   for (const digit of ['8', '9', '9']) await page.getByRole('button', { name: digit, exact: true }).click()
   await expect(input).toHaveValue('899')
-  await expect(page.locator('.weight-limit-dialog')).toContainText('Weight exceeds the limit')
+  await expect(page.locator('.weight-limit-dialog')).toContainText('maximum is 200 kg')
   await expect(page.getByRole('button', { name: 'Start capture' })).toBeDisabled()
   await expect(page.locator('.weight-input-display')).toHaveClass(/is-error/)
   await page.screenshot({ path: 'test-results/weight-limit-1280x800.png', fullPage: false })
