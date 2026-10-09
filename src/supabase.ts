@@ -69,3 +69,24 @@ export async function ensureSupabaseUser() {
   if (error || !data.user) throw error ?? new Error('Supabase authentication failed.')
   return data.user
 }
+
+export async function hasAdminProfile() {
+  if (!isSupabaseConfigured()) return false
+  const supabase = getSupabase()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) return false
+  const { data, error } = await supabase.from('profiles').select('role').eq('user_id', session.user.id).maybeSingle()
+  if (error) throw error
+  return data?.role === 'admin'
+}
+
+export async function sendAdminMagicLink(email: string) {
+  if (!isSupabaseConfigured()) throw new Error('Supabase is not configured in this deployment.')
+  const normalizedEmail = email.trim()
+  if (!normalizedEmail) throw new Error('Enter the administrator email address.')
+  const { error } = await getSupabase().auth.signInWithOtp({
+    email: normalizedEmail,
+    options: { emailRedirectTo: `${window.location.origin}/admin` },
+  })
+  if (error) throw error
+}

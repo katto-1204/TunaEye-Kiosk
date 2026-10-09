@@ -1,3 +1,54 @@
+# Pi fetch, automatic sync, and tablet control sizing — 2026-10-10
+
+- [x] Trace Pi status, snapshot, and inference URLs separately from Supabase sync.
+- [x] Start Supabase synchronization automatically after a completed grading result is saved.
+- [x] Keep failed cloud sync records locally available with an explicit retry message.
+- [x] Make kiosk welcome buttons equal width.
+- [x] Move same-fish association content toward the vertical center on landscape tablets.
+
+### Review
+
+- Pi fetches can still fail on the same hotspot when the page origin is HTTPS or the Pi does not return CORS headers; the browser blocks the request before Flask inference runs.
+- Supabase synchronization now starts immediately after completed records are persisted, while manual Sync now remains available for retries.
+- The welcome CTA buttons share a 260px width and association heading content is centered lower in the tablet layout.
+
+# Tablet selector overlap fix — 2026-10-10
+
+- [x] Reserve heading space on the sample selector and same-fish screens.
+- [x] Center both card rows in the remaining tablet viewport.
+- [x] Remove the same-fish heading/card overlap caused by conflicting responsive overrides.
+
+### Review
+
+- Added final tablet landscape rules so the heading occupies its own row and cards are centered below it.
+- Kept card dimensions uniform and preserved the existing bottom navigation bar.
+
+# Hosted Supabase visibility and public landing link — 2026-10-10
+
+- [x] Add a “Go to main page” button to the installed kiosk welcome screen.
+- [x] Confirm Vercel variables are build-time inputs and require a new deployment after changes.
+- [x] Trace hosted record visibility through Supabase Auth and RLS policies.
+- [ ] Choose and implement the hosted administrator authentication flow.
+
+### Review
+
+- The Vercel environment screenshot shows the required Supabase variables for Production and Preview, but an existing deployment does not change until Vercel builds it again.
+- The kiosk currently uses a local PIN only; it does not create a Supabase admin session.
+- Supabase RLS permits `grading_records` reads for the record owner or a Supabase user with `profiles.role = 'admin'`. Anonymous Auth creates a separate owner per browser, so it cannot provide shared hosted admin visibility.
+
+# Kiosk tablet dock and role selector layout — 2026-10-10
+
+- [x] Keep the fullscreen control from exiting fullscreen when pressed repeatedly.
+- [x] Remove the role-selector dock controls that can navigate away from kiosk mode.
+- [x] Resize role cards so they are not stretched across the viewport.
+- [x] Center the role-card contents and verify the tablet workflow.
+
+### Review
+
+- Fullscreen remains enabled once entered; the control is now status-only while fullscreen is active.
+- The role selector no longer renders back/tutorial dock controls.
+- Role cards use a bounded height with centered icon, copy, and action content.
+
 # Kiosk landing Chrome fullscreen button — 2026-10-10
 
 - [x] Add a small fullscreen control on the kiosk welcome screen.

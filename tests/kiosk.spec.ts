@@ -68,6 +68,11 @@ test('installed tablet opens kiosk welcome screen and enters tight workflow scre
   await page.goto('/')
   await expect(page.getByRole('heading', { name: /TUNAEYE/i })).toBeVisible({ timeout: 5000 })
   await expect(page.getByRole('button', { name: 'Install' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Go to main page' })).toBeVisible()
+  await page.getByRole('button', { name: 'Go to main page' }).click()
+  await expect(page.getByRole('heading', { name: /Sea Beyond the Cut/i })).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: /TUNAEYE/i })).toBeVisible()
   
   // Navigate into kiosk workflow (select-role)
   await page.getByRole('button', { name: /Get started/i }).click()

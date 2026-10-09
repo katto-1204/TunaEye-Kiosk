@@ -4,7 +4,7 @@ import ProductLanding, { type MarketingPage } from './MarketingLanding'
 import { PaymentReceiptPrinter } from './components/ui/payment-receipt-printer'
 import { getCapturedEvidence, saveCapturedEvidence } from './evidenceStorage'
 import { fetchCloudRecords, syncPendingRecords, syncPriceSchedule } from './cloudSync'
-import { getSupabase, isSupabaseConfigured } from './supabase'
+import { getSupabase, hasAdminProfile, isSupabaseConfigured, sendAdminMagicLink } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
 import { getDemoPreviewUrl, initDemoMode, isDemoMode, parseDemoGradeFromFilename, setDemoGradeHint } from './demoMode'
 import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage, PI_CONNECTION_GUIDANCE, PiIntegrationError } from './piClient'
@@ -25,6 +25,7 @@ const allScreens: Screen[] = ['welcome', 'select-role', 'admin', 'admin-dashboar
 const pathForScreen = (screen: Screen) => screen === 'welcome' ? '/' : screen === 'select-role' ? '/select-role' : screen === 'admin' || screen === 'admin-dashboard' ? '/admin' : `/kiosk/${screen}`
 const screenForPath = (path: string): Screen => { if (path === '/select-role') return 'select-role'; if (path === '/admin') return 'admin'; if (path.startsWith('/kiosk/')) { const candidate = path.replace('/kiosk/', '') as Screen; if (allScreens.includes(candidate)) return candidate } return 'welcome' }
 const marketingPageForPath = (path: string): MarketingPage => { const page = path.replace(/^\//, '') as MarketingPage; return ['features', 'about', 'team', 'faq', 'terms', 'privacy'].includes(page) ? page : 'home' }
+const requiresHostedAdminAuth = () => isSupabaseConfigured() && !['localhost', '127.0.0.1'].includes(window.location.hostname)
 const unfinishedScreens = new Set<Screen>(['sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print'])
 const wasReloaded = () => (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'reload'
 
@@ -45,14 +46,6 @@ const forceBrowserFullscreen = async () => {
     } catch { /* try the next host */ }
   }
   try { await (screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> }).lock?.('landscape') } catch { /* lock is optional after fullscreen */ }
-}
-const exitBrowserFullscreen = async () => {
-  const doc = document as Document & { webkitExitFullscreen?: () => Promise<void> | void; webkitCancelFullScreen?: () => Promise<void> | void }
-  try {
-    if (document.exitFullscreen) await document.exitFullscreen()
-    else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen()
-    else if (doc.webkitCancelFullScreen) await doc.webkitCancelFullScreen()
-  } catch { /* already left fullscreen */ }
 }
 function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
@@ -177,7 +170,7 @@ function LoadingScreen() {
 }
  
 
-function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart: () => void; onInstall: () => void; onTutorial: () => void; installed: boolean }) {
+function WelcomeScreen({ onStart, onInstall, onTutorial, onGoMain, installed }: { onStart: () => void; onInstall: () => void; onTutorial: () => void; onGoMain: () => void; installed: boolean }) {
   const [entered, setEntered] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(() => Boolean(fullscreenElement()))
   useEffect(() => { const t = setTimeout(() => setEntered(true), 100); return () => clearTimeout(t) }, [])
@@ -190,7 +183,7 @@ function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart:
       document.removeEventListener('webkitfullscreenchange', sync)
     }
   }, [])
-  const toggleFullscreen = () => { void (isFullscreen ? exitBrowserFullscreen() : forceBrowserFullscreen()) }
+  const toggleFullscreen = () => { if (!isFullscreen) void forceBrowserFullscreen() }
   return (
     <div className={`welcome-screen welcome-screen--v2 ${entered ? 'is-entered' : ''}`}>
       <div className="welcome-screen__bg" />
@@ -202,15 +195,16 @@ function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart:
         </div>
         <div className="welcome-cta-group" style={{ marginTop: '32px' }}>
           <Button className="btn--hero welcome-cta-main" onClick={onStart} icon="arrow">Get started</Button>
+          <Button variant="secondary" onClick={onGoMain} icon="home">Go to main page</Button>
           {!installed && <Button variant="ghost" onClick={onInstall} icon="home" className="welcome-btn--install">Install App</Button>}
         </div>
       </div>
-      <button className="welcome-fullscreen-btn" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}><Icon name={isFullscreen ? 'compress' : 'expand'} size={18} /></button>
+      <button className="welcome-fullscreen-btn" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Fullscreen enabled' : 'Enter fullscreen'}><Icon name={isFullscreen ? 'compress' : 'expand'} size={18} /></button>
       <button className="tutorial-fab tutorial-fab--glass" onClick={onTutorial} aria-label="Guided Tutorial"><Icon name="tutorial" size={20} /></button>
     </div>
   )
 }
-function SelectRoleScreen({ onRole, onTutorial, onBack }: { onRole: (role: Role) => void; onTutorial: () => void; onBack: () => void }) {
+function SelectRoleScreen({ onRole }: { onRole: (role: Role) => void }) {
   return (
     <div className="screen-stack screen-stack--role screen-stack--role-v2">
       <div className="role-heading-v3"><span className="eyebrow">Choose your workspace</span><h1 className="role-title-v2">Who's grading?</h1><p>Open the tools designed for your role at this station.</p></div>
@@ -218,24 +212,39 @@ function SelectRoleScreen({ onRole, onTutorial, onBack }: { onRole: (role: Role)
         <button className="role-card-v2 role-card-v2--admin" onClick={() => onRole('admin')}>
           <span className="role-card-v2__top"><span className="role-card-v2__badge">Station control</span><Icon name="arrow" size={20} /></span>
           <span className="role-card-v2__icon role-card-v2__icon--admin"><RoleIcon role="admin" /></span>
-          <span className="role-card-v2__copy"><strong>Admin</strong><small>Manage records, people, devices, pricing, and station settings.</small></span>
+          <span className="role-card-v2__copy"><strong>Admin</strong><small></small></span>
           <span className="role-card-v2__action">Open admin console <Icon name="arrow" size={18} /></span>
         </button>
         <button className="role-card-v2 role-card-v2--primary" onClick={() => onRole('expert')}>
           <span className="role-card-v2__top"><span className="role-card-v2__badge">Expert workflow</span><Icon name="arrow" size={20} /></span>
           <span className="role-card-v2__icon role-card-v2__icon--expert"><RoleIcon role="expert" /></span>
-          <span className="role-card-v2__copy"><strong>Expert Grader</strong><small>Capture tuna samples, review AI results, and print grading records.</small></span>
+          <span className="role-card-v2__copy"><strong>Expert Grader</strong><small></small></span>
           <span className="role-card-v2__action">Start grading <Icon name="arrow" size={18} /></span>
         </button>
       </div>
-      <div className="role-bottom role-bottom--v2">
-        <Button variant="ghost" icon="back" onClick={onBack}>Back</Button>
-        <button className="tutorial-fab tutorial-fab--inline" onClick={onTutorial}><Icon name="tutorial" size={20} /></button>
-      </div>
+      <div className="role-bottom role-bottom--v2" aria-hidden="true" />
     </div>
   )
 }
 function AdminPinScreen({ value, error, onChange, onContinue, onBack }: { value: string; error: string; onChange: (value: string) => void; onContinue: () => void; onBack: () => void }) { const cells = useRef<Array<HTMLInputElement | null>>([]); const setDigit = (index: number, digit: string) => { const next = value.padEnd(4, ' ').split(' '); next[index] = digit.slice(-1); const joined = next.join('').replace(/\s/g, '').slice(0, 4); onChange(joined); if (digit && index < 3) cells.current[index + 1]?.focus() }; return <div className="screen-stack screen-stack--narrow otp-screen"><div className="admin-icon"><Icon name="shield" size={34} /></div><h1>Enter your admin PIN</h1><div className="otp-inputs" onPaste={event => { event.preventDefault(); const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4); onChange(pasted); cells.current[Math.min(3, pasted.length)]?.focus() }}>{[0,1,2,3].map(index => <input key={index} ref={node => { cells.current[index] = node }} autoFocus={index === 0} inputMode="numeric" type="password" value={value[index] ?? ''} maxLength={1} aria-label={`PIN digit ${index + 1}`} onChange={event => setDigit(index, event.target.value.replace(/\D/g, ''))} onKeyDown={event => { if (event.key === 'Backspace' && !value[index] && index > 0) { const next = value.slice(0, index - 1) + value.slice(index); onChange(next); cells.current[index - 1]?.focus() } if (event.key === 'Enter' && value.length === 4) onContinue() }} />)}</div>{error ? <span className="error-text"><Icon name="help" size={16} />{error}</span> : <span className="form-hint"><Icon name="shield" size={16} />Protected administrator access</span>}<BottomBar onBack={onBack} primary={onContinue} primaryLabel="Verify and continue" primaryIcon="lock" primaryDisabled={value.length < 4} /></div> }
+
+function AdminMagicLinkScreen({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const send = async () => {
+    if (sending) return
+    setSending(true)
+    setMessage('')
+    try {
+      await sendAdminMagicLink(email)
+      setMessage('Check that inbox and open the secure TunaEye sign-in link on this tablet.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'The sign-in link could not be sent.')
+    } finally { setSending(false) }
+  }
+  return <div className="screen-stack screen-stack--narrow otp-screen"><div className="admin-icon"><Icon name="shield" size={34} /></div><h1>Confirm hosted admin access</h1><p>Use the administrator email registered in Supabase to view synced kiosk records.</p><label className="field-label"><span>Administrator email</span><input type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" placeholder="admin@example.com" /></label>{message && <span className="form-hint" role="status"><Icon name="help" size={16} />{message}</span>}<BottomBar onBack={onBack} primary={send} primaryLabel={sending ? 'Sending link…' : 'Email me a sign-in link'} primaryIcon="arrow" primaryDisabled={sending || !email.trim()} /></div>
+}
 
 function AdminTrendGraph({ data }: { data: { label: string; value: number }[] }) {
   const [active, setActive] = useState(data.length - 1)
@@ -1198,13 +1207,15 @@ function App() {
   const [session, dispatch] = useReducer(reducer, initialSession)
   const [booting, setBooting] = useState(true)
   const [webIntroDismissed, setWebIntroDismissed] = useState(false)
+  const [publicLandingRequested, setPublicLandingRequested] = useState(false)
+  const [adminCloudAuthRequired, setAdminCloudAuthRequired] = useState(false)
   const [marketingPage, setMarketingPage] = useState<MarketingPage>(() => marketingPageForPath(window.location.pathname))
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [legalKind, setLegalKind] = useState<'terms' | 'privacy' | null>(null)
   const [installed, setInstalled] = useState(() => window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem('tunaeye-installed') === 'true')
   const [refreshRecovery] = useState(() => {
     const previousScreen = screenForPath(window.location.pathname)
-    const active = installed && wasReloaded()
+    const active = installed && wasReloaded() && unfinishedScreens.has(previousScreen)
     return { active, unfinished: active && unfinishedScreens.has(previousScreen) }
   })
   const [noticeModal, setNoticeModal] = useState<NoticeModalData | null>(() => refreshRecovery.unfinished ? {
@@ -1224,6 +1235,12 @@ function App() {
   useEffect(() => { if (refreshRecovery.active) { setBooting(false); return }; const timeout = window.setTimeout(() => setBooting(false), 750); return () => window.clearTimeout(timeout) }, [refreshRecovery.active])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
   useEffect(() => { if (refreshRecovery.active) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.active])
+  useEffect(() => {
+    if (currentPathScreen !== 'admin' || !requiresHostedAdminAuth()) return
+    void hasAdminProfile().then(isAdmin => {
+      if (isAdmin) dispatch({ type: 'adminAuthenticated' })
+    }).catch(error => console.error('[TunaEye] Hosted admin session check failed:', error))
+  }, [currentPathScreen])
   useEffect(() => {
     const syncOnReconnect = () => { if (isSupabaseConfigured() && navigator.onLine && loadRecords().some(record => record.transaction?.syncState === 'pending' || record.transaction?.syncState === 'failed')) void syncPendingRecords().catch(() => undefined) }
     syncOnReconnect()
@@ -1280,7 +1297,25 @@ function App() {
     return () => { cancelled = true }
   }, [session.screen, sample, go])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; const pricing = priceSnapshot(grade, result.weight); return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, overrideActor: result.overrideActor, overrideAt: result.overrideAt, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', unitRatePerKg: pricing.unitRatePerKg, amount: pricing.amount, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
+  useEffect(() => {
+    const completed = sampleOrder.flatMap((item, index) => {
+      const result = session.results[item]
+      if (!result?.captured) return []
+      const { id: sessionId, timestamp } = gradingSessionRef.current
+      const grade = effectiveGrade(result) ?? 'Invalid'
+      const pricing = priceSnapshot(grade, result.weight)
+      return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, overrideActor: result.overrideActor, overrideAt: result.overrideAt, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', unitRatePerKg: pricing.unitRatePerKg, amount: pricing.amount, syncState: 'pending' as const } }]
+    })
+    if (!completed.length) return
+    const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id)
+    saveRecords([...completed, ...previous])
+    if (isSupabaseConfigured() && navigator.onLine) {
+      void syncPendingRecords().catch(error => {
+        console.error('[TunaEye] Automatic record sync failed:', error)
+        setNoticeModal({ title: 'Record saved locally', message: error instanceof Error ? error.message : 'Cloud sync failed. Use Sync now when the connection is available.', icon: 'help' })
+      })
+    }
+  }, [session.results, session.graderName])
   const openRole = (role: Role) => { gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {
@@ -1330,9 +1365,9 @@ function App() {
   const enterFullscreen = () => { if (!fullscreenElement()) void forceBrowserFullscreen() }
   const renderScreen = () => {
     switch (session.screen) {
-      case 'welcome': return <WelcomeScreen onStart={() => { enterFullscreen(); go('select-role') }} onInstall={installApp} installed={installed} onTutorial={() => setTutorialOpen(true)} />
-      case 'select-role': return <SelectRoleScreen onRole={openRole} onTutorial={() => setTutorialOpen(true)} onBack={back} />
-      case 'admin': return <AdminPinScreen value={session.adminPin} error={session.adminError} onChange={value => dispatch({ type: 'setAdminPin', value })} onContinue={() => { if (session.adminPin === ADMIN_PIN) { audit('Admin', 'Login', 'Administrator authenticated at the kiosk'); dispatch({ type: 'adminAuthenticated' }) } else { audit('Unknown', 'Failed admin login', 'Incorrect station PIN'); dispatch({ type: 'adminError', message: 'Incorrect station PIN.' }) } }} onBack={back} />
+      case 'welcome': return <WelcomeScreen onStart={() => { enterFullscreen(); go('select-role') }} onInstall={installApp} installed={installed} onTutorial={() => setTutorialOpen(true)} onGoMain={() => { setMarketingPage('home'); setPublicLandingRequested(true); window.history.pushState({}, '', '/') }} />
+      case 'select-role': return <SelectRoleScreen onRole={openRole} />
+      case 'admin': return adminCloudAuthRequired ? <AdminMagicLinkScreen onBack={() => { setAdminCloudAuthRequired(false); back() }} /> : <AdminPinScreen value={session.adminPin} error={session.adminError} onChange={value => dispatch({ type: 'setAdminPin', value })} onContinue={() => { if (session.adminPin === ADMIN_PIN) { audit('Admin', 'Login', 'Administrator authenticated at the kiosk'); if (requiresHostedAdminAuth()) void hasAdminProfile().then(isAdmin => { if (isAdmin) dispatch({ type: 'adminAuthenticated' }); else setAdminCloudAuthRequired(true) }).catch(error => setNoticeModal({ title: 'Hosted admin login unavailable', message: error instanceof Error ? error.message : 'Supabase admin access could not be checked.', icon: 'help' })); else dispatch({ type: 'adminAuthenticated' }) } else { audit('Unknown', 'Failed admin login', 'Incorrect admin PIN'); dispatch({ type: 'adminError', message: 'Incorrect admin PIN.' }) } }} onBack={back} />
       case 'admin-dashboard': return <AdminDashboard onExit={goHome} onNotice={setNoticeModal} onStartGrading={() => { dispatch({ type: 'setRole', role: 'expert' }); go(session.graderName ? 'grader-dashboard' : 'grader') }} />
       case 'grader': return <GraderEntryScreen name={session.graderName} remember={session.rememberName} onName={value => dispatch({ type: 'setGraderName', value })} onRemember={value => dispatch({ type: 'setRememberName', value })} onContinue={() => go('sample')} onBack={back} onLegal={setLegalKind} />
       case 'grader-dashboard': return <GraderDashboard name={session.graderName} onStart={gradeAnother} onLogout={goHome} onNotice={setNoticeModal} />
@@ -1350,7 +1385,7 @@ function App() {
     }
   }
   if (booting) return <LoadingScreen />
-  if (!installed && !webIntroDismissed && session.screen === 'welcome') return <ProductLanding page={marketingPage} onInstall={installApp} onOpen={() => setWebIntroDismissed(true)} onNavigate={page => { setMarketingPage(page); window.history.pushState({}, '', page === 'home' ? '/' : `/${page}`) }} />
+  if ((publicLandingRequested || (!installed && !webIntroDismissed)) && session.screen === 'welcome') return <ProductLanding page={marketingPage} onInstall={installApp} onOpen={() => { setPublicLandingRequested(false); setWebIntroDismissed(true) }} onNavigate={page => { setMarketingPage(page); window.history.pushState({}, '', page === 'home' ? '/' : `/${page}`) }} />
   const isLanding = session.screen === 'welcome'
   const showGraderHome = session.role === 'expert' && !['welcome', 'select-role', 'grader', 'grader-dashboard', 'complete'].includes(session.screen)
   return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{showGraderHome && <button className="grader-home-shortcut" onClick={() => go('grader-dashboard')} aria-label="View grading history" title="View grading history"><Icon name="home" size={18} /></button>}{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason, actor: session.graderName || 'Guest grader', timestamp: new Date().toISOString() }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
