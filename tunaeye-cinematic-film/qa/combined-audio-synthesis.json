@@ -1,0 +1,18 @@
+{
+  "bpm": 136,
+  "seed": 231136,
+  "composition": "Original 136 BPM D minor / B flat / F / C progression, D major bright finale; evolving detuned pads, mallet motif, syncopated arpeggios, saturated bass, synthesized percussion, deterministic stereo sound design",
+  "cueFilesReady": false,
+  "events": 88,
+  "stems": [
+    {
+      "name": "sfx.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "bits": 24,
+      "peak": 0.53,
+      "rms": 0.02882677590811845
+    }
+  ]
+}

@@ -22,6 +22,12 @@ let activeSync: Promise<SyncSummary> | null = null
 
 function sameValue(field: string, actual: unknown, expected: unknown) {
   if (field.endsWith('_at') && typeof actual === 'string' && typeof expected === 'string') return Date.parse(actual) === Date.parse(expected)
+  // PostgreSQL jsonb returns score keys in its own order.
+  if (field === 'scores' && actual && expected && typeof actual === 'object' && typeof expected === 'object') {
+    const stored = actual as Record<string, unknown>
+    const scores = expected as Record<string, unknown>
+    return Object.keys(stored).length === Object.keys(scores).length && Object.keys(scores).every(key => Object.hasOwn(stored, key) && stored[key] === scores[key])
+  }
   return JSON.stringify(actual ?? null) === JSON.stringify(expected ?? null)
 }
 

@@ -1,0 +1,475 @@
+{
+  "fps": 60,
+  "source": "Re-edited authentic footage from both accepted projects; camera/inference fixtures remain labeled",
+  "groups": {
+    "workflow": [
+      {
+        "name": "welcome",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/workflow-welcome.mp4",
+        "sourceStartSeconds": 5.901999999999999,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 1,
+        "montageStartSeconds": 0,
+        "events": []
+      },
+      {
+        "name": "role",
+        "source": "Previous 90-second product demo recording",
+        "file": "combined/clips/workflow-role.mp4",
+        "sourceStartSeconds": 9.298,
+        "observedVideoClockOffsetSeconds": 0.51,
+        "durationSeconds": 1.5,
+        "montageStartSeconds": 1,
+        "events": []
+      },
+      {
+        "name": "name",
+        "source": "Previous 90-second product demo recording",
+        "file": "combined/clips/workflow-name.mp4",
+        "sourceStartSeconds": 9.536,
+        "observedVideoClockOffsetSeconds": 0.51,
+        "durationSeconds": 1.5,
+        "montageStartSeconds": 2.5,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Expert Grader",
+            "rawMs": 10308,
+            "x": 890,
+            "y": 448,
+            "seconds": 2.7666666666666666,
+            "filmSeconds": 34.766666666666666
+          },
+          {
+            "type": "typing",
+            "label": "Eli",
+            "rawMs": 10946,
+            "seconds": 3.4,
+            "filmSeconds": 35.4
+          }
+        ]
+      },
+      {
+        "name": "samples",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/workflow-samples.mp4",
+        "sourceStartSeconds": 15.466000000000001,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 3,
+        "montageStartSeconds": 4,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Select Tail cut",
+            "rawMs": 16686,
+            "x": 904,
+            "y": 414.125,
+            "seconds": 4.7,
+            "filmSeconds": 36.7
+          },
+          {
+            "type": "tap",
+            "label": "Sample Continue",
+            "rawMs": 18037,
+            "x": 1157.578125,
+            "y": 740,
+            "seconds": 6.05,
+            "filmSeconds": 38.05
+          },
+          {
+            "type": "tap",
+            "label": "Same fish",
+            "rawMs": 18920,
+            "x": 373,
+            "y": 190.078125,
+            "seconds": 6.933333333333334,
+            "filmSeconds": 38.93333333333333
+          }
+        ]
+      },
+      {
+        "name": "association",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/workflow-association.mp4",
+        "sourceStartSeconds": 17.900000000000002,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 2,
+        "montageStartSeconds": 7,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Same fish",
+            "rawMs": 18920,
+            "x": 373,
+            "y": 190.078125,
+            "seconds": 7.5,
+            "filmSeconds": 39.5
+          },
+          {
+            "type": "tap",
+            "label": "Association Continue",
+            "rawMs": 20270,
+            "x": 1157.578125,
+            "y": 740,
+            "seconds": 8.85,
+            "filmSeconds": 40.85
+          }
+        ]
+      },
+      {
+        "name": "tutorial-first",
+        "source": "Previous 90-second product demo recording",
+        "file": "combined/clips/workflow-tutorial-first.mp4",
+        "sourceStartSeconds": 23.055,
+        "observedVideoClockOffsetSeconds": 0.51,
+        "durationSeconds": 2,
+        "montageStartSeconds": 9,
+        "events": []
+      },
+      {
+        "name": "tutorial-next",
+        "source": "Previous 90-second product demo recording",
+        "file": "combined/clips/workflow-tutorial-next.mp4",
+        "sourceStartSeconds": 23.047,
+        "observedVideoClockOffsetSeconds": 0.51,
+        "durationSeconds": 2,
+        "montageStartSeconds": 11,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Tutorial Next 1",
+            "rawMs": 23757,
+            "x": 1175.2109375,
+            "y": 740,
+            "seconds": 11.2,
+            "filmSeconds": 43.2
+          },
+          {
+            "type": "tap",
+            "label": "Tutorial Next 2",
+            "rawMs": 24307,
+            "x": 1175.2109375,
+            "y": 740,
+            "seconds": 11.75,
+            "filmSeconds": 43.75
+          }
+        ]
+      },
+      {
+        "name": "weight",
+        "source": "Previous 90-second product demo recording",
+        "file": "combined/clips/workflow-weight.mp4",
+        "sourceStartSeconds": 24.415,
+        "observedVideoClockOffsetSeconds": 0.51,
+        "durationSeconds": 4,
+        "montageStartSeconds": 13,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Weight 3",
+            "rawMs": 25125,
+            "x": 1085.78125,
+            "y": 331.37042236328125,
+            "seconds": 13.2,
+            "filmSeconds": 45.2
+          },
+          {
+            "type": "tap",
+            "label": "Weight 6",
+            "rawMs": 25774,
+            "x": 1085.78125,
+            "y": 424.703125,
+            "seconds": 13.85,
+            "filmSeconds": 45.85
+          },
+          {
+            "type": "tap",
+            "label": "Weight .",
+            "rawMs": 26309,
+            "x": 648.9140625,
+            "y": 498.890625,
+            "seconds": 14.383333333333333,
+            "filmSeconds": 46.38333333333333
+          },
+          {
+            "type": "tap",
+            "label": "Weight 2",
+            "rawMs": 26941,
+            "x": 867.34375,
+            "y": 326.109375,
+            "seconds": 15.016666666666667,
+            "filmSeconds": 47.016666666666666
+          }
+        ]
+      },
+      {
+        "name": "capture",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/workflow-capture.mp4",
+        "sourceStartSeconds": 31.1,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 3,
+        "montageStartSeconds": 17,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Capture sashibo core",
+            "rawMs": 33320,
+            "x": 1052.3515625,
+            "y": 740,
+            "seconds": 18.7,
+            "filmSeconds": 50.7
+          }
+        ]
+      },
+      {
+        "name": "review",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/workflow-review.mp4",
+        "sourceStartSeconds": 37.565999999999995,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 3,
+        "montageStartSeconds": 20,
+        "events": []
+      },
+      {
+        "name": "analysis",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/workflow-analysis.mp4",
+        "sourceStartSeconds": 40.866,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 2.5,
+        "montageStartSeconds": 23,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Sashibo Use Image",
+            "rawMs": 41686,
+            "x": 1116.375,
+            "y": 425.875,
+            "seconds": 23.3,
+            "filmSeconds": 55.3
+          }
+        ]
+      },
+      {
+        "name": "tail-capture",
+        "source": "Fresh correct Tail camera fixture capture",
+        "file": "combined/clips/workflow-tail-capture.mp4",
+        "sourceStartSeconds": 0,
+        "observedVideoClockOffsetSeconds": 0,
+        "durationSeconds": 2.5,
+        "montageStartSeconds": 25.5,
+        "events": [
+          {
+            "label": "Capture Tail cut",
+            "x": 1052.3515625,
+            "y": 740,
+            "clipSeconds": 0.867,
+            "type": "tap",
+            "seconds": 26.366666666666667,
+            "filmSeconds": 58.36666666666667
+          }
+        ]
+      },
+      {
+        "name": "tail-review",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/workflow-tail-review.mp4",
+        "sourceStartSeconds": 52.183,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 2,
+        "montageStartSeconds": 28,
+        "events": []
+      }
+    ],
+    "results": [
+      {
+        "name": "core-result",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/results-core-result.mp4",
+        "sourceStartSeconds": 44.117999999999995,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 5.5,
+        "montageStartSeconds": 0,
+        "events": []
+      },
+      {
+        "name": "tail-result",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/results-tail-result.mp4",
+        "sourceStartSeconds": 55.50099999999999,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 5.5,
+        "montageStartSeconds": 5.5,
+        "events": []
+      }
+    ],
+    "override": [
+      {
+        "name": "expert-control",
+        "source": "Previous 90-second product demo recording",
+        "file": "combined/clips/override-expert-control.mp4",
+        "sourceStartSeconds": 59.747,
+        "observedVideoClockOffsetSeconds": 0.51,
+        "durationSeconds": 12,
+        "montageStartSeconds": 0,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Manual override",
+            "rawMs": 60457,
+            "x": 415.703125,
+            "y": 748,
+            "seconds": 0.2,
+            "filmSeconds": 73.2
+          },
+          {
+            "type": "tap",
+            "label": "PIN 1",
+            "rawMs": 60992,
+            "x": 556.6640625,
+            "y": 398.25,
+            "seconds": 0.7333333333333333,
+            "filmSeconds": 73.73333333333333
+          },
+          {
+            "type": "tap",
+            "label": "PIN 2",
+            "rawMs": 61241,
+            "x": 639.9921875,
+            "y": 398.25,
+            "seconds": 0.9833333333333333,
+            "filmSeconds": 73.98333333333333
+          },
+          {
+            "type": "tap",
+            "label": "PIN 3",
+            "rawMs": 61491,
+            "x": 723.328125,
+            "y": 398.25,
+            "seconds": 1.2333333333333334,
+            "filmSeconds": 74.23333333333333
+          },
+          {
+            "type": "tap",
+            "label": "PIN 4",
+            "rawMs": 61742,
+            "x": 556.6640625,
+            "y": 460.25,
+            "seconds": 1.4833333333333334,
+            "filmSeconds": 74.48333333333333
+          },
+          {
+            "type": "tap",
+            "label": "Unlock override",
+            "rawMs": 62008,
+            "x": 776.5,
+            "y": 683.25,
+            "seconds": 1.75,
+            "filmSeconds": 74.75
+          },
+          {
+            "type": "tap",
+            "label": "Expert Grade B",
+            "rawMs": 62357,
+            "x": 640.9921875,
+            "y": 341.09375,
+            "seconds": 2.1,
+            "filmSeconds": 75.1
+          },
+          {
+            "type": "tap",
+            "label": "Save override",
+            "rawMs": 63875,
+            "x": 776.5,
+            "y": 591.09375,
+            "seconds": 3.6166666666666667,
+            "filmSeconds": 76.61666666666666
+          },
+          {
+            "type": "tap",
+            "label": "View results overview",
+            "rawMs": 64391,
+            "x": 840.328125,
+            "y": 748,
+            "seconds": 4.133333333333334,
+            "filmSeconds": 77.13333333333334
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "name": "individual-receipts",
+        "source": "Previous 90-second product demo recording",
+        "file": "combined/clips/receipts-individual-receipts.mp4",
+        "sourceStartSeconds": 69.74799999999999,
+        "observedVideoClockOffsetSeconds": 0.51,
+        "durationSeconds": 8,
+        "montageStartSeconds": 0,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Print separate copies",
+            "rawMs": 70458,
+            "x": 1110.34375,
+            "y": 641.625,
+            "seconds": 0.2,
+            "filmSeconds": 85.2
+          },
+          {
+            "type": "tap",
+            "label": "Print Sashibo core",
+            "rawMs": 71977,
+            "x": 886.703125,
+            "y": 735,
+            "seconds": 1.7166666666666666,
+            "filmSeconds": 86.71666666666667
+          },
+          {
+            "type": "tap",
+            "label": "Print Tail cut",
+            "rawMs": 74241,
+            "x": 899.71875,
+            "y": 735,
+            "seconds": 3.9833333333333334,
+            "filmSeconds": 88.98333333333333
+          }
+        ]
+      }
+    ],
+    "records": [
+      {
+        "name": "local-records",
+        "source": "Accepted cinematic film recording",
+        "file": "combined/clips/records-local-records.mp4",
+        "sourceStartSeconds": 79.983,
+        "observedVideoClockOffsetSeconds": 0.52,
+        "durationSeconds": 7,
+        "montageStartSeconds": 0,
+        "events": [
+          {
+            "type": "tap",
+            "label": "Dashboard",
+            "rawMs": 80703,
+            "x": 506.5,
+            "y": 580.34375,
+            "seconds": 0.2,
+            "filmSeconds": 93.2
+          },
+          {
+            "type": "tap",
+            "label": "Open Tail cut record",
+            "rawMs": 82486,
+            "x": 883.1953125,
+            "y": 248.109375,
+            "seconds": 1.9833333333333334,
+            "filmSeconds": 94.98333333333333
+          }
+        ]
+      }
+    ]
+  }
+}

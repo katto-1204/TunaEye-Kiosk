@@ -1,0 +1,163 @@
+{
+  "label": "DEMO CLOUD · SIMULATED SYNC",
+  "durationSeconds": 14,
+  "video": "combined/hero-admin.mp4",
+  "clips": [
+    {
+      "name": "01-login",
+      "file": "combined/admin-01-login.mp4",
+      "sourceStartSeconds": 1.3919999999999997,
+      "wallStartSeconds": 2.5919999999999996,
+      "videoClockOffsetSeconds": 1.2,
+      "durationSeconds": 2,
+      "montageStartSeconds": 0,
+      "events": [
+        {
+          "label": "Admin login",
+          "type": "tap",
+          "rawSeconds": 3.392,
+          "x": 1117.0078125,
+          "y": 740,
+          "clipSeconds": 0.8000000000000003,
+          "montageSeconds": 0.8000000000000003
+        }
+      ]
+    },
+    {
+      "name": "02-overview",
+      "file": "combined/admin-02-overview.mp4",
+      "sourceStartSeconds": 2.7070000000000007,
+      "wallStartSeconds": 3.9070000000000005,
+      "videoClockOffsetSeconds": 1.2,
+      "durationSeconds": 2,
+      "montageStartSeconds": 2,
+      "events": []
+    },
+    {
+      "name": "03-records",
+      "file": "combined/admin-03-records.mp4",
+      "sourceStartSeconds": 4.528,
+      "wallStartSeconds": 5.728,
+      "videoClockOffsetSeconds": 1.2,
+      "durationSeconds": 2,
+      "montageStartSeconds": 4,
+      "events": [
+        {
+          "label": "Records",
+          "type": "tap",
+          "rawSeconds": 6.128,
+          "x": 128,
+          "y": 167,
+          "clipSeconds": 0.40000000000000036,
+          "montageSeconds": 4.4
+        }
+      ]
+    },
+    {
+      "name": "04-offline-waiting",
+      "file": "combined/admin-04-offline-waiting.mp4",
+      "sourceStartSeconds": 7.324000000000001,
+      "wallStartSeconds": 8.524000000000001,
+      "videoClockOffsetSeconds": 1.2,
+      "durationSeconds": 2,
+      "montageStartSeconds": 6,
+      "events": [
+        {
+          "label": "Open audit logs before sync",
+          "type": "tap",
+          "rawSeconds": 8.809,
+          "x": 128,
+          "y": 411,
+          "clipSeconds": 0.28499999999999837,
+          "montageSeconds": 6.284999999999998
+        },
+        {
+          "label": "Sync offline",
+          "type": "tap",
+          "rawSeconds": 8.874,
+          "x": 876.9453125,
+          "y": 92.578125,
+          "clipSeconds": 0.34999999999999964,
+          "montageSeconds": 6.35
+        }
+      ]
+    },
+    {
+      "name": "05-recovery",
+      "file": "combined/admin-05-recovery.mp4",
+      "sourceStartSeconds": 10.916,
+      "wallStartSeconds": 12.116,
+      "videoClockOffsetSeconds": 1.2,
+      "durationSeconds": 2,
+      "montageStartSeconds": 8,
+      "events": []
+    },
+    {
+      "name": "06-explicit-sync",
+      "file": "combined/admin-06-explicit-sync.mp4",
+      "sourceStartSeconds": 12.733,
+      "wallStartSeconds": 13.933,
+      "videoClockOffsetSeconds": 1.2,
+      "durationSeconds": 2,
+      "montageStartSeconds": 10,
+      "events": [
+        {
+          "label": "Dismiss recovery",
+          "type": "tap",
+          "rawSeconds": 14.246,
+          "x": 1217,
+          "y": 57,
+          "clipSeconds": 0.3130000000000006,
+          "montageSeconds": 10.313000000000002
+        },
+        {
+          "label": "Explicit Sync now",
+          "type": "tap",
+          "rawSeconds": 14.283,
+          "x": 876.9453125,
+          "y": 92.578125,
+          "clipSeconds": 0.34999999999999964,
+          "montageSeconds": 10.350000000000001
+        }
+      ]
+    },
+    {
+      "name": "07-synced-evidence",
+      "file": "combined/admin-07-synced-evidence.mp4",
+      "sourceStartSeconds": 18.33,
+      "wallStartSeconds": 19.529999999999998,
+      "videoClockOffsetSeconds": 1.2,
+      "durationSeconds": 2,
+      "montageStartSeconds": 12,
+      "events": [
+        {
+          "label": "Close admin detail",
+          "type": "tap",
+          "rawSeconds": 19.694,
+          "x": 1015,
+          "y": 77.75,
+          "clipSeconds": 0.16400000000000148,
+          "montageSeconds": 12.164000000000001
+        },
+        {
+          "label": "Open local grader dashboard",
+          "type": "tap",
+          "rawSeconds": 19.759,
+          "x": 1066.7265625,
+          "y": 92.578125,
+          "clipSeconds": 0.22900000000000276,
+          "montageSeconds": 12.229000000000003
+        },
+        {
+          "label": "Open synced local evidence",
+          "type": "tap",
+          "rawSeconds": 19.88,
+          "x": 883.1953125,
+          "y": 252.0291519165039,
+          "clipSeconds": 0.3500000000000014,
+          "montageSeconds": 12.350000000000001
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "source": "Current unchanged kiosk Tail cut Capture 2 of 2",
+  "boundary": "Deterministic isolated Pi camera snapshot/stream and inference fixtures; no live hardware",
+  "runs": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "errors": [],
+      "failedRequests": [],
+      "streamSource": "public/DEMO_SAMPLES/TAILCUT_A.png",
+      "status": "passed",
+      "event": {
+        "label": "Capture Tail cut",
+        "x": 1052.3515625,
+        "y": 740,
+        "clipSeconds": 0.867
+      },
+      "checks": [
+        "Actual two-sample same-fish setup, Eli,36.2kg",
+        "Capture2of2 and Tail context",
+        "Decoded preview pixels exactly match TAILCUT_A.png",
+        "Real Capture snapshot2 is Tail PNG",
+        "Actual Captured Tail cut review image",
+        "Capture button fully inside viewport",
+        "No console errors or failed requests"
+      ]
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 600
+      },
+      "errors": [],
+      "failedRequests": [],
+      "streamSource": "public/DEMO_SAMPLES/TAILCUT_A.png",
+      "status": "passed",
+      "event": {
+        "label": "Capture Tail cut",
+        "x": 842.3359375,
+        "y": 554,
+        "clipSeconds": 1.037
+      },
+      "checks": [
+        "Actual two-sample same-fish setup, Eli,36.2kg",
+        "Capture2of2 and Tail context",
+        "Decoded preview pixels exactly match TAILCUT_A.png",
+        "Real Capture snapshot2 is Tail PNG",
+        "Actual Captured Tail cut review image",
+        "Capture button fully inside viewport",
+        "No console errors or failed requests"
+      ]
+    }
+  ],
+  "video": "combined/tail-camera.mp4",
+  "durationSeconds": 2.5,
+  "event": {
+    "label": "Capture Tail cut",
+    "x": 1052.3515625,
+    "y": 740,
+    "clipSeconds": 0.867
+  }
+}

@@ -1,5 +1,20 @@
 # Plan
 
+## Combined cinematic product demo with admin sync (2026-10-10)
+
+Scope: one new 120-second cut in the existing separate Remotion project. Preserve both accepted videos and production app. Blend the cinematic sample/brand visuals with the earlier demo's complete functional footage. Faster (+8%) natural narration, livelier original score, actual admin UI with isolated cloud fixtures visibly labeled.
+
+- [x] Capture admin dashboard, offline preservation, manual sync and verified record/image states; verify both tablet sizes.
+- [x] Edit eleven scenes: hook 0-8, expert 8-16, brand 16-23, vision 23-32, workflow 32-62, results 62-73, override 73-85, receipts 85-93, local records 93-100, admin sync 100-114, finale 114-120.
+- [ ] Produce faster narration, energetic original music, real-interaction effects and mastered stems.
+- [x] Typecheck and review meaningful feature/transition frames; verify existing browser flows.
+- [ ] Render narrated and narration-free combined MP4s plus full-length preview.
+- [ ] Verify exact duration, frame counts, audio levels, actual playback and sampled final visuals; deliver updated storyboard and instructions.
+
+Plan review: allocates 82 seconds to concrete product workflows, keeps expert control and separate sample results, includes manual offline-first sync, and requires media plus real browser evidence.
+
+Progress review: both Admin viewport captures and the corrected Tail camera retake passed. Feature source timing, specimen identity, guide/weight ordering and critical typography were reviewed. Existing suite: 38 passed, 4 skipped, one fractional-pixel assertion failure; the exact test passed on isolated retry. Lint/typecheck and diff whitespace checks passed. New instrumental mix passed at -13.93 LUFS / -1.30 dBTP with 88 audible synchronized effects, no clipping, exactly 120 seconds and stereo 48kHz. Revised neural narration remains pending explicit Microsoft TTS disclosure approval after automatic approval review rejected that external action; no retry occurred. Full instrumental render is underway, with separate final numerical/playback QA required.
+
 ## Internet recovery and captured image sync labels (2026-10-10)
 - [x] Add bounded cloud reachability checks and friendly waiting states for both sync entry points.
 - [x] Show verified Synced / saved-local labels on captured images and current record review.
@@ -90,3 +105,10 @@ Scope: new `tunaeye-cinematic-film/` project; preserve production app and existi
 - All three final MP4s passed 20 real Chrome seeks each, with audio/video decoding and no console, page, HTTP or unexpected network errors. Reviewed 21 decoded final frames and full-resolution opening, grade, overview and finale screenshots; visual review passed.
 - Reports: `qa/export-verification.md`, `qa/playback-verification.json`, `qa/visual-review.md`, `qa/final-contact-sheet.jpg` and `qa/playwright-report.json` inside the new project.
 - Inference and camera fixtures are labeled demonstrations; the network is conceptual. Physical hardware, live cloud writes, paper printing, subjective audio listening and manual inspection of every frame were not tested. Production source and the earlier demo were preserved.
+
+## Local records sync needs attention (2026-10-10)
+- [x] Check the live cloud schema and reproduce the failing record verification with reordered Supabase JSON.
+- [x] Apply the smallest complete fix while retaining unsynced records and evidence.
+- [ ] Verify sync/retry with Playwright, run existing suite and production builds.
+
+Scope: shared record sync, corresponding regression tests, required cloud schema/config and task notes. Do not bypass persistence verification or change manual sync behavior.

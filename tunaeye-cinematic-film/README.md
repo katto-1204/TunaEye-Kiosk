@@ -1,5 +1,7 @@
 # TunaEye cinematic product launch film
 
+The newer merged product demo with Admin sync is documented in [combined-README.md](combined-README.md). The accepted launch-film outputs below remain preserved.
+
 A separate editable Remotion / React / TypeScript project. Eight authored cinematic acts combine authentic sample photography, kinetic typography, perspective framing, temporal motion trails, an explicitly conceptual classifier visualization and freshly recorded real kiosk interactions. Production application source and the existing 90-second demo were preserved.
 
 ## Deliverables

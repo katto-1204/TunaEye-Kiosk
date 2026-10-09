@@ -8,6 +8,13 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
   let cloudPrices: Record<string, unknown>[] = []
   let rejectUpserts = false
   let disconnectUpserts = false
+  let corruptScores = false
+  const pageErrors: string[] = []
+  const unexpectedFailures: string[] = []
+  const consoleIssues: string[] = []
+  page.on('pageerror', error => pageErrors.push(error.message))
+  page.on('requestfailed', request => { if (!request.url().startsWith('http://supabase.test/')) unexpectedFailures.push(request.url()) })
+  page.on('console', message => { if (['error', 'warning'].includes(message.type()) && !/Failed to load resource|net::ERR_NAME_NOT_RESOLVED/.test(message.text())) consoleIssues.push(message.text()) })
 
   await page.route('http://supabase.test/**', async route => {
     const url = new URL(route.request().url())
@@ -49,7 +56,8 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
       return
     }
     if (url.pathname === '/rest/v1/grading_records') {
-      const normalized = cloudRecord && { ...cloudRecord, captured_at: String(cloudRecord.captured_at).replace('Z', '+00:00'), override_at: String(cloudRecord.override_at).replace('Z', '+00:00') }
+      const scores = cloudRecord?.scores as Record<string, number> | null
+      const normalized = cloudRecord && { ...cloudRecord, scores: scores ? { ...Object.fromEntries(Object.entries(scores).reverse()), ...(corruptScores ? { GRADE_A: .5 } : {}) } : null, captured_at: String(cloudRecord.captured_at).replace('Z', '+00:00'), override_at: String(cloudRecord.override_at).replace('Z', '+00:00') }
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify(url.searchParams.get('select') === '*' ? [normalized] : normalized) })
       return
     }
@@ -156,7 +164,21 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
   await expect(page.locator('.image-sync-label')).toHaveText('Saved locally')
   await page.getByRole('button', { name: 'Understood' }).click()
   disconnectUpserts = false
+  corruptScores = true
+  await page.getByRole('button', { name: 'Sync now' }).click()
+  await expect(page.getByRole('heading', { name: "Maria Santos's sync needs attention" })).toBeVisible()
+  await expect(page.getByText(/Cloud verification failed for scores/)).toBeVisible()
+  const failedRecord = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]')[0])
+  expect(failedRecord.result.scores).toEqual(originalRecord.result.scores)
+  expect(failedRecord.transaction.syncState).toBe('failed')
+  expect(failedRecord.transaction.amount).toBe(originalRecord.transaction.amount)
+  expect(await page.evaluate(async () => await new Promise(resolve => { const open = indexedDB.open('tunaeye-offline', 1); open.onsuccess = () => { const get = open.result.transaction('evidence').objectStore('evidence').get('record-1'); get.onsuccess = async () => resolve({ state: get.result.syncState, bytes: await get.result.blob.text() }) } }))).toEqual({ state: 'failed', bytes: 'jpeg' })
+  await page.getByRole('button', { name: 'Understood' }).click()
+  corruptScores = false
   await page.getByRole('button', { name: 'Sync now' }).click()
   await expect(page.getByRole('heading', { name: "Maria Santos's records are synced" })).toBeVisible()
   await expect(page.locator('.image-sync-label')).toHaveText('Synced')
+  expect(pageErrors).toEqual([])
+  expect(unexpectedFailures).toEqual([])
+  expect(consoleIssues).toEqual([])
 })

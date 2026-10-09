@@ -1,0 +1,655 @@
+{
+  "passed": true,
+  "instrumentalOnly": true,
+  "narrationVerified": false,
+  "acts": [],
+  "synchronizedCues": [
+    {
+      "seconds": 0.6,
+      "frame": 36,
+      "label": "opening-beam",
+      "type": "sweep",
+      "rms": 0.024008586274347567
+    },
+    {
+      "seconds": 2.2,
+      "frame": 132,
+      "label": "every-tuna-headline",
+      "type": "impact",
+      "rms": 0.13848488365560171
+    },
+    {
+      "seconds": 5.5,
+      "frame": 330,
+      "label": "beyond-the-cut",
+      "type": "sweep",
+      "rms": 0.023895363701038043
+    },
+    {
+      "seconds": 8,
+      "frame": 480,
+      "label": "expert-eye",
+      "type": "sweep",
+      "rms": 0.024148542948549387
+    },
+    {
+      "seconds": 10,
+      "frame": 600,
+      "label": "sashibo-panel",
+      "type": "scan",
+      "rms": 0.031182378805803667
+    },
+    {
+      "seconds": 12,
+      "frame": 720,
+      "label": "tail-panel",
+      "type": "scan",
+      "rms": 0.031263008363418686
+    },
+    {
+      "seconds": 15.3,
+      "frame": 918,
+      "label": "reveal-riser",
+      "type": "riser",
+      "rms": 0.015289300877654462
+    },
+    {
+      "seconds": 16,
+      "frame": 960,
+      "label": "product-reveal",
+      "type": "reveal",
+      "rms": 0.2125873589670223
+    },
+    {
+      "seconds": 17.3,
+      "frame": 1038,
+      "label": "logo-settle",
+      "type": "logo",
+      "rms": 0.11214832434336895
+    },
+    {
+      "seconds": 20,
+      "frame": 1200,
+      "label": "guided-workflow",
+      "type": "shine",
+      "rms": 0.027296980676334615
+    },
+    {
+      "seconds": 23,
+      "frame": 1380,
+      "label": "computer-vision",
+      "type": "data",
+      "rms": 0.02854157051856074
+    },
+    {
+      "seconds": 25,
+      "frame": 1500,
+      "label": "visual-characteristics",
+      "type": "data",
+      "rms": 0.028948638633881276
+    },
+    {
+      "seconds": 26.5,
+      "frame": 1590,
+      "label": "grade-a",
+      "type": "grade",
+      "rms": 0.13251520776796685
+    },
+    {
+      "seconds": 27.1,
+      "frame": 1626,
+      "label": "grade-b",
+      "type": "grade",
+      "rms": 0.13097907460790273
+    },
+    {
+      "seconds": 27.7,
+      "frame": 1662,
+      "label": "grade-c",
+      "type": "grade",
+      "rms": 0.13143681131940468
+    },
+    {
+      "seconds": 28.6,
+      "frame": 1716,
+      "label": "invalid",
+      "type": "grade",
+      "rms": 0.13227392103119578
+    },
+    {
+      "seconds": 32,
+      "frame": 1920,
+      "label": "guided-kiosk",
+      "type": "sweep",
+      "rms": 0.03729501484214457
+    },
+    {
+      "seconds": 32,
+      "frame": 1920,
+      "label": "welcome",
+      "type": "sweep",
+      "rms": 0.03729501484214457
+    },
+    {
+      "seconds": 33,
+      "frame": 1980,
+      "label": "role",
+      "type": "sweep",
+      "rms": 0.023841245322332245
+    },
+    {
+      "seconds": 34.5,
+      "frame": 2070,
+      "label": "name",
+      "type": "sweep",
+      "rms": 0.023887835818891583
+    },
+    {
+      "seconds": 34.766666666666666,
+      "frame": 2086,
+      "label": "Expert Grader",
+      "type": "click",
+      "rms": 0.012736907835150435
+    },
+    {
+      "seconds": 35.4,
+      "frame": 2124,
+      "label": "Eli",
+      "type": "typing",
+      "rms": 0.0069779615567315545
+    },
+    {
+      "seconds": 36,
+      "frame": 2160,
+      "label": "samples",
+      "type": "sweep",
+      "rms": 0.023237743152732405
+    },
+    {
+      "seconds": 36.7,
+      "frame": 2202,
+      "label": "Select Tail cut",
+      "type": "click",
+      "rms": 0.012609044950111342
+    },
+    {
+      "seconds": 38.05,
+      "frame": 2283,
+      "label": "Sample Continue",
+      "type": "click",
+      "rms": 0.012652201199662191
+    },
+    {
+      "seconds": 38.93333333333333,
+      "frame": 2336,
+      "label": "Same fish",
+      "type": "click",
+      "rms": 0.03422362974116291
+    },
+    {
+      "seconds": 39,
+      "frame": 2340,
+      "label": "association",
+      "type": "sweep",
+      "rms": 0.024513422787428022
+    },
+    {
+      "seconds": 39.5,
+      "frame": 2370,
+      "label": "Same fish",
+      "type": "click",
+      "rms": 0.012664168515923342
+    },
+    {
+      "seconds": 40.85,
+      "frame": 2451,
+      "label": "Association Continue",
+      "type": "click",
+      "rms": 0.037966775589350375
+    },
+    {
+      "seconds": 41,
+      "frame": 2460,
+      "label": "tutorial-first",
+      "type": "sweep",
+      "rms": 0.023949586013003295
+    },
+    {
+      "seconds": 43,
+      "frame": 2580,
+      "label": "tutorial-next",
+      "type": "sweep",
+      "rms": 0.024173145315375774
+    },
+    {
+      "seconds": 43.2,
+      "frame": 2592,
+      "label": "Tutorial Next 1",
+      "type": "click",
+      "rms": 0.012853879942303841
+    },
+    {
+      "seconds": 43.75,
+      "frame": 2625,
+      "label": "Tutorial Next 2",
+      "type": "click",
+      "rms": 0.012546619450203807
+    },
+    {
+      "seconds": 45,
+      "frame": 2700,
+      "label": "weight",
+      "type": "sweep",
+      "rms": 0.023807096594397042
+    },
+    {
+      "seconds": 45.2,
+      "frame": 2712,
+      "label": "Weight 3",
+      "type": "click",
+      "rms": 0.012965291276957025
+    },
+    {
+      "seconds": 45.85,
+      "frame": 2751,
+      "label": "Weight 6",
+      "type": "click",
+      "rms": 0.012546513410565487
+    },
+    {
+      "seconds": 46.38333333333333,
+      "frame": 2783,
+      "label": "Weight .",
+      "type": "click",
+      "rms": 0.012561689836765824
+    },
+    {
+      "seconds": 47.016666666666666,
+      "frame": 2821,
+      "label": "Weight 2",
+      "type": "click",
+      "rms": 0.012489579903009843
+    },
+    {
+      "seconds": 49,
+      "frame": 2940,
+      "label": "capture",
+      "type": "sweep",
+      "rms": 0.023057945794367735
+    },
+    {
+      "seconds": 50.7,
+      "frame": 3042,
+      "label": "Capture sashibo core",
+      "type": "shutter",
+      "rms": 0.04042620650318979
+    },
+    {
+      "seconds": 52,
+      "frame": 3120,
+      "label": "review",
+      "type": "sweep",
+      "rms": 0.023513102161630675
+    },
+    {
+      "seconds": 55,
+      "frame": 3300,
+      "label": "analysis",
+      "type": "sweep",
+      "rms": 0.023569723783907228
+    },
+    {
+      "seconds": 55.3,
+      "frame": 3318,
+      "label": "Sashibo Use Image",
+      "type": "confirm",
+      "rms": 0.04055741027750731
+    },
+    {
+      "seconds": 57.5,
+      "frame": 3450,
+      "label": "tail-capture",
+      "type": "sweep",
+      "rms": 0.02383799788986259
+    },
+    {
+      "seconds": 58.36666666666667,
+      "frame": 3502,
+      "label": "Capture Tail cut",
+      "type": "shutter",
+      "rms": 0.04136843019321027
+    },
+    {
+      "seconds": 60,
+      "frame": 3600,
+      "label": "tail-review",
+      "type": "sweep",
+      "rms": 0.02379149674251653
+    },
+    {
+      "seconds": 62,
+      "frame": 3720,
+      "label": "individual-results",
+      "type": "confirm",
+      "rms": 0.0462832820242844
+    },
+    {
+      "seconds": 62,
+      "frame": 3720,
+      "label": "core-result",
+      "type": "sweep",
+      "rms": 0.0462832820242844
+    },
+    {
+      "seconds": 67.5,
+      "frame": 4050,
+      "label": "tail-result",
+      "type": "sweep",
+      "rms": 0.02412523087421161
+    },
+    {
+      "seconds": 73,
+      "frame": 4380,
+      "label": "expert-control",
+      "type": "impact",
+      "rms": 0.14047979628162635
+    },
+    {
+      "seconds": 73,
+      "frame": 4380,
+      "label": "expert-control",
+      "type": "sweep",
+      "rms": 0.14047979628162635
+    },
+    {
+      "seconds": 73.2,
+      "frame": 4392,
+      "label": "Manual override",
+      "type": "click",
+      "rms": 0.0667330726386122
+    },
+    {
+      "seconds": 73.73333333333333,
+      "frame": 4424,
+      "label": "PIN 1",
+      "type": "click",
+      "rms": 0.015822100244190063
+    },
+    {
+      "seconds": 73.98333333333333,
+      "frame": 4439,
+      "label": "PIN 2",
+      "type": "click",
+      "rms": 0.012529959571231363
+    },
+    {
+      "seconds": 74.23333333333333,
+      "frame": 4454,
+      "label": "PIN 3",
+      "type": "click",
+      "rms": 0.012079600512940885
+    },
+    {
+      "seconds": 74.48333333333333,
+      "frame": 4469,
+      "label": "PIN 4",
+      "type": "click",
+      "rms": 0.012547602138740451
+    },
+    {
+      "seconds": 74.75,
+      "frame": 4485,
+      "label": "Unlock override",
+      "type": "click",
+      "rms": 0.012992966890824392
+    },
+    {
+      "seconds": 75.1,
+      "frame": 4506,
+      "label": "Expert Grade B",
+      "type": "click",
+      "rms": 0.012696597186940212
+    },
+    {
+      "seconds": 76.61666666666666,
+      "frame": 4597,
+      "label": "Save override",
+      "type": "confirm",
+      "rms": 0.04053833936747947
+    },
+    {
+      "seconds": 77.13333333333334,
+      "frame": 4628,
+      "label": "View results overview",
+      "type": "click",
+      "rms": 0.016811110850398985
+    },
+    {
+      "seconds": 85,
+      "frame": 5100,
+      "label": "receipt-overview",
+      "type": "sweep",
+      "rms": 0.03798972951495283
+    },
+    {
+      "seconds": 85,
+      "frame": 5100,
+      "label": "individual-receipts",
+      "type": "sweep",
+      "rms": 0.03798972951495283
+    },
+    {
+      "seconds": 85.2,
+      "frame": 5112,
+      "label": "Print separate copies",
+      "type": "paper",
+      "rms": 0.09869805855159772
+    },
+    {
+      "seconds": 86.71666666666667,
+      "frame": 5203,
+      "label": "Print Sashibo core",
+      "type": "paper",
+      "rms": 0.09811215165086976
+    },
+    {
+      "seconds": 88.98333333333333,
+      "frame": 5339,
+      "label": "Print Tail cut",
+      "type": "paper",
+      "rms": 0.09958877710508116
+    },
+    {
+      "seconds": 93,
+      "frame": 5580,
+      "label": "local-records",
+      "type": "sweep",
+      "rms": 0.03751110386126671
+    },
+    {
+      "seconds": 93,
+      "frame": 5580,
+      "label": "local-records",
+      "type": "sweep",
+      "rms": 0.03751110386126671
+    },
+    {
+      "seconds": 93.2,
+      "frame": 5592,
+      "label": "Dashboard",
+      "type": "click",
+      "rms": 0.013184010992911261
+    },
+    {
+      "seconds": 94.98333333333333,
+      "frame": 5699,
+      "label": "Open Tail cut record",
+      "type": "click",
+      "rms": 0.012412528728872198
+    },
+    {
+      "seconds": 100,
+      "frame": 6000,
+      "label": "admin-sync",
+      "type": "data",
+      "rms": 0.03684948745754374
+    },
+    {
+      "seconds": 100,
+      "frame": 6000,
+      "label": "01-login",
+      "type": "sweep",
+      "rms": 0.03684948745754374
+    },
+    {
+      "seconds": 100.8,
+      "frame": 6048,
+      "label": "Admin login",
+      "type": "click",
+      "rms": 0.012639492154107331
+    },
+    {
+      "seconds": 102,
+      "frame": 6120,
+      "label": "02-overview",
+      "type": "sweep",
+      "rms": 0.0231760244711051
+    },
+    {
+      "seconds": 104,
+      "frame": 6240,
+      "label": "03-records",
+      "type": "sweep",
+      "rms": 0.022950973916950522
+    },
+    {
+      "seconds": 104.4,
+      "frame": 6264,
+      "label": "Records",
+      "type": "click",
+      "rms": 0.012539730877326242
+    },
+    {
+      "seconds": 106,
+      "frame": 6360,
+      "label": "04-offline-waiting",
+      "type": "sweep",
+      "rms": 0.023606812925234758
+    },
+    {
+      "seconds": 106.28333333333333,
+      "frame": 6377,
+      "label": "Open audit logs before sync",
+      "type": "click",
+      "rms": 0.018333192579935993
+    },
+    {
+      "seconds": 106.35,
+      "frame": 6381,
+      "label": "Sync offline",
+      "type": "click",
+      "rms": 0.014669913004690976
+    },
+    {
+      "seconds": 108,
+      "frame": 6480,
+      "label": "05-recovery",
+      "type": "sweep",
+      "rms": 0.02313319591250587
+    },
+    {
+      "seconds": 110,
+      "frame": 6600,
+      "label": "06-explicit-sync",
+      "type": "sweep",
+      "rms": 0.023008697636739097
+    },
+    {
+      "seconds": 110.31666666666666,
+      "frame": 6619,
+      "label": "Dismiss recovery",
+      "type": "click",
+      "rms": 0.03812427547205227
+    },
+    {
+      "seconds": 110.35,
+      "frame": 6621,
+      "label": "Explicit Sync now",
+      "type": "confirm",
+      "rms": 0.04136757960843586
+    },
+    {
+      "seconds": 112,
+      "frame": 6720,
+      "label": "07-synced-evidence",
+      "type": "sweep",
+      "rms": 0.025432131990414338
+    },
+    {
+      "seconds": 112.16666666666667,
+      "frame": 6730,
+      "label": "Close admin detail",
+      "type": "click",
+      "rms": 0.020288134429315142
+    },
+    {
+      "seconds": 112.23333333333333,
+      "frame": 6734,
+      "label": "Open local grader dashboard",
+      "type": "click",
+      "rms": 0.018412409757562073
+    },
+    {
+      "seconds": 112.35,
+      "frame": 6741,
+      "label": "Open synced local evidence",
+      "type": "click",
+      "rms": 0.012866077851494965
+    },
+    {
+      "seconds": 114,
+      "frame": 6840,
+      "label": "brand-finale",
+      "type": "logo",
+      "rms": 0.1123272150931922
+    },
+    {
+      "seconds": 117.2,
+      "frame": 7032,
+      "label": "connected-records",
+      "type": "shine",
+      "rms": 0.027285866684533276
+    }
+  ],
+  "musicDucking": {
+    "voicedWindows": 0,
+    "medianAttenuationDB": null
+  },
+  "stems": [
+    {
+      "name": "music.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -6.375177064506227,
+      "rms": 0.07004052274020901
+    },
+    {
+      "name": "sfx.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -5.514483076862148,
+      "rms": 0.028826772471572646
+    },
+    {
+      "name": "no_narration_mix.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -1.4653705469221614,
+      "rms": 0.17089486144126695
+    }
+  ],
+  "limits": "Instrumental audio only; narration pending external disclosure approval. Final audiovisual playback review remains necessary."
+}
