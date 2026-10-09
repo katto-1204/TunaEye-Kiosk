@@ -1586,6 +1586,21 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 @media(hover:hover){.role-card-v2:hover{transform:translateY(-5px);border-color:rgba(23,107,255,.48)!important;box-shadow:0 24px 58px rgba(17,24,39,.14)!important}.role-card-v2--primary:hover{box-shadow:0 28px 64px rgba(11,69,229,.32)!important}}
 @media(prefers-reduced-motion:reduce){.role-card-v2{transition:none}.role-card-v2:hover,.role-card-v2:active{transform:none}}
 .role-bottom--v2{display:none!important}
+.result-price-badge{background:#e7f8ef!important;color:#087443!important;font-weight:800!important}
+.result-price-summary{margin-top:14px;color:#087443}
+.result-price-summary strong{font-size:28px;line-height:1.05}
+/* Review actions sit directly on the page instead of inside a large card. */
+.screen-stack--review .review-aside{
+  height:auto!important;
+  min-height:0!important;
+  padding:clamp(12px,2vw,24px)!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.screen-stack--review .review-aside h1{margin-block:14px!important}
+.screen-stack--review .review-actions{max-width:520px}
 
 .screen-stack--association{display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;align-items:center!important}
 .association-copy{max-width:760px!important;margin-inline:auto!important;text-align:center!important}.association-copy p{margin-inline:auto!important}

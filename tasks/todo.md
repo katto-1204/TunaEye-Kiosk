@@ -12,6 +12,35 @@
 - Supabase synchronization now starts immediately after completed records are persisted, while manual Sync now remains available for retries.
 - The welcome CTA buttons share a 260px width and association heading content is centered lower in the tablet layout.
 
+# Flattening image review screen — 2026-10-10
+
+- [x] Remove the oversized review card container.
+- [x] Keep the saved status and review actions directly on the page.
+
+### Review
+
+- The review panel is now borderless, shadowless, and transparent while preserving the existing image and actions.
+
+# Persistent grader dashboard access — 2026-10-10
+
+- [x] Keep the dashboard home shortcut visible throughout active grading.
+- [x] Confirm leaving an active session before opening the dashboard.
+- [x] Provide Continue grading and Leave session actions.
+
+### Review
+
+- The fixed home shortcut now opens a confirmation modal instead of abandoning an active session immediately.
+
+# Showing price in grading results — 2026-10-10
+
+- [x] Reuse the grade-based price snapshot in individual result screens.
+- [x] Show unit price and total fish value in result details.
+- [x] Show total price on each result overview card.
+
+### Review
+
+- Result prices use the same local price schedule and calculation already used by records, Supabase sync, and thermal receipts.
+
 # Tablet selector overlap fix — 2026-10-10
 
 - [x] Reserve heading space on the sample selector and same-fish screens.
