@@ -5,9 +5,9 @@
 .pdial {
   --pdial-w: 340px;
   --pdial-h: calc(var(--pdial-w) * 458 / 440);
-  --pdial-c1: #2467bf;
-  --pdial-c2: #38bdf8;
-  --pdial-c3: #bfdbfe;
+  --pdial-c1: #0B45E5;
+  --pdial-c2: #3B8CFF;
+  --pdial-c3: #C5D9FF;
   --pdial-font-head: 'Open Runde', var(--font-manrope, "Manrope"), system-ui, sans-serif;
   --pdial-font-body: 'Open Runde', "Inter", system-ui, sans-serif;
 
@@ -47,17 +47,17 @@
   --pdial-card-shadow: 0 0 0 1px rgba(40, 25, 10, 0.06), 0 1px 2px rgba(40, 25, 10, 0.06), 0 40px 70px -35px rgba(20, 50, 90, 0.25);
   --pdial-rim-top: rgba(255, 255, 255, 1);
   --pdial-rim-mid: rgba(255, 255, 255, 0.4);
-  --pdial-ink: #092f5e;
-  --pdial-label-top: #092f5e;
-  --pdial-label-bot: #2467bf;
-  --pdial-lead-1: #092f5e;
+  --pdial-ink: #111827;
+  --pdial-label-top: #111827;
+  --pdial-label-bot: #0B45E5;
+  --pdial-lead-1: #111827;
   --pdial-lead-2: rgba(15, 45, 90, 0.62);
   --pdial-lead-3: rgba(20, 60, 120, 0.14);
-  --pdial-main-1: #092f5e;
-  --pdial-main-2: #174a84;
+  --pdial-main-1: #111827;
+  --pdial-main-2: #061EAE;
   --pdial-digit-sep: rgba(255, 255, 255, 0.85);
   --pdial-wash-op: 0.78;
-  --pdial-hint: rgba(9, 47, 94, 0.6);
+  --pdial-hint: rgba(17, 24, 39, 0.6);
 }
 
 .pdial__wrap {

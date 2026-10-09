@@ -29,9 +29,9 @@ const SVGNS = 'http://www.w3.org/2000/svg'
 const categoryFor = (v: number, unit?: string) => (unit === '%' ? 'TUNAEYE' : v < 20 ? 'Light Cut' : v < 35 ? 'Medium Tuna' : v < 65 ? 'Standard Grade' : 'Jumbo Tuna')
 
 const stops = [0, 25, 50, 75, 120]
-const c1 = transform(stops, ['#0284c7', '#0284c7', '#2563eb', '#d97706', '#dc2626'])
-const c2 = transform(stops, ['#38bdf8', '#38bdf8', '#3b82f6', '#f59e0b', '#ef4444'])
-const c3 = transform(stops, ['#bae6fd', '#bae6fd', '#bfdbfe', '#fef08a', '#fecaca'])
+const c1 = transform(stops, ['#176BFF', '#176BFF', '#176BFF', '#d97706', '#dc2626'])
+const c2 = transform(stops, ['#3B8CFF', '#3B8CFF', '#2478FF', '#f59e0b', '#ef4444'])
+const c3 = transform(stops, ['#C5D9FF', '#C5D9FF', '#C5D9FF', '#fef08a', '#fecaca'])
 
 export default function KiloThermalDial({
   value,

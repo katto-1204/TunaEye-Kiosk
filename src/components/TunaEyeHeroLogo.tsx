@@ -127,9 +127,9 @@ export const TunaEyeHeroLogo: React.FC<TunaEyeHeroLogoProps> = ({ className = ''
 
             {/* Pulsing AI Target Crosshair */}
             <g className="tunaeye-ai-sight">
-              <circle cx="250" cy="250" r="215" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="8 12" opacity="0.35" className="orbit-dashed-ring" />
+              <circle cx="250" cy="250" r="215" stroke="#3B8CFF" strokeWidth="1.5" strokeDasharray="8 12" opacity="0.35" className="orbit-dashed-ring" />
               <circle cx="250" cy="250" r="160" stroke="#60a5fa" strokeWidth="1" strokeDasharray="4 6" opacity="0.4" />
-              <circle cx="250" cy="250" r="6" fill="#38bdf8" opacity="0.8" className="pulse-center-dot" />
+              <circle cx="250" cy="250" r="6" fill="#3B8CFF" opacity="0.8" className="pulse-center-dot" />
             </g>
           </svg>
         </motion.div>

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Play, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import { createPortal } from 'react-dom'
 
 interface HeroVideoDialogProps {
   trigger: ReactNode
@@ -22,7 +23,7 @@ export function HeroVideoDialog({ trigger, videoSrc }: HeroVideoDialogProps) {
       <button type="button" className="hero-video-trigger" onClick={() => setOpen(true)}>
         {trigger}
       </button>
-      <AnimatePresence>
+      {createPortal(<AnimatePresence>
         {open && (
           <motion.div
             className="hero-video-dialog"
@@ -48,7 +49,7 @@ export function HeroVideoDialog({ trigger, videoSrc }: HeroVideoDialogProps) {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
     </>
   )
 }

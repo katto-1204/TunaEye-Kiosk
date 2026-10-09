@@ -6,6 +6,7 @@ import { getCapturedEvidence, saveCapturedEvidence } from './evidenceStorage'
 import { fetchCloudRecords, syncPendingRecords } from './cloudSync'
 import { getSupabase, isSupabaseConfigured } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
+import { getDemoPreviewUrl, initDemoMode, isDemoMode, parseDemoGradeFromFilename, setDemoGradeHint } from './demoMode'
 import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage } from './piClient'
 
 const ADMIN_PIN = '1234'
@@ -50,25 +51,35 @@ function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
   }
 }
 
+function RoleIcon({ role }: { role: 'admin' | 'expert' }) {
+  const common = { width: 46, height: 46, viewBox: '0 0 48 48', fill: 'none', stroke: 'currentColor', strokeWidth: 2.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
+  return role === 'admin'
+    ? <svg {...common}><rect x="6" y="8" width="36" height="32" rx="8"/><path d="M15 17h18M15 24h18M15 31h18"/><circle cx="20" cy="17" r="2.5" fill="currentColor" stroke="none"/><circle cx="30" cy="24" r="2.5" fill="currentColor" stroke="none"/><circle cx="23" cy="31" r="2.5" fill="currentColor" stroke="none"/></svg>
+    : <svg {...common}><path d="M5 24s7-11 19-11 19 11 19 11-7 11-19 11S5 24 5 24Z"/><circle cx="24" cy="24" r="6"/><path d="M24 5v5M24 38v5M5 24h5M38 24h5"/></svg>
+}
+
 function BrandMark({ compact = false }: { compact?: boolean }) { return <div className={`brand-mark ${compact ? 'brand-mark--compact' : ''}`} aria-label="TunaEye"><span className="brand-symbol" aria-hidden="true"><span /></span><span className="brand-word">Tuna<span>Eye</span></span></div> }
 function Button({ children, variant = 'primary', icon, onClick, disabled = false, className = '' }: { children: ReactNode; variant?: 'primary' | 'secondary' | 'ghost' | 'danger'; icon?: IconName; onClick?: () => void; disabled?: boolean; className?: string }) { return <button type="button" className={`btn btn--${variant} ${className}`} onClick={onClick} disabled={disabled}>{children}{icon && <Icon name={icon} size={23} />}</button> }
 function StepRail({ active }: { active: number }) { const steps = ['Capture', 'Analyze', 'Result']; return <div className="step-rail" aria-label={`Workflow progress, ${steps[Math.min(Math.max(active, 0), 2)]} stage`}>{steps.map((step, index) => <div className={`step-rail__item ${index <= active ? 'is-active' : ''}`} key={step}><span className="step-rail__dot">{index < active ? <Icon name="check" size={16} /> : index + 1}</span><span>{step}</span>{index < steps.length - 1 && <i />}</div>)}</div> }
-function BottomBar({ onBack, onHelp, primary, primaryLabel, primaryIcon = 'arrow', primaryDisabled = false, secondaryLabel, onSecondary }: { onBack?: () => void; onHelp?: () => void; primary?: () => void; primaryLabel?: string; primaryIcon?: IconName; primaryDisabled?: boolean; secondaryLabel?: string; onSecondary?: () => void }) { return <footer className="bottom-bar"><div className="bottom-bar__left">{onBack && <Button variant="ghost" icon="back" onClick={onBack}>Back</Button>}{onHelp && <Button variant="ghost" icon="help" onClick={onHelp}>Help</Button>}</div><div className="bottom-bar__right">{secondaryLabel && onSecondary && <Button variant="secondary" onClick={onSecondary}>{secondaryLabel}</Button>}{primary && primaryLabel && <Button onClick={primary} icon={primaryIcon} disabled={primaryDisabled}>{primaryLabel}</Button>}</div></footer> }
+function BottomBar({ onBack, onHelp, primary, primaryLabel, primaryIcon = 'arrow', primaryDisabled = false, secondaryLabel, secondaryDisabled = false, onSecondary }: { onBack?: () => void; onHelp?: () => void; primary?: () => void; primaryLabel?: string; primaryIcon?: IconName; primaryDisabled?: boolean; secondaryLabel?: string; secondaryDisabled?: boolean; onSecondary?: () => void }) { return <footer className="bottom-bar"><div className="bottom-bar__left">{onBack && <Button variant="ghost" icon="back" onClick={onBack}>Back</Button>}{onHelp && <Button variant="ghost" icon="help" onClick={onHelp}>Help</Button>}</div><div className="bottom-bar__right">{secondaryLabel && onSecondary && <Button variant="secondary" onClick={onSecondary} disabled={secondaryDisabled}>{secondaryLabel}</Button>}{primary && primaryLabel && <Button onClick={primary} icon={primaryIcon} disabled={primaryDisabled}>{primaryLabel}</Button>}</div></footer> }
 function SampleArt({ sample, className = '' }: { sample: SampleType; className?: string }) { return <img className={`sample-art ${className}`} src={sample === 'Sashibo core' ? '/assets/sashiboCoreFull.png' : '/assets/tailCutFull.png'} alt={`${sample} reference`} /> }
 function EvidenceFrame({ sample = 'Sashibo core', mode = 'camera', frozen = false }: { sample?: SampleType; mode?: 'camera' | 'sample' | 'tray'; frozen?: boolean }) { const image = mode === 'sample' ? capturedEvidence[sample] : undefined; return <div className={`evidence-frame evidence-frame--${mode} ${frozen ? 'is-frozen' : ''}`}><div className="evidence-frame__topline"><span>{mode === 'camera' ? 'Live preview' : mode === 'sample' ? 'Captured camera image' : 'Controlled chamber'}</span><span className="evidence-frame__signal"><span className="status-dot" />{mode === 'camera' ? 'Ready' : 'Saved'}</span></div>{image ? <img className="evidence-frame__capture" src={image} alt={`Captured ${sample}`} /> : <div className="chamber"><div className="chamber__rail chamber__rail--left" /><div className="chamber__rail chamber__rail--right" /><div className="tuna-silhouette"><span className="tuna-silhouette__tail" /><span className="tuna-silhouette__body" /><span className="tuna-silhouette__eye" /></div><div className="target-corners"><i /><i /><i /><i /></div>{mode === 'camera' && <div className="camera-crosshair"><span /></div>}</div>}<div className="evidence-frame__bottomline"><span>{frozen ? `${sample} image held for review` : 'Align within the blue guide'}</span><span className="evidence-frame__time">Top-down view</span></div></div> }
 function StoredEvidenceImage({ evidenceId, legacySource, className, alt }: { evidenceId?: string; legacySource?: string; className?: string; alt: string }) {
   const [source, setSource] = useState(legacySource)
+  const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>(legacySource ? 'ready' : 'loading')
   useEffect(() => {
-    if (!evidenceId) return
+    if (!evidenceId) { setStatus(legacySource ? 'ready' : 'unavailable'); return }
     let objectUrl = ''
     void getCapturedEvidence(evidenceId).then(evidence => {
-      if (!evidence) return
+      if (!evidence) { setStatus('unavailable'); return }
       objectUrl = URL.createObjectURL(evidence.blob)
       setSource(objectUrl)
-    })
+      setStatus('ready')
+    }).catch(() => setStatus('unavailable'))
     return () => { if (objectUrl) URL.revokeObjectURL(objectUrl) }
-  }, [evidenceId])
-  return source ? <img className={className} src={source} alt={alt} /> : null
+  }, [evidenceId, legacySource])
+  if (status === 'loading') return <div className="record-review__missing" role="status">Loading captured image…</div>
+  return source ? <img className={className} src={source} alt={alt} /> : <div className="record-review__missing" role="alert">Captured image unavailable.</div>
 }
 function TutorialModal({ onClose, title = 'Guided tutorial' }: { onClose: () => void; title?: string }) { return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}><div className="modal-card"><div className="modal-card__header"><div><span className="eyebrow">{title}</span><h2>Three quick checks before capture</h2></div><button className="icon-button" aria-label="Close tutorial" onClick={onClose}>×</button></div><div className="tutorial-list"><div><span>01</span><div><strong>Pull the tray out</strong><p>Use the chamber handle and keep the sample surface clean.</p></div></div><div><span>02</span><div><strong>Place the tuna flat</strong><p>Keep the selected sample centered in the blue guide.</p></div></div><div><span>03</span><div><strong>Check the view</strong><p>When the image is clear, press Capture once.</p></div></div></div><Button onClick={onClose} icon="check">Got it</Button></div></div> }
 function LegalModal({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () => void }) { const privacy = kind === 'privacy'; return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={privacy ? 'Privacy policy' : 'Terms and conditions'}><div className="modal-card legal-modal"><div className="modal-card__header"><div><span className="eyebrow">TunaEye</span><h2>{privacy ? 'Privacy policy' : 'Terms and conditions'}</h2></div><button className="icon-button" aria-label="Close" onClick={onClose}>×</button></div><div className="legal-modal__body"><p>{privacy ? 'TunaEye stores grading evidence, grader identity, device events, and audit records for operational traceability. Authorized administrators control retention and cloud synchronization through the configured services.' : 'TunaEye supports trained tuna graders and does not replace required regulatory, safety, or purchasing review. Operators remain responsible for confirming the sample, fish association, and final decision.'}</p></div><div className="legal-modal__actions"><Button onClick={onClose}>Close</Button></div></div></div> }
@@ -79,6 +90,8 @@ export interface NoticeModalData {
   items?: string[]
   icon?: IconName
   actionLabel?: string
+  cancelLabel?: string
+  onAction?: () => void
 }
 
 function NoticeModal({ notice, onClose }: { notice: NoticeModalData; onClose: () => void }) {
@@ -108,7 +121,10 @@ function NoticeModal({ notice, onClose }: { notice: NoticeModalData; onClose: ()
             ))}
           </ul>
         )}
-        <button ref={actionRef} type="button" className="btn btn--primary" onClick={onClose}>{notice.actionLabel ?? 'Understood'}</button>
+        <div className="notice-modal__actions">
+          {notice.cancelLabel && <button type="button" className="btn btn--secondary" onClick={onClose}>{notice.cancelLabel}</button>}
+          <button ref={actionRef} type="button" className="btn btn--primary" onClick={() => { notice.onAction?.(); onClose() }}>{notice.actionLabel ?? 'Understood'}</button>
+        </div>
       </div>
     </div>
   )
@@ -139,7 +155,7 @@ function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart:
       <div className="welcome-screen__bg" />
       <div className="welcome-screen__content">
         <div className="welcome-brand-hero">
-          <h1 className="welcome-brand-hero__title" style={{ color: '#ffffff' }}>TUNA<span style={{ color: '#5dbbf3' }}>EYE</span></h1>
+          <h1 className="welcome-brand-hero__title" style={{ color: '#ffffff' }}>TUNA<span style={{ color: '#3B8CFF' }}>EYE</span></h1>
           <p className="welcome-brand-hero__sub" style={{ color: '#ffffff' }}>KIOSK</p>
           <p className="welcome-brand-hero__tagline" style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '20px', marginTop: '12px' }}>AI-Powered Automated Tuna Grading System</p>
         </div>
@@ -155,17 +171,19 @@ function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart:
 function SelectRoleScreen({ onRole, onTutorial, onBack }: { onRole: (role: Role) => void; onTutorial: () => void; onBack: () => void }) {
   return (
     <div className="screen-stack screen-stack--role screen-stack--role-v2">
-      <h1 className="role-title-v2">Who's grading?</h1>
+      <div className="role-heading-v3"><span className="eyebrow">Choose your workspace</span><h1 className="role-title-v2">Who's grading?</h1><p>Open the tools designed for your role at this station.</p></div>
       <div className="role-actions role-actions--v2">
-        <button className="role-card-v2" onClick={() => onRole('admin')}>
-          <span className="role-card-v2__icon role-card-v2__icon--admin"><Icon name="shield" size={30} /></span>
-          <strong>Admin</strong>
-          <small>Settings & records</small>
+        <button className="role-card-v2 role-card-v2--admin" onClick={() => onRole('admin')}>
+          <span className="role-card-v2__top"><span className="role-card-v2__badge">Station control</span><Icon name="arrow" size={20} /></span>
+          <span className="role-card-v2__icon role-card-v2__icon--admin"><RoleIcon role="admin" /></span>
+          <span className="role-card-v2__copy"><strong>Admin</strong><small>Manage records, people, devices, pricing, and station settings.</small></span>
+          <span className="role-card-v2__action">Open admin console <Icon name="arrow" size={18} /></span>
         </button>
         <button className="role-card-v2 role-card-v2--primary" onClick={() => onRole('expert')}>
-          <span className="role-card-v2__icon role-card-v2__icon--expert"><Icon name="spark" size={30} /></span>
-          <strong>Grader</strong>
-          <small>Capture & grade</small>
+          <span className="role-card-v2__top"><span className="role-card-v2__badge">Expert workflow</span><Icon name="arrow" size={20} /></span>
+          <span className="role-card-v2__icon role-card-v2__icon--expert"><RoleIcon role="expert" /></span>
+          <span className="role-card-v2__copy"><strong>Expert Grader</strong><small>Capture tuna samples, review AI results, and print grading records.</small></span>
+          <span className="role-card-v2__action">Start grading <Icon name="arrow" size={18} /></span>
         </button>
       </div>
       <div className="role-bottom role-bottom--v2">
@@ -183,7 +201,7 @@ function AdminTrendGraph({ data }: { data: { label: string; value: number }[] })
   const peak = Math.max(1, ...data.map(point => point.value))
   const points = data.map((point, index) => ({ ...point, x: left + index * ((width - left - right) / Math.max(1, data.length - 1)), y: top + (peak - point.value) / peak * (height - top - bottom) }))
   const path = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-  return <div className="admin-trend" data-testid="admin-simple-graph"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Weekly grading volume line graph"><defs><linearGradient id="adminTrendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2563eb" stopOpacity=".24"/><stop offset="1" stopColor="#2563eb" stopOpacity="0"/></linearGradient></defs>{[0,.25,.5,.75,1].map(level => <line key={level} x1={left} x2={width-right} y1={top + level * (height-top-bottom)} y2={top + level * (height-top-bottom)} className="admin-trend__grid"/>)}<path d={`${path} L ${points.at(-1)?.x ?? 0} ${height-bottom} L ${points[0]?.x ?? 0} ${height-bottom} Z`} className="admin-trend__fill"/><path d={path} className="admin-trend__line"/>{points.map((point,index) => <g key={point.label} role="button" tabIndex={0} aria-label={`${point.label}: ${point.value} samples`} onMouseEnter={() => setActive(index)} onFocus={() => setActive(index)}><circle cx={point.x} cy={point.y} r="16" className="admin-trend__target"/><circle cx={point.x} cy={point.y} r={active === index ? 7 : 5} className={active === index ? 'admin-trend__dot is-active' : 'admin-trend__dot'}/><text x={point.x} y={height-12} textAnchor="middle" className="admin-trend__label">{point.label}</text></g>)}</svg><div className="admin-trend__tooltip" style={{ left: `${Math.min(88, Math.max(12, points[active] ? points[active].x / width * 100 : 50))}%` }}><strong>{points[active]?.value ?? 0}</strong><span>{points[active]?.label} samples</span></div></div>
+  return <div className="admin-trend" data-testid="admin-simple-graph"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Weekly grading volume line graph"><defs><linearGradient id="adminTrendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#176BFF" stopOpacity=".24"/><stop offset="1" stopColor="#176BFF" stopOpacity="0"/></linearGradient></defs>{[0,.25,.5,.75,1].map(level => <line key={level} x1={left} x2={width-right} y1={top + level * (height-top-bottom)} y2={top + level * (height-top-bottom)} className="admin-trend__grid"/>)}<path d={`${path} L ${points.at(-1)?.x ?? 0} ${height-bottom} L ${points[0]?.x ?? 0} ${height-bottom} Z`} className="admin-trend__fill"/><path d={path} className="admin-trend__line"/>{points.map((point,index) => <g key={point.label} role="button" tabIndex={0} aria-label={`${point.label}: ${point.value} samples`} onMouseEnter={() => setActive(index)} onFocus={() => setActive(index)}><circle cx={point.x} cy={point.y} r="16" className="admin-trend__target"/><circle cx={point.x} cy={point.y} r={active === index ? 7 : 5} className={active === index ? 'admin-trend__dot is-active' : 'admin-trend__dot'}/><text x={point.x} y={height-12} textAnchor="middle" className="admin-trend__label">{point.label}</text></g>)}</svg><div className="admin-trend__tooltip" style={{ left: `${Math.min(88, Math.max(12, points[active] ? points[active].x / width * 100 : 50))}%` }}><strong>{points[active]?.value ?? 0}</strong><span>{points[active]?.label} samples</span></div></div>
 }
 
 function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => void; onStartGrading: () => void; onNotice?: (notice: NoticeModalData) => void }) {
@@ -202,6 +220,7 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
   const [lastSync, setLastSync] = useState(() => localStorage.getItem('tunaeye-last-sync') ?? 'Not synced yet')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [cloudStatus, setCloudStatus] = useState(isSupabaseConfigured() && navigator.onLine ? 'Loading cloud records…' : navigator.onLine ? 'Cloud not configured' : 'Offline · showing saved records')
 
   useEffect(() => {
     const refresh = () => {
@@ -209,9 +228,10 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
       setAuditEntries(loadAudit())
     }
     refresh()
-    if (isSupabaseConfigured() && navigator.onLine) void getSupabase().auth.getSession().then(({ data }) => {
-      if (data.session) return fetchCloudRecords().then(setRecords)
-    }).catch(() => undefined)
+    if (isSupabaseConfigured() && navigator.onLine) void getSupabase().auth.getSession().then(async (result: { data: { session: unknown } }) => {
+      if (result.data.session) setRecords(await fetchCloudRecords())
+      setCloudStatus(result.data.session ? 'Cloud records loaded' : 'Sign in required · showing saved records')
+    }).catch(() => setCloudStatus('Cloud unavailable · showing saved records'))
     window.addEventListener('storage', refresh)
     window.addEventListener('tunaeye-records-updated', refresh)
     return () => {
@@ -254,11 +274,11 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
   const testRpi = async () => { setRpiStatus('Checking'); try { const health = await checkPiHealth(connections.rpiUrl) as { model?: string }; if (health.model) setConnections(current => ({ ...current, modelName: health.model! })); setRpiStatus('Connected'); audit('Admin', 'RPi connection test', `Connected to ${connections.rpiUrl}`) } catch { setRpiStatus('Unavailable'); audit('Admin', 'RPi connection test', `Unable to reach ${connections.rpiUrl}`) } }
   const runDiagnostics = async () => { setDiagnostic('Testing Pi camera…'); try { await capturePiImage(); setDiagnostic('Pi camera operational') } catch { setDiagnostic('Pi camera unavailable') } }
   const heading = section === 'Overview' ? 'Good day, Admin.' : section
-  return <div className={`admin-workspace ${sidebarCollapsed ? 'admin-workspace--collapsed' : ''}`}><aside className="admin-sidebar"><button className="admin-sidebar__brand-link" onClick={() => { window.location.href = '/' }} aria-label="Go to TunaEye home"><BrandMark compact /></button><button className="admin-sidebar__toggle" onClick={() => setSidebarCollapsed(value => !value)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}><Icon name={sidebarCollapsed ? 'arrow' : 'back'} size={20} /></button><nav>{nav.map(item => <button key={item.label} className={section === item.label ? 'is-active' : ''} onClick={() => setSection(item.label)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav><div className="admin-sidebar__foot"><span><i className="status-dot" />{navigator.onLine ? 'System online' : 'Offline'}</span><button onClick={() => { audit('Admin', 'Logout', 'Administrator ended the session'); onExit() }}><Icon name="back" size={18} /><span>Logout</span></button></div></aside><section className="admin-content"><header className="admin-content__header"><div><span className="eyebrow">{stationName} · Admin console</span><h1>{heading}</h1><p>{section === 'Overview' ? `Cloud-synchronized overview · Last sync: ${lastSync}` : `Manage ${section.toLowerCase()} for this station.`}</p></div><div className="admin-header-actions"><Button variant="secondary" onClick={() => void syncRecords()} icon="refresh" disabled={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button><Button onClick={onStartGrading} icon="camera">Start grading</Button><div className="admin-avatar">AD</div></div></header>
+  return <div className={`admin-workspace ${sidebarCollapsed ? 'admin-workspace--collapsed' : ''}`}><aside className="admin-sidebar"><button className="admin-sidebar__brand-link" onClick={() => { window.location.href = '/' }} aria-label="Go to TunaEye home"><BrandMark compact /></button><button className="admin-sidebar__toggle" onClick={() => setSidebarCollapsed(value => !value)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}><Icon name={sidebarCollapsed ? 'arrow' : 'back'} size={20} /></button><nav>{nav.map(item => <button key={item.label} className={section === item.label ? 'is-active' : ''} onClick={() => setSection(item.label)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav><div className="admin-sidebar__foot"><span><i className="status-dot" />{navigator.onLine ? 'System online' : 'Offline'}</span><button onClick={() => { audit('Admin', 'Logout', 'Administrator ended the session'); onExit() }}><Icon name="back" size={18} /><span>Logout</span></button></div></aside><section className="admin-content"><header className="admin-content__header"><div><span className="eyebrow">{stationName} · Admin console</span><h1>{heading}</h1><p role="status">{section === 'Overview' ? `${cloudStatus} · Last sync: ${lastSync}` : `Manage ${section.toLowerCase()} for this station.`}</p></div><div className="admin-header-actions"><Button variant="secondary" onClick={() => void syncRecords()} icon="refresh" disabled={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button><Button onClick={onStartGrading} icon="camera">Start grading</Button><div className="admin-avatar">AD</div></div></header>
     {section === 'Overview' && <><div className="admin-metrics"><article><span><Icon name="database" size={22} /></span><small>Sessions recorded</small><strong>{sessionCount}</strong><em>Synced on this station</em></article><article><span><Icon name="scale" size={22} /></span><small>Total fish weight</small><strong>{totalWeight.toFixed(1)} kg</strong><em>Across {records.length} samples</em></article><article><span><Icon name="spark" size={22} /></span><small>Grade A rate</small><strong>{gradeARate}%</strong><em>{records.filter(record => record.grade === 'A').length} Grade A samples</em></article><article><span><Icon name="users" size={22} /></span><small>Active graders</small><strong>{graders.length}</strong><em>All profiles available</em></article></div><div className="admin-overview-grid"><article className="admin-chart"><div className="admin-section-title"><div><h2>Weekly grading volume</h2><p>Completed samples during the last seven days</p></div><b>{records.length} total</b></div><AdminTrendGraph data={weeklyData}/></article><article className="admin-breakdown"><h2>Grade breakdown</h2><div className="grade-ring"><strong>{records.length}<small>samples</small></strong></div><div className="grade-legend"><span><i className="grade-a" />Grade A <b>{gradeARate}%</b></span><span><i className="grade-b" />Grade B <b>{records.length ? Math.round(records.filter(record => record.grade === 'B').length / records.length * 100) : 0}%</b></span><span><i className="grade-c" />Grade C <b>{records.length ? Math.round(records.filter(record => record.grade === 'C').length / records.length * 100) : 0}%</b></span></div></article></div><AdminRecords records={records.slice(0, 3)} compact onViewAll={() => setSection('Records')} /></>}
     {section === 'Records' && <><div className="admin-toolbar"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search record, grader, sample, or grade…" /><Button variant="secondary" icon="printer" onClick={() => window.print()}>Export records</Button></div><AdminRecords records={visibleRecords} /></>}
     {section === 'Price schedule' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Approved buying prices</h2><p>Set the current rate per kilogram for each tuna grade.</p></div><span className="status-label status-label--valid">Active schedule</span></div><div className="price-editor">{(['A','B','C'] as Grade[]).map(grade => <label key={grade}><span>Grade {grade}<small>{grade === 'A' ? 'Premium quality' : grade === 'B' ? 'Standard quality' : 'Processing quality'}</small></span><div><b>₱</b><input inputMode="decimal" value={prices[grade]} onChange={event => setPrices({ ...prices, [grade]: event.target.value.replace(/[^0-9.]/g, '') })} /><small>per kg</small></div></label>)}</div><div className="admin-card-actions"><span>Last updated today · Values are stored on this device.</span><Button onClick={savePrices} icon="check">Save price schedule</Button></div></div>}
-    {section === 'Expert graders' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Grader profiles</h2><p>Control who can start expert grading sessions.</p></div><b>{graders.length} active</b></div><div className="grader-admin-list">{graders.map((name,index) => <div key={name}><span className="admin-avatar">{name.split(' ').map(part => part[0]).slice(0,2).join('')}</span><span><strong>{name}</strong><small>{index === 0 ? 'Last active 8 minutes ago' : 'Available at this station'}</small></span><span className="status-label status-label--valid">Active</span><button aria-label={`Remove ${name}`} onClick={() => saveGraders(graders.filter(item => item !== name))}>Remove</button></div>)}</div><div className="admin-add-grader"><input value={newGrader} onChange={event => setNewGrader(event.target.value)} placeholder="Enter full name" /><Button icon="users" disabled={!newGrader.trim()} onClick={() => { const name = newGrader.trim(); if (name && !graders.includes(name)) saveGraders([...graders, name]); setNewGrader('') }}>Add grader</Button></div></div>}
+    {section === 'Expert graders' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Grader profiles</h2><p>Control who can start expert grading sessions.</p></div><b>{graders.length} active</b></div><div className="grader-admin-list">{graders.map((name,index) => <div key={name}><span className="admin-avatar">{name.split(' ').map(part => part[0]).slice(0,2).join('')}</span><span><strong>{name}</strong><small>{index === 0 ? 'Last active 8 minutes ago' : 'Available at this station'}</small></span><span className="status-label status-label--valid">Active</span><button aria-label={`Remove ${name}`} onClick={() => onNotice?.({ title: 'Remove grader?', message: `${name} will no longer be available for new grading sessions on this station.`, icon: 'users', cancelLabel: 'Keep grader', actionLabel: 'Remove', onAction: () => saveGraders(graders.filter(item => item !== name)) })}>Remove</button></div>)}</div><div className="admin-add-grader"><input value={newGrader} onChange={event => setNewGrader(event.target.value)} placeholder="Enter full name" /><Button icon="users" disabled={!newGrader.trim()} onClick={() => { const name = newGrader.trim(); if (name && !graders.includes(name)) saveGraders([...graders, name]); setNewGrader('') }}>Add grader</Button></div></div>}
     {section === 'Devices' && <AdminDevices rpiUrl={connections.rpiUrl} modelName={connections.modelName} audit={audit} onNotice={onNotice} />}
     {section === 'Audit logs' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Audit logs</h2><p>Navigation, grading, overrides, connections, sync, and administrator activity.</p></div><b>{auditEntries.length} events</b></div><div className="audit-list">{auditEntries.length ? auditEntries.slice(0, 12).map(entry => <article key={entry.id}><span><Icon name="shield" size={18} /></span><div><strong>{entry.action}</strong><small>{entry.actor} · {entry.detail}</small></div><time>{new Date(entry.timestamp).toLocaleString()}</time></article>) : <p>No audit events recorded yet.</p>}</div></div>}
     {section === 'Settings' && <div className="admin-page-card settings-form"><div><h2>Station and connection settings</h2><p>Configure the kiosk and local Raspberry Pi. Supabase credentials come only from deployment environment variables.</p></div><div className="connection-settings"><label>Station name<input value={stationName} onChange={event => setStationName(event.target.value)} /></label><label>Raspberry Pi API URL<input value={connections.rpiUrl} onChange={event => setConnections({ ...connections, rpiUrl: event.target.value })} /></label><label>AI model identifier<input value={connections.modelName} onChange={event => setConnections({ ...connections, modelName: event.target.value })} /></label><label>Supabase cloud<input value={isSupabaseConfigured() ? 'Configured from environment' : 'Not configured'} disabled /></label></div><div className="connection-status"><span className={`status-label ${rpiStatus === 'Connected' ? 'status-label--valid' : rpiStatus === 'Unavailable' ? 'status-label--invalid' : 'status-label--uncertain'}`}>Raspberry Pi: {rpiStatus}</span><span>Active model: <strong>{connections.modelName}</strong></span><Button variant="secondary" icon="refresh" onClick={testRpi} disabled={rpiStatus === 'Checking'}>{rpiStatus === 'Checking' ? 'Checking…' : 'Test RPi connection'}</Button></div><label>Maximum accepted weight<input value="200 kg" disabled /></label><label className="settings-toggle"><span><strong>Offline mode</strong><small>Keep the PWA available without internet</small></span><input type="checkbox" defaultChecked /></label><label className="settings-toggle"><span><strong>Automatic printing</strong><small>Open print dialog after each completed session</small></span><input type="checkbox" /></label><div className="admin-card-actions"><span>Use only a publishable/anon key in Vite. Never expose a service-role key.</span><Button icon="check" onClick={() => { localStorage.setItem('tunaeye-station', stationName); localStorage.setItem('tunaeye-rpi-url', connections.rpiUrl); localStorage.setItem('tunaeye-model-name', connections.modelName); audit('Admin', 'Settings updated', 'Station and local edge settings saved'); onNotice?.({ title: 'Settings Saved', message: 'Station identity and Raspberry Pi settings were saved.', icon: 'check' }) }}>Save settings</Button></div></div>}
@@ -661,6 +681,13 @@ function GraderEntryScreen({ name, remember, onName, onRemember, onContinue, onB
           <p>Enter your name once for this grading session.</p>
         </div>
         <div className="grader-entry__form">
+          <div className="grader-entry__form-heading">
+            <span className="grader-entry__form-icon" aria-hidden="true"><Icon name="users" /></span>
+            <div>
+              <strong>Expert grader</strong>
+              <span>Your name will appear on this session's record.</span>
+            </div>
+          </div>
           <label className="field-label">
             Expert grader name
             <input
@@ -792,25 +819,32 @@ function WeightScreen({ selected, sameFish, weights, onWeight, onContinue, onBac
     </div>
   )
 }
-function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sample: SampleType; index: number; total: number; onCapture: (blob: Blob, previewUrl: string) => void; onBack: () => void; onHelp?: () => void }) {
+function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sample: SampleType; index: number; total: number; onCapture: (blob: Blob, previewUrl: string) => Promise<void>; onBack: () => void; onHelp?: () => void }) {
   const uploadRef = useRef<HTMLInputElement>(null)
   const [cameraError, setCameraError] = useState('')
   const [streamKey, setStreamKey] = useState(0)
-  const [capturing, setCapturing] = useState(false)
+  const [busy, setBusy] = useState<'capture' | 'upload' | null>(null)
+  const demoPreview = isDemoMode() ? getDemoPreviewUrl(sample, index) : null
   const streamUrl = `${getPiSettings().streamUrl}?reconnect=${streamKey}`
   const capture = async () => {
-    if (capturing) return
-    setCapturing(true)
+    if (busy) return
+    setBusy('capture')
     setCameraError('')
-    try { const blob = await capturePiImage(); onCapture(blob, URL.createObjectURL(blob)) }
-    catch { setCameraError('Camera capture failed. Confirm this tablet is connected to TunaRpi, then reconnect.') }
-    finally { setCapturing(false) }
+    try {
+      const blob = await capturePiImage(sample, index)
+      await onCapture(blob, URL.createObjectURL(blob))
+    }
+    catch { setCameraError(isDemoMode() ? 'Demo sample could not be loaded.' : 'Camera capture failed. Confirm this tablet is connected to TunaRpi, then reconnect.') }
+    finally { setBusy(null) }
   }
   const upload = async (file?: File) => {
-    if (!file) return
+    if (!file || busy) return
+    const demoGrade = parseDemoGradeFromFilename(file.name)
+    if (demoGrade) setDemoGradeHint(sample, demoGrade)
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setCameraError('Choose a JPEG, PNG, or WebP image.'); return }
     if (file.size === 0) { setCameraError('The selected image is empty. Choose another file.'); return }
     if (file.size > 10 * 1024 * 1024) { setCameraError('Choose an image smaller than 10 MB.'); return }
+    setBusy('upload')
     try {
       const bitmap = await createImageBitmap(file)
       const canvas = document.createElement('canvas')
@@ -821,11 +855,11 @@ function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sam
       const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', .92))
       if (!blob) throw new Error()
       setCameraError('')
-      onCapture(blob, URL.createObjectURL(blob))
+      await onCapture(blob, URL.createObjectURL(blob))
     } catch { setCameraError('TunaEye could not read this image. Choose another file.') }
-    finally { if (uploadRef.current) uploadRef.current.value = '' }
+    finally { setBusy(null); if (uploadRef.current) uploadRef.current.value = '' }
   }
-  return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera"><img src={streamUrl} alt="Live Raspberry Pi USB camera preview" onLoad={() => setCameraError('')} onError={() => setCameraError('Raspberry Pi camera stream is unavailable.')} /><div className="target-corners"><i /><i /><i /><i /></div>{cameraError && <div className="camera-error" role="alert"><Icon name="camera" size={28} /><span>{cameraError}</span><Button variant="secondary" icon="refresh" onClick={() => { setCameraError(''); setStreamKey(key => key + 1) }}>Reconnect</Button></div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>Raspberry Pi USB camera</small></span></div><h1>Align the sample in the guide.</h1><p>Keep the surface still and fully visible. The snapshot or uploaded image shown next is the exact evidence sent for inference.</p><input ref={uploadRef} className="camera-upload-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload specimen image" onChange={event => void upload(event.target.files?.[0])} /><small className="camera-upload-note">Upload accepts JPEG, PNG, or WebP up to 10 MB and stores it as JPEG.</small></aside></div><BottomBar onBack={onBack} onHelp={onHelp} secondaryLabel="Upload image" onSecondary={() => uploadRef.current?.click()} primary={() => void capture()} primaryLabel={capturing ? 'Capturing…' : 'Capture'} primaryIcon="camera" primaryDisabled={capturing} /></div>
+  return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera live-camera--demo"><img src={demoPreview ?? streamUrl} alt={demoPreview ? 'Demo specimen preview' : 'Live Raspberry Pi USB camera preview'} onLoad={() => setCameraError('')} onError={() => { if (!demoPreview) setCameraError('Raspberry Pi camera stream is unavailable.') }} /><div className="target-corners"><i /><i /><i /><i /></div>{demoPreview && <span className="camera-demo-badge">Demo specimen</span>}{cameraError && <div className="camera-error" role="alert"><Icon name="camera" size={28} /><span>{cameraError}</span><Button variant="secondary" icon="refresh" onClick={() => { setCameraError(''); setStreamKey(key => key + 1) }}>Reconnect</Button></div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>{demoPreview ? 'Demo video samples' : 'Raspberry Pi USB camera'}</small></span></div><h1>Align the sample in the guide.</h1><p>{demoPreview ? 'Press Capture to use the bundled demo specimen, or upload SASHIBOCORE_*.png / TAILCUT_*.png from DEMO_SAMPLES.' : 'Keep the surface still and fully visible. The snapshot or uploaded image shown next is the exact evidence sent for inference.'}</p><input ref={uploadRef} className="camera-upload-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload specimen image" onChange={event => void upload(event.target.files?.[0])} disabled={Boolean(busy)} /><small className="camera-upload-note" role="status">{busy === 'upload' ? 'Processing and saving uploaded image…' : 'Upload accepts JPEG, PNG, or WebP up to 10 MB and stores it as JPEG.'}</small></aside></div><BottomBar onBack={onBack} onHelp={onHelp} secondaryLabel={busy === 'upload' ? 'Uploading…' : 'Upload image'} secondaryDisabled={Boolean(busy)} onSecondary={() => uploadRef.current?.click()} primary={() => void capture()} primaryLabel={busy === 'capture' ? 'Capturing…' : 'Capture'} primaryIcon="camera" primaryDisabled={Boolean(busy)} /></div>
 }
 function ReviewScreen({ sample, outcome, onRetake, onUse, onBack }: { sample: SampleType; outcome: DemoOutcome; onRetake: () => void; onUse: () => void; onBack: () => void }) { const valid = outcome === 'valid'; return <div className="screen-stack screen-stack--review"><div className="review-layout"><EvidenceFrame sample={sample} mode="sample" frozen /><aside className="review-aside"><span className={`review-badge review-badge--${outcome}`}>{valid ? <Icon name="check" size={17} /> : <Icon name="help" size={17} />}{valid ? 'Image saved' : outcome === 'uncertain' ? 'Check the image' : 'Retake recommended'}</span><h1>{valid ? 'Use this image?' : 'Let’s check the image.'}</h1><p>{valid ? `Your ${sample.toLowerCase()} image is saved and ready to send for grading.` : outcome === 'uncertain' ? 'Review the captured sample before deciding whether to continue.' : 'The sample needs a clearer view inside the guide.'}</p><div className="review-note"><Icon name="shield" size={18} /><span>Image saved and linked to this grading session.</span></div><div className="review-actions"><Button variant="secondary" onClick={onRetake} icon="refresh">Retake</Button><Button onClick={onUse} icon="arrow">Use Image</Button></div></aside></div><BottomBar onBack={onBack} /></div> }
 function AnalysisScreen({ sample }: { sample: SampleType }) {
@@ -1145,10 +1179,12 @@ function App() {
   const [overrideTarget, setOverrideTarget] = useState<SampleType | null>(null)
   const [isCapturing, setIsCapturing] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
+  const [isInstalling, setIsInstalling] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [currentPathScreen] = useState<Screen>(() => refreshRecovery.active ? 'select-role' : screenForPath(window.location.pathname))
   const gradingSessionRef = useRef({ id: crypto.randomUUID(), timestamp: Date.now() })
-  useEffect(() => { const timeout = window.setTimeout(() => setBooting(false), 2600); return () => window.clearTimeout(timeout) }, [])
+  useEffect(() => { initDemoMode() }, [])
+  useEffect(() => { if (refreshRecovery.active) { setBooting(false); return }; const timeout = window.setTimeout(() => setBooting(false), 2600); return () => window.clearTimeout(timeout) }, [refreshRecovery.active])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
   useEffect(() => { if (refreshRecovery.active) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.active])
   useEffect(() => {
@@ -1175,7 +1211,9 @@ function App() {
       await saveCapturedEvidence({ id: recordId, sessionId: gradingSessionRef.current.id, sample, fishId: fishIdForSample(session, sample), capturedAt: Date.now(), blob })
       if (capturedEvidence[sample]?.startsWith('blob:')) URL.revokeObjectURL(capturedEvidence[sample]!)
       capturedEvidence[sample] = previewUrl
-      window.setTimeout(() => { dispatch({ type: 'captured' }); setIsCapturing(false) }, 850)
+      await new Promise(resolve => window.setTimeout(resolve, 850))
+      dispatch({ type: 'captured' })
+      setIsCapturing(false)
     } catch {
       if (previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
       setIsCapturing(false)
@@ -1210,16 +1248,19 @@ function App() {
     if (isPrinting) return
     setIsPrinting(true)
     window.setTimeout(() => {
-      try {
-        window.print()
-      } catch {}
+      try { window.print() }
+      catch {
+        setIsPrinting(false)
+        setNoticeModal({ title: 'Printing failed', message: 'The print dialog could not open. Check the printer connection, then try again.', icon: 'printer', actionLabel: 'Try again', onAction: print })
+        return
+      }
       dispatch({ type: 'printed', sample: selected[session.printIndex] ?? selected[0] })
       setIsPrinting(false)
       if (session.printIndex + 1 >= selected.length) go('complete')
     }, 1500)
   }
   const installApp = async () => {
-    if (installed) return;
+    if (installed || isInstalling) return;
     if (!installPrompt) {
       setNoticeModal({
         title: 'Install TunaEye Kiosk',
@@ -1233,14 +1274,19 @@ function App() {
       });
       return;
     }
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    if (choice.outcome === 'accepted') {
-      setInstalled(true);
-      localStorage.setItem('tunaeye-installed', 'true');
-      audit('Device', 'App installed', 'TunaEye kiosk installed on this device');
-    }
-    setInstallPrompt(null);
+    setIsInstalling(true)
+    try {
+      await installPrompt.prompt()
+      const choice = await installPrompt.userChoice
+      if (choice.outcome === 'accepted') {
+        setInstalled(true)
+        localStorage.setItem('tunaeye-installed', 'true')
+        audit('Device', 'App installed', 'TunaEye kiosk installed on this device')
+      } else setNoticeModal({ title: 'Installation cancelled', message: 'TunaEye was not installed. You can try again whenever you are ready.', icon: 'help' })
+      setInstallPrompt(null)
+    } catch {
+      setNoticeModal({ title: 'Installation unavailable', message: 'The browser could not start installation. Use the browser menu and choose Install app or Add to Home Screen.', icon: 'help' })
+    } finally { setIsInstalling(false) }
   }
   const enterFullscreen = () => { if (installed && document.fullscreenEnabled && !document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => undefined) }
   const renderScreen = () => {
@@ -1260,14 +1306,14 @@ function App() {
       case 'analysis': return <AnalysisScreen sample={sample} />
       case 'individual-result': return <IndividualResultScreen result={currentResult} sample={sample} weight={weightForSample(session, sample)} hasNext={session.currentSampleIndex < selected.length - 1} onNext={() => session.currentSampleIndex < selected.length - 1 ? dispatch({ type: 'nextSample' }) : go('overview')} onRetake={() => go('camera')} onOverride={() => setOverrideTarget(sample)} onBack={back} />
       case 'overview': return <OverviewScreen selected={selected} results={session.results} sameFish={session.sameFish} onOverride={setOverrideTarget} onPrint={() => dispatch({ type: 'startPrinting' })} onBack={back} />
-      case 'print': return <PrintScreen samples={selected} results={session.results} printIndex={session.printIndex} printed={session.printedSamples} printing={isPrinting} onPrint={print} onSkip={() => go('complete')} onBack={back} graderName={session.graderName} />
+      case 'print': return <PrintScreen samples={selected} results={session.results} printIndex={session.printIndex} printed={session.printedSamples} printing={isPrinting} onPrint={print} onSkip={() => setNoticeModal({ title: 'Skip printing?', message: 'The grading record stays saved, but no physical receipt will be produced.', icon: 'printer', cancelLabel: 'Keep printing', actionLabel: 'Skip receipt', onAction: () => go('complete') })} onBack={back} graderName={session.graderName} />
       case 'complete': return <CompleteScreen printed={session.printedSamples} onAgain={gradeAnother} onHome={graderHome} onLogout={graderLogout} />
     }
   }
   if (booting) return <LoadingScreen />
   if (!installed && !webIntroDismissed && session.screen === 'welcome') return <ProductLanding page={marketingPage} onInstall={installApp} onOpen={() => setWebIntroDismissed(true)} onNavigate={page => { setMarketingPage(page); window.history.pushState({}, '', page === 'home' ? '/' : `/${page}`) }} />
   const isLanding = session.screen === 'welcome'
-  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{tutorialOpen && <TutorialModal onClose={() => setTutorialOpen(false)} />}{legalKind && <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} />}{overrideTarget && <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason }); setOverrideTarget(null) }} />}{noticeModal && <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} />}{isCapturing && <div className="capture-toast"><span className="capture-toast__ring"><Icon name="camera" size={22} /></span><span><strong>Capturing image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast"><span className="capture-toast__ring"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait · receipt printer</small></span></div>}</div>
+  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait · receipt printer</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
 }
 
 export default App

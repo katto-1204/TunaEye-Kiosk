@@ -9,7 +9,7 @@ test('uninstalled visitors see the public landing after loading and can scroll',
 
   await page.goto('/')
   await expect(page.locator('.pdial')).toBeVisible()
-  await expect(page.getByRole('heading', { name: /Clear evidence/i }).first()).toBeVisible({ timeout: 5000 })
+  await expect(page.getByRole('heading', { name: /Sea Beyond the Cut/i })).toBeVisible({ timeout: 5000 })
   await expect(page.getByRole('button', { name: 'Install kiosk app' })).toBeVisible()
   
   // Verify landing page scrollability
@@ -23,7 +23,10 @@ test('uninstalled visitors see the public landing after loading and can scroll',
   await iphone.scrollIntoViewIfNeeded()
   await expect(iphone).toBeVisible()
   await expect(iphone).toHaveAttribute('viewBox', '0 0 200 400')
-  await expect(iphone.locator('.device-screen-content')).toContainText('TunaEye Grader')
+  const phoneImage = iphone.locator('image')
+  await expect(phoneImage).toHaveAttribute('href', /\/app-screens\/.+\.jpg$/)
+  const firstPhoneImage = await phoneImage.getAttribute('href')
+  await expect.poll(() => phoneImage.getAttribute('href'), { timeout: 3000 }).not.toBe(firstPhoneImage)
   await iphone.screenshot({ path: 'test-results/iphone-mockup.png' })
   const macbook = page.locator('.demo-macbook')
   await expect(macbook).toBeVisible()
@@ -32,7 +35,7 @@ test('uninstalled visitors see the public landing after loading and can scroll',
   await expect(page.getByRole('dialog', { name: 'TunaEye demo video' })).toBeVisible()
   await page.getByRole('button', { name: 'Close demo video' }).click()
   await expect(page.getByRole('dialog', { name: 'TunaEye demo video' })).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: /Install and set up your TunaEye/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Install the station app/ })).toBeVisible()
   const landingLayout = await page.evaluate(() => ({
     demoColumns: getComputedStyle(document.querySelector('.site-demo-video')!).gridTemplateColumns.split(' ').length,
     mobileColumns: getComputedStyle(document.querySelector('.mobile-experience-grid')!).gridTemplateColumns.split(' ').length,
@@ -78,6 +81,26 @@ test('installed tablet opens kiosk welcome screen and enters tight workflow scre
     return (htmlOverflow === 'hidden' || bodyOverflow === 'hidden') && appShell !== null
   })
   expect(isTight).toBe(true)
+})
+
+test('role selector uses distinct role icons, focus states, and destinations', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 600 })
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/select-role')
+  const admin = page.getByRole('button', { name: /Admin/ })
+  const grader = page.getByRole('button', { name: /Expert Grader/ })
+  await expect(admin).toBeVisible()
+  await expect(grader).toBeVisible()
+  expect(await admin.locator('.role-card-v2__icon').innerHTML()).not.toBe(await grader.locator('.role-card-v2__icon').innerHTML())
+  await admin.focus()
+  await expect(admin).toBeFocused()
+  expect(await grader.evaluate(element => getComputedStyle(element).backgroundImage)).toContain('linear-gradient')
+  await page.screenshot({ path: 'test-results/role-selector-1024x600.png' })
+  await grader.click()
+  await expect(page).toHaveURL(/\/kiosk\/grader$/)
+  await page.goto('/select-role')
+  await page.getByRole('button', { name: /Admin/ }).click()
+  await expect(page).toHaveURL(/\/admin$/)
 })
 
 test('admin OTP opens diagnostics, audit logs, and logout', async ({ page }) => {
@@ -203,6 +226,36 @@ test('refresh always returns to role selection but only unfinished work shows th
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
+for (const viewport of [{ width: 1024, height: 600 }, { width: 800, height: 1280 }]) {
+  test(`critical kiosk panels never overlap contextual actions at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    await page.route('http://10.42.0.1:8080/**', route => route.fulfill({ contentType: 'image/jpeg', body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }))
+    await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+
+    const cases = [
+      ['/kiosk/sample', '.sample-options'],
+      ['/kiosk/association', '.association-options, .single-fish-card'],
+      ['/kiosk/tutorial', '.tutorial-stage'],
+      ['/kiosk/weight', '.weight-split'],
+      ['/kiosk/camera', '.camera-layout'],
+      ['/kiosk/review', '.review-layout'],
+      ['/kiosk/print', '.print-layout'],
+    ] as const
+
+    for (const [route, contentSelector] of cases) {
+      await page.goto(route)
+      const content = page.locator(contentSelector)
+      const actions = page.locator('.screen-stack > .bottom-bar')
+      await expect(content).toBeVisible()
+      await expect(actions).toBeVisible()
+      const [contentBox, actionsBox] = await Promise.all([content.boundingBox(), actions.boundingBox()])
+      expect(contentBox!.y + contentBox!.height, `${route} content overlaps actions`).toBeLessThanOrEqual(actionsBox!.y + 1)
+      expect(actionsBox!.y + actionsBox!.height, `${route} actions leave viewport`).toBeLessThanOrEqual(viewport.height)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route} overflows horizontally`).toBe(true)
+    }
+  })
+}
+
 test('legal dialogs share safe tablet sizing and visible actions', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 600 })
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
@@ -220,6 +273,27 @@ test('legal dialogs share safe tablet sizing and visible actions', async ({ page
     await expect(closeAction).toBeInViewport()
     await closeAction.click()
   }
+})
+
+test('expert grader identity form is touch-sized and responsive', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+
+  for (const viewport of [{ width: 1024, height: 600 }, { width: 800, height: 1280 }]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/kiosk/grader')
+    const input = page.getByLabel('Expert grader name')
+    const checkbox = page.getByRole('checkbox', { name: 'Remember my name for this session' })
+    const form = page.locator('.grader-entry__form')
+    await expect(input).toBeVisible()
+    await expect(form).toBeInViewport()
+    expect((await input.boundingBox())!.height).toBeGreaterThanOrEqual(64)
+    expect((await checkbox.boundingBox())!.width).toBeGreaterThanOrEqual(26)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  }
+
+  await page.getByLabel('Expert grader name').fill('Maria Santos')
+  await page.getByRole('button', { name: 'Start grading' }).click()
+  await expect(page).toHaveURL(/\/kiosk\/sample$/)
 })
 
 test('tablet viewport renders expert grader dashboard in bento layout', async ({ page }) => {
@@ -260,6 +334,41 @@ test('camera help triggers custom notice modal instead of alert', async ({ page 
   // Close modal
   await page.getByRole('button', { name: 'Understood' }).click()
   await expect(modal).not.toBeVisible()
+})
+
+test('camera capture shows progress and recovers from Pi failure', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.route('http://10.42.0.1:8080/**', async route => {
+    await new Promise(resolve => setTimeout(resolve, 250))
+    await route.fulfill({ status: 503, body: 'Camera unavailable' })
+  })
+  await page.goto('/kiosk/camera')
+  await page.getByRole('button', { name: 'Capture' }).click()
+  await expect(page.getByRole('button', { name: 'Capturing…' })).toBeDisabled()
+  await expect(page.getByRole('alert')).toContainText('Camera capture failed')
+  await expect(page.getByRole('button', { name: 'Capture' })).toBeEnabled()
+})
+
+test('printing failure stays on receipt and offers retry', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('tunaeye-installed', 'true')
+    window.print = () => { throw new Error('Printer unavailable') }
+  })
+  await page.goto('/kiosk/print')
+  await page.getByRole('button', { name: /Print Sashibo core/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Printing failed' })).toBeVisible()
+  await expect(page).toHaveURL(/\/kiosk\/print$/)
+  await expect(page.getByRole('button', { name: 'Try again' })).toBeFocused()
+})
+
+test('skipping a receipt requires confirmation', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/kiosk/print')
+  await page.getByRole('button', { name: 'Skip printing' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Skip printing?' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Keep printing' }).click()
+  await expect(page).toHaveURL(/\/kiosk\/print$/)
 })
 
 test('uploaded image uses the same saved-evidence and Pi inference flow', async ({ page }) => {
@@ -362,6 +471,7 @@ test('completed grading session remains local and pending until cloud sync', asy
   // Print screen -> Skip printing to complete
   await expect(page.getByRole('button', { name: 'Skip printing' })).toBeVisible({ timeout: 5000 })
   await page.getByRole('button', { name: 'Skip printing' }).click()
+  await page.getByRole('dialog', { name: 'Skip printing?' }).getByRole('button', { name: 'Skip receipt' }).click()
   
   // Complete screen
   await expect(page.getByRole('heading', { name: 'Results printed.' })).toBeVisible()

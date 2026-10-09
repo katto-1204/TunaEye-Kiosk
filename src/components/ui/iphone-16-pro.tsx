@@ -16,7 +16,7 @@ export function Iphone16Pro({ width = 200, height = 400, src, children, ...props
       {src && <image href={src} x="14.08" y="12.81" width="171.98" height="374.37" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />}
       {!src && children && <foreignObject x="14.08" y="12.81" width="171.98" height="374.37" clipPath={`url(#${clipId})`}>{children}</foreignObject>}
       <path fill="#000" d="M119.61,33.86h-38.93c-10.48-.18-10.5-15.78,0-15.96,0,0,38.93,0,38.93,0,4.41,0,7.98,3.57,7.98,7.98,0,4.41-3.57,7.98-7.98,7.98Z" />
-      <path fill="#080d4c" d="M118.78,29.21c-4.32.06-4.32-6.73,0-6.66,4.32-.06,4.32,6.73,0,6.66Z" />
+      <path fill="#111" d="M118.78,29.21c-4.32.06-4.32-6.73,0-6.66,4.32-.06,4.32,6.73,0,6.66Z" />
       <defs><clipPath id={clipId}><rect x="14.08" y="12.81" width="171.98" height="374.37" rx="24.62" ry="24.62" /></clipPath></defs>
     </svg>
   )

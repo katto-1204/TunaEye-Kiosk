@@ -1,5 +1,11 @@
 # Lessons
 
+- A kiosk form should visually match the importance of its task: use a large touch field, readable label, and clear identity grouping instead of leaving small desktop controls floating in a large panel.
+
+- “Use this color for any blue” means do not preserve a legacy navy tier: use the supplied cobalt for blue surfaces and neutral charcoal for ordinary text that previously used blue-black.
+
+- When the user supplies a palette reference for the whole product, replace both shared tokens and direct component colors; updating only the main theme variables leaves obvious old blues behind.
+
 - Never clean Playwright artifact directories while a browser suite is still running; wait for the process to exit, then restore or remove generated files.
 
 - Input width calculations must include placeholder length; a two-character minimum clips the three-character `0.0` weight display.

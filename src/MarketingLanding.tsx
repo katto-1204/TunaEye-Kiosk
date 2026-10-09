@@ -18,6 +18,14 @@ const pages: { id: MarketingPage; label: string; children?: { id: MarketingPage;
   { id: 'faq', label: 'FAQ' },
 ]
 
+const mobileAppScreens = [
+  '/app-screens/0f28951a-c673-402e-95af-ec54cb2299b4.jpg',
+  '/app-screens/9c1a96f6-ddce-40d8-a350-48a485826270.jpg',
+  '/app-screens/486c94d0-543c-4243-bd0c-5f5f1293ad2d.jpg',
+  '/app-screens/b87bd4a0-8c8e-4e16-94da-84dc49b9986f.jpg',
+  '/app-screens/c5ba90a3-7dfd-46bb-b1fc-58213f53544c.jpg',
+]
+
 const changelog = [
   { version: 'v0.9.0', date: 'Oct 2026', items: ['Initial kiosk workflow with guided capture', 'Raspberry Pi edge inference integration', 'Dual-cloud sync (Supabase + Convex)', 'Admin dashboard with audit logging'] },
   { version: 'v0.8.0', date: 'Sep 2026', items: ['Multi-camera support with live preview', 'Thermal receipt printing (80mm)', 'Expert override with PIN protection'] },
@@ -149,7 +157,7 @@ function PictoInfer() {
       <rect x="8" y="8" width="20" height="20" rx="4" stroke="currentColor" strokeWidth="2"/>
       <path d="M8 14h20M8 22h20M14 8v20M22 8v20" stroke="currentColor" strokeWidth="1.3" opacity="0.3"/>
       <path d="M15 18l2 2 4-4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="28" cy="10" r="4" fill="#2769eb" opacity="0.9"/>
+      <circle cx="28" cy="10" r="4" fill="#176BFF" opacity="0.9"/>
       <path d="M27 10l.8.8L30 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   )
@@ -379,6 +387,13 @@ function Home({
 }) {
   const [showcase, setShowcase] = useState(0)
   const [selectedCut, setSelectedCut] = useState<'sashibo' | 'tail'>('sashibo')
+  const [mobileScreen, setMobileScreen] = useState(0)
+
+  useEffect(() => {
+    mobileAppScreens.forEach(src => { const image = new Image(); image.src = src })
+    const timer = window.setInterval(() => setMobileScreen(current => (current + 1) % mobileAppScreens.length), 2_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const showcaseItems = [
     {
@@ -457,13 +472,11 @@ function Home({
             {/* LEFT SIDE: Device Mockup + QR Code */}
             <div className="mobile-experience__left">
               <div className="device-mockup">
-                <Iphone16Pro className="iphone-16-pro" aria-label="TunaEye mobile grading preview">
-                  <div className="device-screen-content">
-                    <h3>TunaEye Grader</h3>
-                    <p>Ready to grade</p>
-                    <button className="btn--primary">Start Session</button>
-                  </div>
-                </Iphone16Pro>
+                <Iphone16Pro
+                  className="iphone-16-pro"
+                  src={mobileAppScreens[mobileScreen]}
+                  aria-label="TunaEye mobile app screen preview"
+                />
               </div>
 
               <div className="qr-section">

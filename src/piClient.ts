@@ -1,3 +1,4 @@
+import { gradeDemoImage, isDemoMode, loadDemoSampleBlob } from './demoMode'
 import type { DemoOutcome, Grade, SampleType } from './kioskState'
 
 const DEFAULT_API_URL = 'http://10.42.0.1:5000'
@@ -39,7 +40,8 @@ export async function checkPiHealth(apiUrl = getPiSettings().apiUrl) {
   return request(`${apiUrl}/status`, undefined, 3).then(response => response.json())
 }
 
-export async function capturePiImage(): Promise<Blob> {
+export async function capturePiImage(sample?: SampleType, sampleIndex = 0): Promise<Blob> {
+  if (isDemoMode() && sample) return loadDemoSampleBlob(sample, sampleIndex)
   const { snapshotUrl } = getPiSettings()
   const blob = await request(snapshotUrl, undefined, 2).then(response => response.blob())
   if (!blob.type.startsWith('image/') || blob.size === 0) throw new Error('The Raspberry Pi returned an invalid camera image.')
@@ -47,6 +49,7 @@ export async function capturePiImage(): Promise<Blob> {
 }
 
 export async function gradePiImage(blob: Blob, sample: SampleType): Promise<PiGradeResult> {
+  if (isDemoMode()) return gradeDemoImage(sample)
   const { apiUrl } = getPiSettings()
   const form = new FormData()
   form.append('image_type', sample === 'Tail cut' ? 'tailcut' : 'sashibocore')

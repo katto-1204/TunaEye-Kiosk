@@ -1,3 +1,69 @@
+# Landing Mobile App Screenshot Carousel — 2026-10-09
+
+- [x] Inspect the existing iPhone mockup and all five supplied app screenshots.
+- [x] Replace the placeholder phone content with the supplied images in the requested order.
+- [x] Rotate the phone image every two seconds and clean up the timer when the landing page unmounts.
+- [x] Verify image loading, rotation, desktop/mobile layout, and production build.
+
+### Review
+
+- All five supplied 908×2048 screenshots now fill the existing iPhone mockup in the requested order and advance every two seconds.
+- Images preload before their turn; the interval is removed when the Home page unmounts.
+- Playwright verified image loading and URL rotation, desktop two-column layout, 390 px mobile stacking, no failed requests, and no browser errors.
+- Visual captures confirm the screenshots remain clipped inside the rounded iPhone display and Dynamic Island.
+- Production build passed. Full Playwright regression passed: 28 tests; one live Supabase test skipped as designed.
+
+---
+
+# Expert Grader Identity UI — 2026-10-09
+
+- [x] Inspect the grader-name screen and effective responsive styles.
+- [x] Enlarge and visually prioritize the grader identity form without changing the flow.
+- [x] Verify entry, legal modals, and responsive tablet layouts in Playwright.
+- [x] Run the production build and record results.
+
+### Review
+
+- Rebuilt the identity area as a clear, elevated form card with a dedicated grader icon, supporting record copy, a 76 px name field, and a 26 px touch checkbox.
+- Verified 1024×600 and 800×1280 layouts, legal dialogs, name entry, and Start grading navigation with a focused Playwright test.
+- Visually inspected the 1024×600 capture: content and actions remain fully visible with no overlap or horizontal overflow.
+- Production build passed. Full Playwright regression passed with `VITE_DEMO_MODE=false`: 28 passed, one live Supabase test skipped as designed.
+
+---
+
+# Error Handling, Loading States, and Modals — 2026-10-09
+
+- [x] Audit async grading, storage, hardware, install, print, Admin, and cloud operations.
+- [x] Prevent failed printing from being recorded as successful and provide retry feedback.
+- [x] Keep capture/upload controls locked until evidence is stored and show explicit progress.
+- [x] Add install prompt failure/cancellation handling and visible progress.
+- [x] Surface Admin cloud loading/fallback state and stored-evidence loading/errors.
+- [x] Add confirmations for skipping receipts and removing graders; prevent modal stacking.
+- [ ] Verify focused error/loading/modal flows, full Playwright regression, and production build.
+
+### Review
+
+- Implementation complete; browser verification in progress.
+
+---
+
+# Electric Blue Palette Overhaul — 2026-10-09
+
+- [x] Inventory every shared blue token and direct blue used by marketing, kiosk, Admin, charts, device previews, and the weight dial.
+- [x] Replace the current mixed cyan/navy palette with the supplied electric-blue-to-deep-cobalt system.
+- [x] Verify contrast, selected states, dialogs, charts, and responsive layouts in the browser.
+- [x] Run the full Playwright suite and production build.
+
+### Review
+
+- Replaced shared theme variables and direct legacy royal/cyan/navy values with the supplied reference family: electric `#176BFF`, saturated `#0B45E5`, deep `#061EAE`, plus accessible pale tints for light surfaces.
+- Applied the system across public marketing, kiosk screens, Admin, charts, SVG/logo accents, device previews, and the thermal weight dial.
+- Visually inspected the landing footer, Admin overview/chart, and responsive tablet captures; the footer now closely matches the supplied bright-to-deep blue reference.
+- Legacy primary-color scan returned no old royal/cyan matches.
+- Full Playwright suite passed: 23 tests; one live Supabase test skipped as designed. Production build passed with the existing large-chunk warning.
+
+---
+
 # Landing brand voice + visual README — 2026-10-09
 
 - [x] Rewrite README around Sea Beyond the Cut, expert-extend positioning, and operator essentials.
@@ -17,15 +83,19 @@
 
 ## Interrupted Refresh Recovery + Full UI Audit — 2026-10-09
 
-- [ ] Detect a true browser/software reload on an unfinished grading route.
-- [ ] Reset only the unfinished in-memory session, replace the URL with the role selector, and preserve completed local records/evidence.
-- [ ] Show an immediate accessible notice explaining that the unfinished session was not saved.
-- [ ] Verify normal first navigation, completed screens, Admin routes, and browser history are not incorrectly redirected.
-- [ ] Re-run every kiosk UI/UX viewport check, modal bound check, workflow regression, and production build.
+- [x] Detect a true browser/software reload on an unfinished grading route.
+- [x] Reset only the unfinished in-memory session, replace the URL with the role selector, and preserve completed local records/evidence.
+- [x] Show an immediate accessible notice explaining that the unfinished session was not saved.
+- [x] Verify normal first navigation, completed screens, Admin routes, and browser history are not incorrectly redirected.
+- [x] Re-run every kiosk UI/UX viewport check, modal bound check, workflow regression, and production build.
 
 ### Review
 
-- Pending implementation and verification.
+- Reload recovery now skips the splash, clears only transient grading state, replaces the URL with `/select-role`, and warns only when the previous route represented unfinished work.
+- Completed local records remain intact; completed and role-selection refreshes return to role selection without a false warning.
+- Critical sample, association, tutorial, weight, camera, review, and print panels stay above their action bars at 1024×600 and 800×1280 with no horizontal overflow.
+- The public video dialog was moved to the document root and its close control anchored inside the panel, eliminating overlap with the floating changelog trigger and hero layers.
+- Playwright coverage passed across the 22-test full regression run plus corrected focused recovery/overlap/landing reruns; one live Supabase test remained skipped as designed. Production build passed.
 
 ## Master Kiosk UI/UX QA + Branding Overhaul — 2026-10-09
 
@@ -285,3 +355,20 @@
 - [x] Add a real toggleable admin sidebar with an icon-only collapsed state.
 - [x] Apply QA tablet sizing to role selection, print queue, placement number, association cards, and admin header.
 - [ ] Complete live browser screenshots at 1024x600, 1280x800, and 1366x768 after the OneDrive node_modules EPERM lock is cleared.
+# Role Selector Card Redesign — 2026-10-09
+
+- [x] Audit the selector structure, duplicate responsive rules, touch sizing, and current icons.
+- [x] Replace generic shield/spark artwork with control-console and inspection-eye role icons.
+- [x] Redesign both cards with clearer hierarchy, destination cues, focus, hover, active, and reduced-motion states.
+- [x] Verify Admin/Grader routing and card layout at landscape, portrait, and mobile viewports.
+- [x] Run the full browser suite and production build.
+
+### Review
+
+- Admin now uses a control-console/sliders icon and the Expert Grader uses an inspection-eye/crosshair icon.
+- Cards have clearer role labels, descriptive copy, destination actions, keyboard focus, hover/touch feedback, and reduced-motion handling.
+- The Admin card remains a clean white management surface; Expert Grader uses the electric-blue/cobalt brand treatment without the removed navy.
+- Focused role/routing/responsive verification passed 7/7, and the 1024×600 render was visually inspected with no overlap.
+- Full Playwright suite passed 27 tests with one live Supabase test skipped as designed. Production build passed.
+
+---
