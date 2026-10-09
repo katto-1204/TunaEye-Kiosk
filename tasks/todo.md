@@ -1,3 +1,38 @@
+# 1000x650 responsive UI, pricing, and idempotent sync — 2026-10-10
+
+- [x] Audit the selector, review, loading, receipt, grader dashboard, admin tables, and record modal at 1000x650.
+- [x] Remove oversized card/panel whitespace and fix missing-image table overlap.
+- [x] Shorten and resize the artificial boot loader without changing inference loading.
+- [x] Make the receipt responsive and show grade-based fish value.
+- [x] Keep record sync idempotent and label grader sync progress/results by name.
+- [x] Add pricing fields and a price schedule table through an additive Supabase migration.
+- [x] Apply migration `202610100001_grading_prices.sql` to the live project.
+- [ ] Run final full regression and normal/Pi production builds.
+
+### Review
+
+- Exact 1000x650 Playwright checks pass for the workflow surfaces, seeded grader records, and record review modal.
+- Mocked Supabase test passes for timestamp normalization, pricing provenance, retry preservation, and idempotent upsert.
+- Live database migration completed successfully; existing rows remain valid with nullable historical price fields.
+
+---
+
+# Supabase retry verification fix — 2026-10-10
+
+- [x] Reproduce the all-record sync retry failure.
+- [x] Compare PostgreSQL timestamps semantically during cloud verification.
+- [x] Show the first actionable record error in the sync result modal.
+- [x] Add focused regression coverage for normalized Supabase timestamps.
+- [x] Run the sync Playwright flow and production build.
+
+### Review
+
+- PostgREST-style `+00:00` timestamps now verify as the same instant as `Z` timestamps.
+- Object-shaped Supabase errors now remain visible instead of becoming `Unknown synchronization error`.
+- Focused sync Playwright and production build passed.
+
+---
+
 # Weight, grader shortcut, selector scale, and sync diagnosis — 2026-10-09
 
 - [x] Enforce a 15 kg minimum and 200 kg maximum with clear errors.
@@ -7,13 +42,15 @@
 - [x] Add restrained screen/card/button microtransitions with reduced-motion support.
 - [x] Verify live Supabase anonymous Auth is enabled.
 - [x] Replace the stale generic Vite-variable sync error with rebuild/redeploy guidance.
-- [ ] Run final normal/Pi builds and full Playwright regression.
+- [x] Run final normal/Pi builds and full Playwright regression.
 
 ### Review
 
 - Focused Playwright passed: 3 tests covering range validation, alignment, and grader shortcut.
 - Live Auth settings now report anonymous users enabled and signups allowed.
 - Existing kiosk/PWA records still require a new Vercel deployment before the newly added Vite variables exist in the compiled bundle.
+- Full Playwright regression passed: 31 tests; three environment-gated integration tests skipped and were verified separately.
+- Normal and Pi TypeScript/Vite builds passed. Existing bundle-size warning remains.
 
 ---
 

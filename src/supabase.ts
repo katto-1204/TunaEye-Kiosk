@@ -18,6 +18,7 @@ export type Database = {
           capture_id: string | null; inference_id: string | null; raw_confidence: number | null; scores: Record<string, number> | null
           image_type: 'sashibocore' | 'tailcut' | null; model_source: 'raspberry-pi' | 'demo' | null
           override_actor: string | null; override_at: string | null
+          currency_code: string | null; grade_unit_rate_per_kg: number | null; total_fish_price: number | null
           image_path: string | null; gradcam_path: string | null; captured_at: string; created_at: string; updated_at: string
         }
         Insert: {
@@ -28,9 +29,16 @@ export type Database = {
           capture_id?: string | null; inference_id?: string | null; raw_confidence?: number | null; scores?: Record<string, number> | null
           image_type?: 'sashibocore' | 'tailcut' | null; model_source?: 'raspberry-pi' | 'demo' | null
           override_actor?: string | null; override_at?: string | null
+          currency_code?: string | null; grade_unit_rate_per_kg?: number | null; total_fish_price?: number | null
           image_path?: string | null; gradcam_path?: string | null; captured_at: string; updated_at?: string
         }
         Update: Partial<Database['public']['Tables']['grading_records']['Insert']>
+        Relationships: []
+      }
+      price_schedules: {
+        Row: { user_id: string; station_id: string; grade: 'A' | 'B' | 'C'; currency_code: string; price_per_kg: number; updated_at: string }
+        Insert: { user_id: string; station_id: string; grade: 'A' | 'B' | 'C'; currency_code?: string; price_per_kg: number; updated_at?: string }
+        Update: Partial<Database['public']['Tables']['price_schedules']['Insert']>
         Relationships: []
       }
     }

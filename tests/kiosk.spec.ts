@@ -335,6 +335,29 @@ test('tablet viewport renders expert grader dashboard in bento layout', async ({
   await expect(helloCard).toBeVisible()
 })
 
+test('1000x650 grader records and review modal do not overlap', async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 650 })
+  await page.addInitScript(() => {
+    localStorage.setItem('tunaeye-installed', 'true')
+    localStorage.setItem('tunaeye-grader-name', 'Owen Pilongo')
+    localStorage.setItem('tunaeye-records', JSON.stringify(Array.from({ length: 3 }, (_, index) => ({
+      id: `record-with-a-long-identifier-${index + 1}`, sessionId: `session-${index}`, timestamp: Date.now() - index * 60000, time: '12:13 AM', grader: 'Owen Pilongo', sample: 'Sashibo core', fish: 'Fish 1', weight: '96 kg', grade: 'A', status: index ? 'Complete' : 'Override', capturedImageId: `missing-${index}`, result: { status: 'valid', originalGrade: 'A', originalConfidence: 96.3, overrideGrade: null, overrideReason: '' }, transaction: { currency: 'PHP', unitRatePerKg: 420, amount: 40320, syncState: 'synced' },
+    }))))
+  })
+  await page.goto('/kiosk/grader-dashboard')
+  const rows = page.locator('.grader-record-item')
+  await expect(rows).toHaveCount(3)
+  for (const row of await rows.all()) expect((await row.boundingBox())!.height).toBeLessThanOrEqual(64)
+  await page.screenshot({ path: 'test-results/grader-dashboard-1000x650.png', fullPage: false })
+  await rows.first().click()
+  const modal = page.locator('.record-review')
+  await expect(modal).toBeVisible()
+  await expect(modal.getByText('₱40,320.00')).toBeVisible()
+  expect(await modal.evaluate(element => element.scrollHeight <= element.clientHeight)).toBe(true)
+  await expect(modal.getByRole('button', { name: 'Close record' })).toBeInViewport()
+  await page.screenshot({ path: 'test-results/record-modal-1000x650.png', fullPage: false })
+})
+
 test('camera help triggers custom notice modal instead of alert', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
   await page.goto('/kiosk/camera')
@@ -630,10 +653,12 @@ test('completed grading session remains local and pending until cloud sync', asy
   expect(savedRecords[0].transaction.syncState).toBe('pending')
   expect(JSON.stringify(savedRecords)).not.toContain('data:image')
 
+  await page.context().setOffline(true)
   await page.getByRole('button', { name: 'Sync now' }).click()
   await expect(page.getByRole('heading', { name: 'Sync unavailable' })).toBeVisible()
   const afterFailedSync = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]'))
   expect(afterFailedSync[0].transaction.syncState).toBe('pending')
+  await page.context().setOffline(false)
 })
 
 test('58mm thermal printer receipt preview and print layout', async ({ page }) => {
@@ -713,6 +738,7 @@ test('completion actions and grader logout return to the kiosk landing', async (
 })
 
 for (const viewport of [
+  { width: 1000, height: 650 },
   { width: 1024, height: 600 },
   { width: 1280, height: 800 },
   { width: 1024, height: 768 },

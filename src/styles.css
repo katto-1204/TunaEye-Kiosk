@@ -1644,3 +1644,39 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 .screen-stack--sample-selector .section-heading h1{font-size:clamp(46px,5.4vw,70px)!important}
 .weight-input-display{justify-content:flex-start!important}
 .weight-input-display input{text-align:left!important;margin:0!important}
+
+/* Compact kiosk target: 1000 × 650. */
+.stored-evidence--missing{display:grid;place-items:center;background:#eef3f8;color:var(--muted);text-align:center}
+.record-sample-cell .stored-evidence--missing{grid-row:1/span 2;width:42px;height:34px;min-height:0;padding:3px;border-radius:7px;font-size:8px;line-height:1.05}
+@media (min-width:681px) and (max-width:1100px) and (max-height:700px) and (orientation:landscape){
+  .app-main:not(.app-main--welcome):not(.app-main--complete):not(.app-main--admin-dashboard){padding:8px 14px!important}
+  .app-main:not(.app-main--welcome):not(.app-main--complete):not(.app-main--admin-dashboard) .screen-stack{width:min(100%,1000px)!important;padding:6px 0!important;gap:8px!important}
+  .screen-stack--sample-selector{grid-template-rows:auto auto minmax(0,1fr)!important}.screen-stack--sample-selector>.bottom-bar{align-self:end!important}
+  .screen-stack--sample-selector .section-heading h1{font-size:40px!important;margin:4px 0 10px!important}
+  .screen-stack--sample-selector .sample-options{height:auto!important;align-self:start!important;gap:14px!important}
+  .screen-stack--sample-selector .selector-card{height:176px!important;min-height:176px!important;display:grid!important;grid-template-columns:180px minmax(0,1fr) 34px!important;align-items:center!important;align-content:center!important;padding:12px!important;border-radius:22px!important}
+  .screen-stack--sample-selector .selector-card.is-selected{padding:10px!important}
+  .screen-stack--sample-selector .selector-card__art{height:130px!important;border-radius:16px!important}
+  .screen-stack--sample-selector .selector-card strong{font-size:25px!important}
+  .review-layout{grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr)!important;align-items:center!important;gap:20px!important}
+  .review-layout .evidence-frame{height:min(68vh,430px)!important}
+  .review-aside{height:auto!important;min-height:0!important;align-self:center!important;padding:20px!important;border-radius:22px!important}
+  .review-aside h1{font-size:34px!important;margin:10px 0!important}.review-actions{margin-top:14px!important}
+  .analysis-screen--split{width:calc(100% - 36px)!important;max-width:1000px!important;height:100%!important;margin:auto!important;padding:14px 0!important;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr)!important;gap:26px!important;text-align:left!important}
+  .analysis-screen--split .analysis-screen__visual{height:min(60vh,380px)!important;min-height:0!important}
+  .analysis-screen__info{gap:12px!important}.analysis-screen__info h1{font-size:34px!important;margin:2px 0!important}.analysis-screen__info>p{display:none}.analysis-screen__info .step-rail{margin-top:4px!important}.analysis-status{margin-top:4px!important;padding:14px!important}
+  .capture-toast{right:18px!important;bottom:18px!important;min-width:0!important;padding:10px 14px!important;border-radius:16px!important}.capture-toast__ring{width:38px!important;height:38px!important}.capture-toast strong{font-size:14px}.capture-toast small{font-size:11px}
+  .screen-stack--print .print-layout{grid-template-columns:minmax(0,1fr) 300px!important;gap:28px!important;padding:0!important;align-items:start!important}
+  .screen-stack--print .print-copy h1{font-size:34px!important;margin:4px 0 12px!important}.print-queue{margin-top:8px!important}
+  .screen-stack--print .receipt-container-v2{width:300px!important;height:390px!important;max-width:300px!important;overflow:auto!important}
+  .screen-stack--print .receipt-container-v2>[role="region"]{width:100%!important;max-width:300px!important;transform:none!important;margin:0!important}
+  .grader-dashboard{width:calc(100% - 24px)!important;max-width:1000px!important}
+  .grader-bento.grader-bento-v2{grid-template-columns:300px minmax(0,1fr)!important;gap:12px!important}
+  .grader-bento__hello-card{padding:16px!important;gap:12px!important}.grader-hello__header h1{font-size:30px!important}.grader-info-card{min-height:76px!important;padding:9px!important}
+  .grader-bento-v2__right .admin-table-card{padding:12px!important;overflow:hidden!important}.grader-bento-v2__right .admin-table{min-width:0!important}.admin-table-card--compact .admin-table>div{grid-template-columns:minmax(135px,1.05fr) minmax(180px,1.45fr) 58px 38px minmax(80px,.7fr)!important;gap:7px!important;min-height:48px!important}.admin-table-card--compact .record-sample-cell{min-width:0!important}
+  .app-main--admin-dashboard .admin-workspace{grid-template-columns:72px minmax(0,1fr)!important}.app-main--admin-dashboard .admin-content{padding:10px 14px 28px!important}.app-main--admin-dashboard .admin-sidebar{width:72px!important;padding-inline:9px!important}.app-main--admin-dashboard .admin-workspace:not(.admin-workspace--collapsed) .admin-sidebar .brand-word{display:none!important}.app-main--admin-dashboard .admin-workspace:not(.admin-workspace--collapsed) .admin-sidebar nav span,.app-main--admin-dashboard .admin-workspace:not(.admin-workspace--collapsed) .admin-sidebar__foot>span,.app-main--admin-dashboard .admin-workspace:not(.admin-workspace--collapsed) .admin-sidebar__foot button span{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.app-main--admin-dashboard .admin-sidebar nav button,.app-main--admin-dashboard .admin-sidebar__foot button{justify-content:center!important;padding-inline:0!important}
+  .admin-content__header{margin-bottom:8px!important;padding-bottom:8px!important}.admin-content__header h1{font-size:30px!important;line-height:1.2!important}.admin-header-actions{gap:7px!important}.admin-header-actions .btn{min-height:44px!important;padding-inline:13px!important}
+  .admin-table-card{padding:12px!important}.admin-table{min-width:0!important}.admin-table>div{grid-template-columns:minmax(130px,1.2fr) minmax(90px,.8fr) minmax(150px,1.2fr) 58px 40px minmax(78px,.7fr)!important;gap:7px!important;min-height:48px!important}
+  .record-review{width:min(900px,96vw)!important;max-height:calc(100dvh - 24px)!important;padding:16px!important}.record-review header{margin-bottom:9px!important}.record-review h2{font-size:23px!important;overflow-wrap:anywhere}.record-review__image,.record-review__missing{height:170px!important;min-height:170px!important}.record-review__grade{margin:8px 0!important;padding:9px 12px!important}.record-review dl div{padding:7px!important}
+  .screen-stack--role-v2 .role-actions--v2{height:auto!important;max-height:350px!important;align-self:start!important}.screen-stack--role-v2 .role-card-v2{height:300px!important;min-height:0!important}
+}

@@ -3,12 +3,13 @@ import { currentSample, fishIdForSample, initialSession, reducer, sampleOrder, w
 import ProductLanding, { type MarketingPage } from './MarketingLanding'
 import { PaymentReceiptPrinter } from './components/ui/payment-receipt-printer'
 import { getCapturedEvidence, saveCapturedEvidence } from './evidenceStorage'
-import { fetchCloudRecords, syncPendingRecords } from './cloudSync'
+import { fetchCloudRecords, syncPendingRecords, syncPriceSchedule } from './cloudSync'
 import { getSupabase, isSupabaseConfigured } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
 import { getDemoPreviewUrl, initDemoMode, isDemoMode, parseDemoGradeFromFilename, setDemoGradeHint } from './demoMode'
 import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage, PI_CONNECTION_GUIDANCE, PiIntegrationError } from './piClient'
 import { createId } from './id'
+import { loadPriceSchedule, peso, priceSnapshot } from './pricing'
 
 const ADMIN_PIN = '1234'
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
@@ -80,8 +81,8 @@ function StoredEvidenceImage({ evidenceId, legacySource, className, alt }: { evi
     }).catch(() => setStatus('unavailable'))
     return () => { if (objectUrl) URL.revokeObjectURL(objectUrl) }
   }, [evidenceId, legacySource])
-  if (status === 'loading') return <div className="record-review__missing" role="status">Loading captured image…</div>
-  return source ? <img className={className} src={source} alt={alt} /> : <div className="record-review__missing" role="alert">Captured image unavailable.</div>
+  if (status === 'loading') return <div className={`${className ?? ''} stored-evidence--missing`} role="status">Loading image…</div>
+  return source ? <img className={className} src={source} alt={alt} /> : <div className={`${className ?? ''} stored-evidence--missing`} role="status">Image unavailable</div>
 }
 function TutorialModal({ onClose, title = 'Guided tutorial' }: { onClose: () => void; title?: string }) { return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={title}><div className="modal-card"><div className="modal-card__header"><div><span className="eyebrow">{title}</span><h2>Three quick checks before capture</h2></div><button className="icon-button" aria-label="Close tutorial" onClick={onClose}>×</button></div><div className="tutorial-list"><div><span>01</span><div><strong>Pull the tray out</strong><p>Use the chamber handle and keep the sample surface clean.</p></div></div><div><span>02</span><div><strong>Place the tuna flat</strong><p>Keep the selected sample centered in the blue guide.</p></div></div><div><span>03</span><div><strong>Check the view</strong><p>When the image is clear, press Capture once.</p></div></div></div><Button onClick={onClose} icon="check">Got it</Button></div></div> }
 function LegalModal({ kind, onClose }: { kind: 'terms' | 'privacy'; onClose: () => void }) { const privacy = kind === 'privacy'; return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={privacy ? 'Privacy policy' : 'Terms and conditions'}><div className="modal-card legal-modal"><div className="modal-card__header"><div><span className="eyebrow">TunaEye</span><h2>{privacy ? 'Privacy policy' : 'Terms and conditions'}</h2></div><button className="icon-button" aria-label="Close" onClick={onClose}>×</button></div><div className="legal-modal__body"><p>{privacy ? 'TunaEye stores grading evidence, grader identity, device events, and audit records for operational traceability. Authorized administrators control retention and cloud synchronization through the configured services.' : 'TunaEye supports trained tuna graders and does not replace required regulatory, safety, or purchasing review. Operators remain responsible for confirming the sample, fish association, and final decision.'}</p></div><div className="legal-modal__actions"><Button onClick={onClose}>Close</Button></div></div></div> }
@@ -138,7 +139,7 @@ function LoadingScreen() {
   useEffect(() => {
     const timer = setInterval(() => {
       setPercent(c => (c >= 100 ? 100 : c + 1))
-    }, 22)
+    }, 7)
     return () => clearInterval(timer)
   }, [])
   return (
@@ -210,7 +211,8 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
   type Section = 'Overview' | 'Records' | 'Price schedule' | 'Expert graders' | 'Devices' | 'Audit logs' | 'Settings'
   const [section, setSection] = useState<Section>('Overview')
   const [query, setQuery] = useState('')
-  const [prices, setPrices] = useState<Record<Grade, string>>(() => JSON.parse(localStorage.getItem('tunaeye-prices') ?? '{"A":"420","B":"350","C":"280"}'))
+  const [prices, setPrices] = useState<Record<Grade, string>>(() => Object.fromEntries(Object.entries(loadPriceSchedule()).map(([grade, value]) => [grade, String(value)])) as Record<Grade, string>)
+  const [savingPrices, setSavingPrices] = useState(false)
   const [graders, setGraders] = useState(() => JSON.parse(localStorage.getItem('tunaeye-graders') ?? JSON.stringify(existingGraders)) as string[])
   const [newGrader, setNewGrader] = useState('')
   const [diagnostic, setDiagnostic] = useState('Ready to run')
@@ -247,13 +249,18 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
   const visibleRecords = records.filter(record => JSON.stringify(record).toLowerCase().includes(query.trim().toLowerCase()))
   const weeklyData = useMemo(() => Array.from({ length: 7 }, (_, index) => { const day = new Date(); day.setHours(0,0,0,0); day.setDate(day.getDate() - (6 - index)); const end = day.getTime() + 86_400_000; return { label: day.toLocaleDateString([], { weekday: 'short' }), value: records.filter(record => record.timestamp >= day.getTime() && record.timestamp < end).length } }), [records])
   const nav: { label: Section; icon: IconName }[] = [{ label: 'Overview', icon: 'home' }, { label: 'Records', icon: 'database' }, { label: 'Price schedule', icon: 'scale' }, { label: 'Expert graders', icon: 'users' }, { label: 'Devices', icon: 'camera' }, { label: 'Audit logs', icon: 'shield' }, { label: 'Settings', icon: 'settings' }]
-  const savePrices = () => {
-    localStorage.setItem('tunaeye-prices', JSON.stringify(prices))
-    if (onNotice) {
-      onNotice({ title: 'Price Schedule Saved', message: 'The approved tuna buying prices per kilogram have been updated and saved locally.', icon: 'scale' })
-    } else {
-      window.alert('Price schedule saved.')
-    }
+  const savePrices = async () => {
+    if (savingPrices) return
+    const numeric = Object.fromEntries((['A', 'B', 'C'] as Grade[]).map(item => [item, Number(prices[item])])) as Record<Grade, number>
+    if (Object.values(numeric).some(value => !Number.isFinite(value) || value < 0)) { onNotice?.({ title: 'Check price schedule', message: 'Enter a valid non-negative price for every grade.', icon: 'help' }); return }
+    localStorage.setItem('tunaeye-prices', JSON.stringify(numeric))
+    setSavingPrices(true)
+    try {
+      await syncPriceSchedule(numeric)
+      onNotice?.({ title: 'Price schedule synced', message: 'Grade A, B, and C prices are saved on this device and in Supabase.', icon: 'scale' })
+    } catch (error) {
+      onNotice?.({ title: 'Saved on this device', message: error instanceof Error ? error.message : 'Cloud price synchronization failed.', icon: 'help' })
+    } finally { setSavingPrices(false) }
   }
   const saveGraders = (next: string[]) => { setGraders(next); localStorage.setItem('tunaeye-graders', JSON.stringify(next)) }
   const syncRecords = async () => {
@@ -266,7 +273,7 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
       setLastSync(syncedAt)
       localStorage.setItem('tunaeye-last-sync', syncedAt)
       audit('Admin', 'Manual sync', `${summary.synced} records synchronized; ${summary.failed} failed`)
-      onNotice?.({ title: summary.failed ? 'Sync completed with errors' : 'Sync complete', message: `${summary.synced} records synchronized. ${summary.failed} remain available for retry.`, icon: 'refresh' })
+      onNotice?.({ title: summary.failed ? 'Sync completed with errors' : 'Sync complete', message: `${summary.synced} records synchronized. ${summary.failed} remain available for retry.${summary.firstError ? ` ${summary.firstError}` : ''}`, icon: 'refresh' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Synchronization failed.'
       audit('Admin', 'Manual sync failed', message)
@@ -279,7 +286,7 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
   return <div className={`admin-workspace ${sidebarCollapsed ? 'admin-workspace--collapsed' : ''}`}><aside className="admin-sidebar"><button className="admin-sidebar__brand-link" onClick={() => { window.location.href = '/' }} aria-label="Go to TunaEye home"><BrandMark compact /></button><button className="admin-sidebar__toggle" onClick={() => setSidebarCollapsed(value => !value)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}><Icon name={sidebarCollapsed ? 'arrow' : 'back'} size={20} /></button><nav>{nav.map(item => <button key={item.label} className={section === item.label ? 'is-active' : ''} onClick={() => setSection(item.label)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav><div className="admin-sidebar__foot"><span><i className="status-dot" />{navigator.onLine ? 'System online' : 'Offline'}</span><button onClick={() => { audit('Admin', 'Logout', 'Administrator ended the session'); onExit() }}><Icon name="back" size={18} /><span>Logout</span></button></div></aside><section className="admin-content"><header className="admin-content__header"><div><span className="eyebrow">{stationName} · Admin console</span><h1>{heading}</h1><p role="status">{section === 'Overview' ? `${cloudStatus} · Last sync: ${lastSync}` : `Manage ${section.toLowerCase()} for this station.`}</p></div><div className="admin-header-actions"><Button variant="secondary" onClick={() => void syncRecords()} icon="refresh" loading={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button><Button onClick={onStartGrading} icon="camera">Start grading</Button><div className="admin-avatar">AD</div></div></header>
     {section === 'Overview' && <><div className="admin-metrics"><article><span><Icon name="database" size={22} /></span><small>Sessions recorded</small><strong>{sessionCount}</strong><em>Synced on this station</em></article><article><span><Icon name="scale" size={22} /></span><small>Total fish weight</small><strong>{totalWeight.toFixed(1)} kg</strong><em>Across {records.length} samples</em></article><article><span><Icon name="spark" size={22} /></span><small>Grade A rate</small><strong>{gradeARate}%</strong><em>{records.filter(record => record.grade === 'A').length} Grade A samples</em></article><article><span><Icon name="users" size={22} /></span><small>Active graders</small><strong>{graders.length}</strong><em>All profiles available</em></article></div><div className="admin-overview-grid"><article className="admin-chart"><div className="admin-section-title"><div><h2>Weekly grading volume</h2><p>Completed samples during the last seven days</p></div><b>{records.length} total</b></div><AdminTrendGraph data={weeklyData}/></article><article className="admin-breakdown"><h2>Grade breakdown</h2><div className="grade-ring"><strong>{records.length}<small>samples</small></strong></div><div className="grade-legend"><span><i className="grade-a" />Grade A <b>{gradeARate}%</b></span><span><i className="grade-b" />Grade B <b>{records.length ? Math.round(records.filter(record => record.grade === 'B').length / records.length * 100) : 0}%</b></span><span><i className="grade-c" />Grade C <b>{records.length ? Math.round(records.filter(record => record.grade === 'C').length / records.length * 100) : 0}%</b></span></div></article></div><AdminRecords records={records.slice(0, 3)} compact onViewAll={() => setSection('Records')} /></>}
     {section === 'Records' && <><div className="admin-toolbar"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search record, grader, sample, or grade…" /><Button variant="secondary" icon="printer" onClick={() => window.print()}>Export records</Button></div><AdminRecords records={visibleRecords} /></>}
-    {section === 'Price schedule' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Approved buying prices</h2><p>Set the current rate per kilogram for each tuna grade.</p></div><span className="status-label status-label--valid">Active schedule</span></div><div className="price-editor">{(['A','B','C'] as Grade[]).map(grade => <label key={grade}><span>Grade {grade}<small>{grade === 'A' ? 'Premium quality' : grade === 'B' ? 'Standard quality' : 'Processing quality'}</small></span><div><b>₱</b><input inputMode="decimal" value={prices[grade]} onChange={event => setPrices({ ...prices, [grade]: event.target.value.replace(/[^0-9.]/g, '') })} /><small>per kg</small></div></label>)}</div><div className="admin-card-actions"><span>Last updated today · Values are stored on this device.</span><Button onClick={savePrices} icon="check">Save price schedule</Button></div></div>}
+    {section === 'Price schedule' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Approved buying prices</h2><p>Set the current rate per kilogram for each tuna grade.</p></div><span className="status-label status-label--valid">Active schedule</span></div><div className="price-editor">{(['A','B','C'] as Grade[]).map(grade => <label key={grade}><span>Grade {grade}<small>{grade === 'A' ? 'Premium quality' : grade === 'B' ? 'Standard quality' : 'Processing quality'}</small></span><div><b>₱</b><input inputMode="decimal" value={prices[grade]} onChange={event => setPrices({ ...prices, [grade]: event.target.value.replace(/[^0-9.]/g, '') })} /><small>per kg</small></div></label>)}</div><div className="admin-card-actions"><span>Saved locally first, then synchronized to Supabase.</span><Button onClick={() => void savePrices()} icon="check" loading={savingPrices}>{savingPrices ? 'Syncing prices…' : 'Save price schedule'}</Button></div></div>}
     {section === 'Expert graders' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Grader profiles</h2><p>Control who can start expert grading sessions.</p></div><b>{graders.length} active</b></div><div className="grader-admin-list">{graders.map((name,index) => <div key={name}><span className="admin-avatar">{name.split(' ').map(part => part[0]).slice(0,2).join('')}</span><span><strong>{name}</strong><small>{index === 0 ? 'Last active 8 minutes ago' : 'Available at this station'}</small></span><span className="status-label status-label--valid">Active</span><button aria-label={`Remove ${name}`} onClick={() => onNotice?.({ title: 'Remove grader?', message: `${name} will no longer be available for new grading sessions on this station.`, icon: 'users', cancelLabel: 'Keep grader', actionLabel: 'Remove', onAction: () => saveGraders(graders.filter(item => item !== name)) })}>Remove</button></div>)}</div><div className="admin-add-grader"><input value={newGrader} onChange={event => setNewGrader(event.target.value)} placeholder="Enter full name" /><Button icon="users" disabled={!newGrader.trim()} onClick={() => { const name = newGrader.trim(); if (name && !graders.includes(name)) saveGraders([...graders, name]); setNewGrader('') }}>Add grader</Button></div></div>}
     {section === 'Devices' && <AdminDevices rpiUrl={connections.rpiUrl} modelName={connections.modelName} audit={audit} onNotice={onNotice} />}
     {section === 'Audit logs' && <div className="admin-page-card"><div className="admin-section-title"><div><h2>Audit logs</h2><p>Navigation, grading, overrides, connections, sync, and administrator activity.</p></div><b>{auditEntries.length} events</b></div><div className="audit-list">{auditEntries.length ? auditEntries.slice(0, 12).map(entry => <article key={entry.id}><span><Icon name="shield" size={18} /></span><div><strong>{entry.action}</strong><small>{entry.actor} · {entry.detail}</small></div><time>{new Date(entry.timestamp).toLocaleString()}</time></article>) : <p>No audit events recorded yet.</p>}</div></div>}
@@ -334,7 +341,7 @@ function AdminRecords({ records, compact = false, onViewAll }: { records: Gradin
           </div>
         </div>
       )}
-      {selectedRecord && <div className="record-review-backdrop" role="dialog" aria-modal="true" aria-label={`Record ${selectedRecord.id}`} onClick={() => setSelectedRecord(null)}><article className="record-review" onClick={event => event.stopPropagation()}><header><div><span className="eyebrow">Captured tuna record</span><h2>{selectedRecord.id}</h2><p>{selectedRecord.time} · {selectedRecord.grader}</p></div><button className="icon-button" onClick={() => setSelectedRecord(null)} aria-label="Close record">×</button></header>{selectedRecord.capturedImageId || selectedRecord.capturedImage ? <StoredEvidenceImage className="record-review__image" evidenceId={selectedRecord.capturedImageId} legacySource={selectedRecord.capturedImage} alt={`Captured ${selectedRecord.sample}`} /> : <div className="record-review__missing">Captured image unavailable for this older record.</div>}<div className="record-review__grade"><span>Final result</span><strong>Grade {selectedRecord.grade}</strong><small>{selectedRecord.result?.originalConfidence ?? '—'}% original confidence</small></div><dl><div><dt>Sample</dt><dd>{selectedRecord.sample}</dd></div><div><dt>Fish association</dt><dd>{selectedRecord.fish}</dd></div><div><dt>Weight</dt><dd>{selectedRecord.weight}</dd></div><div><dt>Model result</dt><dd>{selectedRecord.result?.originalGrade ? `Grade ${selectedRecord.result.originalGrade}` : selectedRecord.result?.status ?? selectedRecord.status}</dd></div><div><dt>Expert decision</dt><dd>{selectedRecord.result?.overrideGrade ? `Grade ${selectedRecord.result.overrideGrade}` : 'No override'}</dd></div><div><dt>Sync status</dt><dd>{selectedRecord.transaction?.syncState ?? 'Pending'}</dd></div></dl>{selectedRecord.result?.overrideReason && <p className="record-review__reason"><strong>Override reason:</strong> {selectedRecord.result.overrideReason}</p>}</article></div>}
+      {selectedRecord && <div className="record-review-backdrop" role="dialog" aria-modal="true" aria-label={`Record ${selectedRecord.id}`} onClick={() => setSelectedRecord(null)}><article className="record-review" onClick={event => event.stopPropagation()}><header><div><span className="eyebrow">Captured tuna record</span><h2>{selectedRecord.id}</h2><p>{selectedRecord.time} · {selectedRecord.grader}</p></div><button className="icon-button" onClick={() => setSelectedRecord(null)} aria-label="Close record">×</button></header>{selectedRecord.capturedImageId || selectedRecord.capturedImage ? <StoredEvidenceImage className="record-review__image" evidenceId={selectedRecord.capturedImageId} legacySource={selectedRecord.capturedImage} alt={`Captured ${selectedRecord.sample}`} /> : <div className="record-review__missing">Captured image unavailable for this older record.</div>}<div className="record-review__grade"><span>Final result</span><strong>Grade {selectedRecord.grade}</strong><small>{selectedRecord.result?.originalConfidence ?? '—'}% original confidence</small></div><dl><div><dt>Sample</dt><dd>{selectedRecord.sample}</dd></div><div><dt>Fish association</dt><dd>{selectedRecord.fish}</dd></div><div><dt>Weight</dt><dd>{selectedRecord.weight}</dd></div><div><dt>Fish value</dt><dd>{peso(selectedRecord.transaction?.amount)}</dd></div><div><dt>Model result</dt><dd>{selectedRecord.result?.originalGrade ? `Grade ${selectedRecord.result.originalGrade}` : selectedRecord.result?.status ?? selectedRecord.status}</dd></div><div><dt>Sync status</dt><dd>{selectedRecord.transaction?.syncState ?? 'Pending'}</dd></div></dl>{selectedRecord.result?.overrideReason && <p className="record-review__reason"><strong>Override reason:</strong> {selectedRecord.result.overrideReason}</p>}</article></div>}
     </div>
   )
 }
@@ -599,7 +606,7 @@ function GraderDashboard({ name, onStart, onLogout, onNotice }: { name: string; 
       setLastSync(syncedAt)
       localStorage.setItem('tunaeye-last-sync', syncedAt)
       audit(graderName, 'Manual sync', `${summary.synced} records synchronized; ${summary.failed} failed`)
-      onNotice({ title: summary.failed ? 'Sync completed with errors' : 'Sync complete', message: `${summary.synced} records synchronized. ${summary.failed} remain available for retry.`, icon: 'refresh' })
+      onNotice({ title: summary.failed ? `${graderName}'s sync needs attention` : `${graderName}'s records are synced`, message: `${summary.synced} new record${summary.synced === 1 ? '' : 's'} synchronized. ${summary.failed} remain available for retry.${summary.firstError ? ` ${summary.firstError}` : ''}`, icon: 'refresh' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Synchronization failed.'
       audit(graderName, 'Manual sync failed', message)
@@ -618,7 +625,7 @@ function GraderDashboard({ name, onStart, onLogout, onNotice }: { name: string; 
             <div className="grader-hello__actions">
               <Button className="btn--hero" onClick={onStart} icon="arrow">Start grading</Button>
               <div className="grader-hello__subactions">
-                <Button variant="secondary" onClick={() => void sync()} icon="refresh" loading={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button>
+                <Button variant="secondary" onClick={() => void sync()} icon="refresh" loading={syncing}>{syncing ? `Syncing ${graderName.split(' ')[0]}…` : 'Sync now'}</Button>
                 <Button variant="ghost" onClick={() => { audit(graderName, 'Logout', 'Grader ended session'); onLogout() }} icon="back">Logout</Button>
               </div>
             </div>
@@ -997,6 +1004,7 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
   const result = results[sample]
   const grade = effectiveGrade(result)
   const isCompleted = printed.includes(sample)
+  const pricing = priceSnapshot(grade ?? 'Invalid', result?.weight ?? 0)
 
   return (
     <div className="screen-stack screen-stack--print">
@@ -1018,12 +1026,12 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
         <div className="receipt-container-v2">
           <PaymentReceiptPrinter
             key={`${sample}-${printIndex}`}
-            status={printing ? 'printing' : isCompleted ? 'completed' : undefined}
+            status={printing ? 'printing' : 'completed'}
             merchant="TunaEye Kiosk"
             merchantSubtext="Certified Quality Inspection"
             orderNumber={`#TE-${String(14 + printIndex).padStart(3, '0')}`}
             date={new Date()}
-            showStatusCard={true}
+            showStatusCard={false}
             statusTitle={isCompleted ? 'Thermal Slip Issued' : printing ? 'Printing Receipt…' : 'Grading Complete'}
             statusSubtitle={isCompleted ? 'Inspection record printed' : printing ? 'Extruding 58mm thermal slip…' : '58mm thermal slip ready to print'}
             showActions={false}
@@ -1032,17 +1040,17 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
             items={[
               {
                 name: `${sample} (${result?.fishId ?? 'Fish 1'})`,
-                price: result?.weight ? `${result.weight} kg` : '1.0 kg',
+                price: peso(pricing.amount),
                 quantity: 1,
                 tag: result?.overrideGrade ? 'Expert Override' : 'AI Graded',
-                description: `Confidence: ${result?.originalConfidence ?? 96}%${result?.overrideGrade ? ' · Manual override' : ''}`,
+                description: `${result?.weight ?? '1.0'} kg · ${peso(pricing.unitRatePerKg)}/kg · ${result?.originalConfidence ?? 96}% confidence`,
               },
             ]}
-            total={`Grade ${grade ?? 'A'}`}
+            total={peso(pricing.amount)}
             currency=""
             paymentMethod={`Inspector: ${graderName || 'Station Operator'}`}
             message="Thank you for using TunaEye Kiosk!"
-            autoPrint={true}
+            autoPrint={false}
             printDuration={1.8}
             paperTheme="cream"
           />
@@ -1086,6 +1094,8 @@ function PrintScreen({ samples, results, printIndex, printed, printing, onPrint,
         <div className="thermal-slip-detail">
           Confidence: {result?.originalConfidence ?? 96}%{result?.overrideGrade ? ' (Override)' : ' (AI Graded)'}
         </div>
+        <div className="thermal-slip-row"><span>RATE:</span><strong>{peso(pricing.unitRatePerKg)}/kg</strong></div>
+        <div className="thermal-slip-row"><span>FISH VALUE:</span><strong>{peso(pricing.amount)}</strong></div>
         <div className="thermal-slip-divider">================================</div>
         <div className="thermal-slip-grade-box">
           <div className="thermal-slip-grade-label">FINAL GRADE</div>
@@ -1172,7 +1182,7 @@ function App() {
   const [currentPathScreen] = useState<Screen>(() => refreshRecovery.active ? 'select-role' : screenForPath(window.location.pathname))
   const gradingSessionRef = useRef({ id: createId(), timestamp: Date.now() })
   useEffect(() => { initDemoMode() }, [])
-  useEffect(() => { if (refreshRecovery.active) { setBooting(false); return }; const timeout = window.setTimeout(() => setBooting(false), 2600); return () => window.clearTimeout(timeout) }, [refreshRecovery.active])
+  useEffect(() => { if (refreshRecovery.active) { setBooting(false); return }; const timeout = window.setTimeout(() => setBooting(false), 750); return () => window.clearTimeout(timeout) }, [refreshRecovery.active])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
   useEffect(() => { if (refreshRecovery.active) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.active])
   useEffect(() => {
@@ -1231,7 +1241,7 @@ function App() {
     return () => { cancelled = true }
   }, [session.screen, sample, go])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, overrideActor: result.overrideActor, overrideAt: result.overrideAt, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
+  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; const pricing = priceSnapshot(grade, result.weight); return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, overrideActor: result.overrideActor, overrideAt: result.overrideAt, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', unitRatePerKg: pricing.unitRatePerKg, amount: pricing.amount, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
   const openRole = (role: Role) => { gradingSessionRef.current = { id: createId(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {

@@ -1,5 +1,9 @@
 # Lessons
 
+- At the target kiosk resolution, verify the final cascade and seeded real records: an empty dashboard can hide table-cell overlap, and a shared modal fallback class can accidentally impose modal dimensions inside table rows.
+
+- Financial values must be snapshotted with the grading record before retry; never recompute historical prices from a mutable current schedule, and keep the stable record ID as the cloud upsert key.
+
 - Recheck live service state immediately after the user says they changed it; distinguish an enabled Supabase Auth setting from a stale Vercel bundle that still needs redeployment.
 
 - Never let an HTTPS deployment inherit HTTP Raspberry Pi defaults: select endpoints by deployment mode, require an authenticated HTTPS gateway for hosted access, and show connection guidance before the browser emits mixed-content requests.

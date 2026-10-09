@@ -15,7 +15,7 @@ export interface GradingRecord {
   capturedImageId?: string
   remoteImagePath?: string
   result?: { status: string; originalGrade: string | null; originalConfidence: number | null; rawConfidence?: number; overrideGrade: string | null; overrideReason: string; overrideActor?: string; overrideAt?: string; inferenceId?: string; captureId?: string; scores?: Record<string, number>; imageType?: 'sashibocore' | 'tailcut'; modelSource?: 'raspberry-pi' | 'demo' }
-  transaction?: { currency: string; amount: number | null; syncState: SyncState; lastSyncError?: string }
+  transaction?: { currency: string; unitRatePerKg?: number | null; amount: number | null; syncState: SyncState; lastSyncError?: string }
 }
 
 export const RECORDS_KEY = 'tunaeye-records'
