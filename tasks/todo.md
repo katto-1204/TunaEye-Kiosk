@@ -12,6 +12,29 @@
 - Supabase synchronization now starts immediately after completed records are persisted, while manual Sync now remains available for retries.
 - The welcome CTA buttons share a 260px width and association heading content is centered lower in the tablet layout.
 
+# Android kiosk fullscreen and stale refresh reset — 2026-10-10
+
+- [x] Reset stale kiosk sessions to the kiosk landing after 30 minutes idle.
+- [x] Request Android Chrome fullscreen from the kiosk start gesture.
+- [x] Add a tiny bottom-right SVG lock control to exit fullscreen.
+- [x] Keep the lock control visually unobtrusive and touch accessible.
+
+### Review
+
+- Reloading an unfinished workflow after a long idle now clears the session and returns to `/`.
+- Android Chrome receives `navigationUI: 'hide'` fullscreen requests when grading starts.
+- The web app cannot disable Android system navigation buttons; the lock control provides the controlled in-app fullscreen exit.
+
+### Route correction
+
+- Stale refresh recovery now canonicalizes to `/kiosk/` and `/kiosk/` resolves directly to the kiosk landing screen.
+
+### Native wrapper
+
+- Added a Capacitor Android wrapper under `android/`.
+- Added immersive fullscreen, device-owner Lock Task Mode, device-admin receiver, and the web-to-native exit bridge.
+- Added [ANDROID_KIOSK_SETUP.md](../ANDROID_KIOSK_SETUP.md) with build and provisioning steps.
+
 # Flattening image review screen — 2026-10-10
 
 - [x] Remove the oversized review card container.
@@ -20,6 +43,26 @@
 ### Review
 
 - The review panel is now borderless, shadowless, and transparent while preserving the existing image and actions.
+
+# Animating image review screen — 2026-10-10
+
+- [x] Add staged entrance animation to the review status, heading, and actions.
+- [x] Add hover and press transitions to review actions.
+- [x] Respect reduced-motion preferences.
+
+### Review
+
+- Review content now enters in a short staggered sequence, with tactile button feedback and no animation when reduced motion is enabled.
+
+# Restoring inference screen preview — 2026-10-10
+
+- [x] Restore the captured preview on narrow inference screens.
+- [x] Fit the preview, workflow rail, and status into tablet/mobile heights.
+- [x] Preserve the readable desktop split layout.
+
+### Review
+
+- Narrow screens now reserve a compact preview row above the inference information instead of allowing the visual area to collapse out of view.
 
 # Persistent grader dashboard access — 2026-10-10
 

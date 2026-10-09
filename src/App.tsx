@@ -23,11 +23,16 @@ const audit = (actor: string, action: string, detail: string) => { const entry =
 const getConnectionSettings = () => ({ rpiUrl: getPiSettings().apiUrl, modelName: localStorage.getItem('tunaeye-model-name') ?? 'TFLite edge model' })
 const allScreens: Screen[] = ['welcome', 'select-role', 'admin', 'admin-dashboard', 'grader', 'grader-dashboard', 'sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print', 'complete']
 const pathForScreen = (screen: Screen) => screen === 'welcome' ? '/' : screen === 'select-role' ? '/select-role' : screen === 'admin' || screen === 'admin-dashboard' ? '/admin' : `/kiosk/${screen}`
-const screenForPath = (path: string): Screen => { if (path === '/select-role') return 'select-role'; if (path === '/admin') return 'admin'; if (path.startsWith('/kiosk/')) { const candidate = path.replace('/kiosk/', '') as Screen; if (allScreens.includes(candidate)) return candidate } return 'welcome' }
+const screenForPath = (path: string): Screen => { if (path === '/select-role') return 'select-role'; if (path === '/admin') return 'admin'; if (path === '/kiosk/' || path === '/kiosk') return 'welcome'; if (path.startsWith('/kiosk/')) { const candidate = path.replace('/kiosk/', '') as Screen; if (allScreens.includes(candidate)) return candidate } return 'welcome' }
 const marketingPageForPath = (path: string): MarketingPage => { const page = path.replace(/^\//, '') as MarketingPage; return ['features', 'about', 'team', 'faq', 'terms', 'privacy'].includes(page) ? page : 'home' }
 const requiresHostedAdminAuth = () => isSupabaseConfigured() && !['localhost', '127.0.0.1'].includes(window.location.hostname)
 const unfinishedScreens = new Set<Screen>(['sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print'])
 const wasReloaded = () => (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'reload'
+const KIOSK_ACTIVITY_KEY = 'tunaeye-last-activity'
+const KIOSK_IDLE_RESET_MS = 30 * 60 * 1000
+const isAndroidChrome = () => /Android/i.test(navigator.userAgent) && /Chrome\/\d+/i.test(navigator.userAgent) && !/EdgA|OPR\//i.test(navigator.userAgent)
+const nativeKiosk = () => (window as Window & { TunaEyeKiosk?: { exitLockTask?: () => void } }).TunaEyeKiosk
+const isNativeAndroidKiosk = () => Boolean(nativeKiosk())
 
 type IconName = 'arrow' | 'back' | 'camera' | 'check' | 'chevron' | 'compress' | 'expand' | 'help' | 'home' | 'lock' | 'play' | 'printer' | 'refresh' | 'scale' | 'shield' | 'spark' | 'tutorial' | 'users' | 'database' | 'settings'
 type FullscreenHost = HTMLElement & {
@@ -1213,10 +1218,13 @@ function App() {
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [legalKind, setLegalKind] = useState<'terms' | 'privacy' | null>(null)
   const [installed, setInstalled] = useState(() => window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem('tunaeye-installed') === 'true')
+  const [androidFullscreenLocked, setAndroidFullscreenLocked] = useState(() => (isAndroidChrome() || isNativeAndroidKiosk()) && localStorage.getItem('tunaeye-fullscreen-unlocked') !== 'true')
   const [refreshRecovery] = useState(() => {
     const previousScreen = screenForPath(window.location.pathname)
-    const active = installed && wasReloaded() && unfinishedScreens.has(previousScreen)
-    return { active, unfinished: active && unfinishedScreens.has(previousScreen) }
+    const lastActivity = Number(localStorage.getItem(KIOSK_ACTIVITY_KEY) ?? 0)
+    const stale = installed && wasReloaded() && lastActivity > 0 && Date.now() - lastActivity >= KIOSK_IDLE_RESET_MS
+    const active = installed && wasReloaded() && unfinishedScreens.has(previousScreen) && !stale
+    return { active, stale, unfinished: active && unfinishedScreens.has(previousScreen) }
   })
   const [noticeModal, setNoticeModal] = useState<NoticeModalData | null>(() => refreshRecovery.unfinished ? {
     title: "Session wasn't saved",
@@ -1229,12 +1237,19 @@ function App() {
   const [isPrinting, setIsPrinting] = useState(false)
   const [isInstalling, setIsInstalling] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [currentPathScreen] = useState<Screen>(() => refreshRecovery.active ? 'select-role' : screenForPath(window.location.pathname))
+  const [currentPathScreen] = useState<Screen>(() => refreshRecovery.active ? 'select-role' : refreshRecovery.stale ? 'welcome' : screenForPath(window.location.pathname))
   const gradingSessionRef = useRef({ id: createId(), timestamp: Date.now() })
   useEffect(() => { initDemoMode() }, [])
   useEffect(() => { if (refreshRecovery.active) { setBooting(false); return }; const timeout = window.setTimeout(() => setBooting(false), 750); return () => window.clearTimeout(timeout) }, [refreshRecovery.active])
   useEffect(() => { const beforeInstall = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent) }; const appInstalled = () => { setInstalled(true); localStorage.setItem('tunaeye-installed', 'true'); setInstallPrompt(null) }; window.addEventListener('beforeinstallprompt', beforeInstall); window.addEventListener('appinstalled', appInstalled); return () => { window.removeEventListener('beforeinstallprompt', beforeInstall); window.removeEventListener('appinstalled', appInstalled) } }, [])
-  useEffect(() => { if (refreshRecovery.active) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.active])
+  useEffect(() => { if (refreshRecovery.active) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'select-role' }); window.history.replaceState({}, '', '/select-role') } else if (refreshRecovery.stale) { clearCapturedEvidence(); dispatch({ type: 'reset' }); dispatch({ type: 'navigate', screen: 'welcome' }); window.history.replaceState({}, '', '/kiosk/') } else if (currentPathScreen !== 'welcome') dispatch({ type: 'navigate', screen: currentPathScreen }); const onPopState = () => { dispatch({ type: 'navigate', screen: screenForPath(window.location.pathname) }); setMarketingPage(marketingPageForPath(window.location.pathname)) }; window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState) }, [currentPathScreen, refreshRecovery.active, refreshRecovery.stale])
+  useEffect(() => {
+    const markActivity = () => localStorage.setItem(KIOSK_ACTIVITY_KEY, String(Date.now()))
+    markActivity()
+    const events = ['pointerdown', 'keydown', 'touchstart', 'scroll'] as const
+    events.forEach(event => window.addEventListener(event, markActivity, { passive: true }))
+    return () => events.forEach(event => window.removeEventListener(event, markActivity))
+  }, [])
   useEffect(() => {
     if (currentPathScreen !== 'admin' || !requiresHostedAdminAuth()) return
     void hasAdminProfile().then(isAdmin => {
@@ -1373,6 +1388,13 @@ function App() {
     } finally { setIsInstalling(false) }
   }
   const enterFullscreen = () => { if (!fullscreenElement()) void forceBrowserFullscreen() }
+  const unlockAndroidFullscreen = () => {
+    localStorage.setItem('tunaeye-fullscreen-unlocked', 'true')
+    setAndroidFullscreenLocked(false)
+    nativeKiosk()?.exitLockTask?.()
+    const exit = document.exitFullscreen ?? (document as Document & { webkitExitFullscreen?: () => Promise<void> | void }).webkitExitFullscreen
+    if (exit) void exit.call(document)
+  }
   const renderScreen = () => {
     switch (session.screen) {
       case 'welcome': return <WelcomeScreen onStart={() => { enterFullscreen(); go('select-role') }} onInstall={installApp} installed={installed} onTutorial={() => setTutorialOpen(true)} onGoMain={() => { setMarketingPage('home'); setPublicLandingRequested(true); window.history.pushState({}, '', '/') }} />
@@ -1398,7 +1420,7 @@ function App() {
   if ((publicLandingRequested || (!installed && !webIntroDismissed)) && session.screen === 'welcome') return <ProductLanding page={marketingPage} onInstall={installApp} onOpen={() => { setPublicLandingRequested(false); setWebIntroDismissed(true) }} onNavigate={page => { setMarketingPage(page); window.history.pushState({}, '', page === 'home' ? '/' : `/${page}`) }} />
   const isLanding = session.screen === 'welcome'
   const showGraderHome = session.role === 'expert' && !['welcome', 'select-role', 'grader', 'grader-dashboard', 'complete'].includes(session.screen)
-  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{showGraderHome && <button className="grader-home-shortcut" onClick={requestGraderHome} aria-label="View grading history" title="View grading history"><Icon name="home" size={18} /></button>}{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason, actor: session.graderName || 'Guest grader', timestamp: new Date().toISOString() }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
+  return <div className={`app-shell ${isLanding ? 'app-shell--landing' : ''}`}><main className={`app-main app-main--${session.screen}`}>{renderScreen()}</main>{showGraderHome && <button className="grader-home-shortcut" onClick={requestGraderHome} aria-label="View grading history" title="View grading history"><Icon name="home" size={18} /></button>}{(isAndroidChrome() || isNativeAndroidKiosk()) && androidFullscreenLocked && <button className="android-fullscreen-lock" onClick={unlockAndroidFullscreen} aria-label="Disable fullscreen" title="Disable fullscreen"><Icon name="lock" size={12} /></button>}{noticeModal ? <NoticeModal notice={noticeModal} onClose={() => setNoticeModal(null)} /> : overrideTarget ? <OverrideModal sample={overrideTarget} result={session.results[overrideTarget]} onClose={() => setOverrideTarget(null)} onSave={(grade, reason) => { dispatch({ type: 'setOverride', sample: overrideTarget, grade, reason, actor: session.graderName || 'Guest grader', timestamp: new Date().toISOString() }); setOverrideTarget(null) }} /> : legalKind ? <LegalModal kind={legalKind} onClose={() => setLegalKind(null)} /> : tutorialOpen ? <TutorialModal onClose={() => setTutorialOpen(false)} /> : null}{isCapturing && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="camera" size={22} /></span><span><strong>Saving image</strong><small>Hold still for a moment</small></span></div>}{isPrinting && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="printer" size={22} /></span><span><strong>Printing result</strong><small>Please wait</small></span></div>}{isInstalling && <div className="capture-toast" role="status"><span className="capture-toast__ring is-spinning"><Icon name="spark" size={22} /></span><span><strong>Installing TunaEye</strong><small>Waiting for the browser</small></span></div>}</div>
 }
 
 export default App
