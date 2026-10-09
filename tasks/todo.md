@@ -1,3 +1,24 @@
+# Raspberry Pi Camera, Inference & Synchronization — 2026-10-09
+
+- [x] Audit the Pi client, camera/upload paths, local evidence storage, result records, sync, and tests.
+- [x] Add stage-specific snapshot, inference, response, and status diagnostics.
+- [x] Preserve exact uploaded and captured image bytes through review, inference, and synchronization.
+- [x] Validate model selection, class scores, confidence, response shape, and result provenance.
+- [x] Expand mocked integration coverage for healthy and failing Pi flows.
+- [x] Run production build and full Playwright regression.
+- [x] Record physical Raspberry Pi verification steps and remaining deployment constraints.
+
+### Review
+
+- Direct snapshot navigation and MJPEG preview do not prove browser `fetch()` can read the cross-origin snapshot; current generic handling hides CORS, mixed-content, HTTP, timeout, validation, and persistence stages.
+- Preserved exact upload bytes and MIME types; camera snapshots continue through one immutable IndexedDB blob into inference and synchronization.
+- Added typed V2 status/result parsing, build-gated demo behavior, raw result provenance, and stage-specific operator diagnostics.
+- Prevented evidence-less records from being marked synced and derived cloud image extensions from MIME type.
+- Build passed. Full Playwright regression passed: 29 tests; one live Supabase test skipped by its existing environment guard.
+- Physical Pi/CORS/mixed-content validation remains documented in `RASPBERRY_PI_INTEGRATION_REPORT.md`.
+
+---
+
 # UI Cleanup — Redundancy, Copy, Loading States
 
 Goal: remove repeated labels, cut verbose copy, add visible loading

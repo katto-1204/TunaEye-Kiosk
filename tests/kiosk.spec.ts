@@ -167,7 +167,7 @@ test('admin dashboard scrolls, graph interacts, and records paginate', async ({ 
 test('weight numpad entry and touch keypad interaction', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
   await page.goto('/kiosk/weight')
-  await expect(page.getByRole('heading', { name: /Enter the fish weight/i })).toBeVisible({ timeout: 5000 })
+  await expect(page.getByRole('heading', { name: /Fish weight/i })).toBeVisible({ timeout: 5000 })
   await expect(page.locator('.numpad-container')).toBeVisible()
   
   // Tap numpad buttons 3, 5, ., 4
@@ -197,7 +197,7 @@ test('refresh clears unfinished session, preserves completed records, and return
     localStorage.setItem('tunaeye-records', JSON.stringify([{ id: 'saved-record', sessionId: 'saved-session', timestamp: Date.now(), time: 'Now', grader: 'Maria Santos', sample: 'Sashibo core', fish: 'Fish 1', weight: '42 kg', grade: 'A', status: 'Complete' }]))
   })
   await page.goto('/kiosk/weight')
-  await expect(page.getByRole('heading', { name: /Enter the fish weight/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Fish weight/i })).toBeVisible()
   await page.reload()
 
   await expect(page).toHaveURL(/\/select-role$/)
@@ -281,8 +281,8 @@ test('expert grader identity form is touch-sized and responsive', async ({ page 
   for (const viewport of [{ width: 1024, height: 600 }, { width: 800, height: 1280 }]) {
     await page.setViewportSize(viewport)
     await page.goto('/kiosk/grader')
-    const input = page.getByLabel('Expert grader name')
-    const checkbox = page.getByRole('checkbox', { name: 'Remember my name for this session' })
+    const input = page.getByLabel('Your name')
+    const checkbox = page.getByRole('checkbox', { name: 'Remember my name' })
     const form = page.locator('.grader-entry__form')
     await expect(input).toBeVisible()
     await expect(form).toBeInViewport()
@@ -291,7 +291,7 @@ test('expert grader identity form is touch-sized and responsive', async ({ page 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   }
 
-  await page.getByLabel('Expert grader name').fill('Maria Santos')
+  await page.getByLabel('Your name').fill('Maria Santos')
   await page.getByRole('button', { name: 'Start grading' }).click()
   await expect(page).toHaveURL(/\/kiosk\/sample$/)
 })
@@ -345,8 +345,57 @@ test('camera capture shows progress and recovers from Pi failure', async ({ page
   await page.goto('/kiosk/camera')
   await page.getByRole('button', { name: 'Capture' }).click()
   await expect(page.getByRole('button', { name: 'Capturing…' })).toBeDisabled()
-  await expect(page.getByRole('alert')).toContainText('Camera capture failed')
+  await expect(page.getByRole('alert')).toContainText('Snapshot failed: HTTP 503')
   await expect(page.getByRole('button', { name: 'Capture' })).toBeEnabled()
+})
+
+test('Pi client validates status, model selection, four classes, and malformed predictions', async ({ page }) => {
+  let response = { id: 'result-A', capture_id: 'capture-A', image_type: 'sashibocore', grade: 'GRADE_A', confidence: 0.963, scores: { GRADE_A: 0.963, GRADE_B: 0.02, GRADE_C: 0.01, INVALID: 0.007 } }
+  let gradeStatus = 200
+  await page.route('http://10.42.0.1:5000/status', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ status: 'ok', service: 'TunaEye V2 Inference API', version: '2.0', models: { sashibocore: true, tailcut: true }, classes: ['GRADE_A', 'GRADE_B', 'GRADE_C', 'INVALID'] }) }))
+  await page.route('http://10.42.0.1:5000/grade', route => route.fulfill({ status: gradeStatus, contentType: 'application/json', body: JSON.stringify(response) }))
+  await page.goto('/')
+
+  const callClient = async (sample: 'Sashibo core' | 'Tail cut') => page.evaluate(async selected => {
+    // @ts-expect-error Vite serves this browser-only integration module during Playwright tests.
+    const client = await import('/src/piClient.ts')
+    return client.gradePiImage(new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: 'image/jpeg' }), selected)
+  }, sample)
+  const status = await page.evaluate(async () => {
+    // @ts-expect-error Vite serves this browser-only integration module during Playwright tests.
+    const client = await import('/src/piClient.ts')
+    return client.checkPiHealth()
+  })
+  expect(status).toMatchObject({ status: 'ok', models: { sashibocore: true, tailcut: true } })
+
+  const cases = [
+    ['GRADE_A', 'A', 'valid', 96.3],
+    ['GRADE_B', 'B', 'valid', 91],
+    ['GRADE_C', 'C', 'valid', 78],
+    ['INVALID', null, 'invalid', 12],
+  ] as const
+  for (const [backendGrade, grade, outcome, confidence] of cases) {
+    response = { id: `result-${backendGrade}`, capture_id: `capture-${backendGrade}`, image_type: 'sashibocore', grade: backendGrade, confidence: confidence / 100, scores: { GRADE_A: .01, GRADE_B: .02, GRADE_C: .03, INVALID: .94 } }
+    await expect(callClient('Sashibo core')).resolves.toMatchObject({ grade, outcome, confidence, rawConfidence: confidence / 100, imageType: 'sashibocore', modelSource: 'raspberry-pi', scores: response.scores })
+  }
+
+  response = { ...response, id: 'tail-result', capture_id: 'tail-capture', image_type: 'tailcut', grade: 'GRADE_C', confidence: .78 }
+  await expect(callClient('Tail cut')).resolves.toMatchObject({ grade: 'C', imageType: 'tailcut' })
+
+  response = { ...response, scores: { GRADE_A: .1, GRADE_B: .2, GRADE_C: .7 } } as typeof response
+  await expect(callClient('Tail cut')).rejects.toThrow('Inference failed: malformed prediction response.')
+
+  gradeStatus = 503
+  await expect(callClient('Tail cut')).rejects.toThrow('Inference failed: HTTP 503.')
+
+  const overridden = await page.evaluate(async () => {
+    // @ts-expect-error Vite serves this browser-only state module during Playwright tests.
+    const state = await import('/src/kioskState.ts')
+    let session = state.reducer(state.initialSession, { type: 'finishAnalysis', outcome: 'valid', grade: 'A', confidence: 96.3, rawConfidence: .963, inferenceId: 'result-A', captureId: 'capture-A', scores: { GRADE_A: .963, GRADE_B: .02, GRADE_C: .01, INVALID: .007 }, imageType: 'sashibocore', modelSource: 'raspberry-pi' })
+    session = state.reducer(session, { type: 'setOverride', sample: 'Sashibo core', grade: 'C', reason: 'Expert visual inspection' })
+    return session.results['Sashibo core']
+  })
+  expect(overridden).toMatchObject({ originalGrade: 'A', originalConfidence: 96.3, rawConfidence: .963, inferenceId: 'result-A', captureId: 'capture-A', overrideGrade: 'C', overrideReason: 'Expert visual inspection' })
 })
 
 test('printing failure stays on receipt and offers retry', async ({ page }) => {
@@ -392,17 +441,23 @@ test('uploaded image uses the same saved-evidence and Pi inference flow', async 
   await page.getByRole('button', { name: 'Use Image' }).click()
   await expect(page.getByRole('heading', { name: 'Sashibo core · Grade B' })).toBeVisible()
   expect(gradeBody).toContain('sashibocore')
-  expect(gradeBody).toContain('name="image"; filename="capture.jpg"')
-  const evidenceType = await page.evaluate(async () => await new Promise<string | undefined>((resolve, reject) => {
+  expect(gradeBody).toContain('name="image"; filename="capture.png"')
+  const evidence = await page.evaluate(async () => await new Promise<{ mimeType?: string; storedHash?: string; sourceHash?: string }>((resolve, reject) => {
     const open = indexedDB.open('tunaeye-offline', 1)
     open.onerror = () => reject(open.error)
     open.onsuccess = () => {
       const get = open.result.transaction('evidence').objectStore('evidence').getAll()
       get.onerror = () => reject(get.error)
-      get.onsuccess = () => resolve(get.result[0]?.mimeType)
+      get.onsuccess = async () => {
+        const stored = get.result[0]
+        const source = await fetch('/assets/sashiboCoreFull.png').then(response => response.blob())
+        const digest = async (blob: Blob) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))).map(byte => byte.toString(16).padStart(2, '0')).join('')
+        resolve({ mimeType: stored?.mimeType, storedHash: stored?.blob ? await digest(stored.blob) : undefined, sourceHash: await digest(source) })
+      }
     }
   }))
-  expect(evidenceType).toBe('image/jpeg')
+  expect(evidence.mimeType).toBe('image/png')
+  expect(evidence.storedHash).toBe(evidence.sourceHash)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   expect(browserErrors).toEqual([])
   expect(failedRequests).toEqual([])
@@ -410,9 +465,11 @@ test('uploaded image uses the same saved-evidence and Pi inference flow', async 
 
 test('completed grading session remains local and pending until cloud sync', async ({ page }) => {
   let gradeBody = ''
+  let gradeBytes: Buffer | null = null
   await page.route('http://10.42.0.1:8080/**', route => route.fulfill({ contentType: 'image/jpeg', body: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }))
   await page.route('http://10.42.0.1:5000/grade', async route => {
     gradeBody = route.request().postData() ?? ''
+    gradeBytes = route.request().postDataBuffer()
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id: 'grade-1', capture_id: 'capture-1', image_type: 'sashibocore', grade: 'GRADE_A', confidence: 0.963, scores: { GRADE_A: 0.963, GRADE_B: 0.025, GRADE_C: 0.01, INVALID: 0.002 } }) })
   })
   await page.addInitScript(() => {
@@ -422,7 +479,7 @@ test('completed grading session remains local and pending until cloud sync', asy
   
   // Complete a simulated grading flow
   await page.goto('/kiosk/weight')
-  await expect(page.getByRole('heading', { name: /Enter the fish weight/i })).toBeVisible({ timeout: 5000 })
+  await expect(page.getByRole('heading', { name: /Fish weight/i })).toBeVisible({ timeout: 5000 })
   await page.getByRole('button', { name: '4', exact: true }).click()
   await page.getByRole('button', { name: '2', exact: true }).click()
   await page.getByRole('button', { name: 'Start capture' }).click()
@@ -465,7 +522,7 @@ test('completed grading session remains local and pending until cloud sync', asy
   await page.getByRole('button', { name: 'View results overview' }).click()
   
   // Overview screen -> Print
-  await expect(page.getByRole('heading', { name: /Review every sample/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Review samples/i })).toBeVisible()
   await page.getByRole('button', { name: /Print separate copies/i }).click()
   
   // Print screen -> Skip printing to complete
@@ -487,10 +544,11 @@ test('completed grading session remains local and pending until cloud sync', asy
   await expect(records.first().locator('img')).toBeVisible()
   const savedRecords = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]'))
   expect(savedRecords[0].capturedImageId).toBeTruthy()
-  expect(savedRecords[0].result).toMatchObject({ inferenceId: 'grade-1', captureId: 'capture-1', originalGrade: 'A', originalConfidence: 96.3 })
+  expect(savedRecords[0].result).toMatchObject({ inferenceId: 'grade-1', captureId: 'capture-1', originalGrade: 'A', originalConfidence: 96.3, rawConfidence: 0.963, imageType: 'sashibocore', modelSource: 'raspberry-pi' })
   expect(gradeBody).toContain('name="image_type"')
   expect(gradeBody).toContain('sashibocore')
   expect(gradeBody).toContain('name="image"; filename="capture.jpg"')
+  expect(gradeBytes?.includes(Buffer.from([0xff, 0xd8, 0xff, 0xd9]))).toBe(true)
   expect(savedRecords[0].transaction.syncState).toBe('pending')
   expect(JSON.stringify(savedRecords)).not.toContain('data:image')
 
@@ -506,7 +564,7 @@ test('58mm thermal printer receipt preview and print layout', async ({ page }) =
     localStorage.setItem('tunaeye-grader-name', 'Maria Santos')
   })
   await page.goto('/kiosk/print')
-  await expect(page.getByRole('heading', { name: /Print separate grading records|Print the next result/i })).toBeVisible({ timeout: 5000 })
+  await expect(page.getByRole('heading', { name: /Print grading records|Print the next result/i })).toBeVisible({ timeout: 5000 })
 
   // Verify 58mm thermal receipt preview & POS-58 chassis indicator
   const printerChassis = page.locator('.receipt-container-v2')

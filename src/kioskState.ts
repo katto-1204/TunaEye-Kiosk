@@ -29,6 +29,7 @@ export interface SampleResult {
   status: DemoOutcome
   originalGrade: Grade | null
   originalConfidence: number | null
+  rawConfidence?: number
   overrideGrade: Grade | null
   overrideReason: string
   captured: boolean
@@ -36,6 +37,8 @@ export interface SampleResult {
   inferenceId?: string
   captureId?: string
   scores?: Record<string, number>
+  imageType?: 'sashibocore' | 'tailcut'
+  modelSource?: 'raspberry-pi' | 'demo'
 }
 
 export interface Session {
@@ -90,7 +93,7 @@ export type Action =
   | { type: 'setDemoOutcome'; outcome: DemoOutcome }
   | { type: 'captured' }
   | { type: 'startAnalysis' }
-  | { type: 'finishAnalysis'; outcome: DemoOutcome; grade?: Grade | null; confidence?: number | null; inferenceId?: string; captureId?: string; scores?: Record<string, number> }
+  | { type: 'finishAnalysis'; outcome: DemoOutcome; grade?: Grade | null; confidence?: number | null; rawConfidence?: number; inferenceId?: string; captureId?: string; scores?: Record<string, number>; imageType?: 'sashibocore' | 'tailcut'; modelSource?: 'raspberry-pi' | 'demo' }
   | { type: 'setAdminPin'; value: string }
   | { type: 'adminError'; message: string }
   | { type: 'adminAuthenticated' }
@@ -160,6 +163,7 @@ export function reducer(state: Session, action: Action): Session {
             status: action.outcome,
             originalGrade: grade,
             originalConfidence: confidence,
+            rawConfidence: action.rawConfidence,
             overrideGrade: resultFor(state, sample)?.overrideGrade ?? null,
             overrideReason: resultFor(state, sample)?.overrideReason ?? '',
             captured: true,
@@ -167,6 +171,8 @@ export function reducer(state: Session, action: Action): Session {
             inferenceId: action.inferenceId,
             captureId: action.captureId,
             scores: action.scores,
+            imageType: action.imageType,
+            modelSource: action.modelSource,
           },
         },
       }

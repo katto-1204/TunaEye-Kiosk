@@ -3,11 +3,16 @@ import type { PiGradeResult } from './piClient'
 
 const DEMO_FLAG = 'tunaeye-demo-mode'
 const gradeHints = new Map<SampleType, Grade>()
-
-let enabled = import.meta.env.VITE_DEMO_MODE === 'true'
+const demoAvailable = import.meta.env.VITE_DEMO_MODE === 'true'
+let enabled = demoAvailable
 
 export function initDemoMode() {
   if (typeof window === 'undefined') return
+  if (!demoAvailable) {
+    enabled = false
+    localStorage.removeItem(DEMO_FLAG)
+    return
+  }
   const params = new URLSearchParams(window.location.search)
   if (params.get('demo') === '1') {
     enabled = true
@@ -73,9 +78,12 @@ export async function gradeDemoImage(sample: SampleType): Promise<PiGradeResult>
   return {
     id: `demo-${crypto.randomUUID()}`,
     captureId: `demo-capture-${crypto.randomUUID()}`,
+    imageType: sample === 'Tail cut' ? 'tailcut' : 'sashibocore',
+    modelSource: 'demo',
     outcome,
     grade,
     confidence,
+    rawConfidence: confidence / 100,
     scores: demoScores(grade),
   }
 }

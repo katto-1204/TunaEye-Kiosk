@@ -7,7 +7,7 @@ import { fetchCloudRecords, syncPendingRecords } from './cloudSync'
 import { getSupabase, isSupabaseConfigured } from './supabase'
 import { loadRecords, saveRecords, type GradingRecord } from './gradingRecords'
 import { getDemoPreviewUrl, initDemoMode, isDemoMode, parseDemoGradeFromFilename, setDemoGradeHint } from './demoMode'
-import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage } from './piClient'
+import { capturePiImage, checkPiHealth, getPiSettings, gradePiImage, PiIntegrationError } from './piClient'
 
 const ADMIN_PIN = '1234'
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
@@ -272,7 +272,7 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
       onNotice?.({ title: 'Sync unavailable', message, icon: 'help' })
     } finally { setSyncing(false) }
   }
-  const testRpi = async () => { setRpiStatus('Checking'); try { const health = await checkPiHealth(connections.rpiUrl) as { model?: string }; if (health.model) setConnections(current => ({ ...current, modelName: health.model! })); setRpiStatus('Connected'); audit('Admin', 'RPi connection test', `Connected to ${connections.rpiUrl}`) } catch { setRpiStatus('Unavailable'); audit('Admin', 'RPi connection test', `Unable to reach ${connections.rpiUrl}`) } }
+  const testRpi = async () => { setRpiStatus('Checking'); try { const health = await checkPiHealth(connections.rpiUrl); const models = health.models ? Object.entries(health.models).filter(([, ready]) => ready).map(([name]) => name).join(' + ') : health.model; if (models) setConnections(current => ({ ...current, modelName: models })); setRpiStatus('Connected'); audit('Admin', 'RPi connection test', `Connected to ${connections.rpiUrl}`) } catch (error) { console.error('RPi status check failed', error); setRpiStatus('Unavailable'); audit('Admin', 'RPi connection test', `Unable to reach ${connections.rpiUrl}`) } }
   const runDiagnostics = async () => { setDiagnostic('Testing Pi camera…'); try { await capturePiImage(); setDiagnostic('Pi camera operational') } catch { setDiagnostic('Pi camera unavailable') } }
   const heading = section === 'Overview' ? 'Good day, Admin.' : section
   return <div className={`admin-workspace ${sidebarCollapsed ? 'admin-workspace--collapsed' : ''}`}><aside className="admin-sidebar"><button className="admin-sidebar__brand-link" onClick={() => { window.location.href = '/' }} aria-label="Go to TunaEye home"><BrandMark compact /></button><button className="admin-sidebar__toggle" onClick={() => setSidebarCollapsed(value => !value)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}><Icon name={sidebarCollapsed ? 'arrow' : 'back'} size={20} /></button><nav>{nav.map(item => <button key={item.label} className={section === item.label ? 'is-active' : ''} onClick={() => setSection(item.label)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav><div className="admin-sidebar__foot"><span><i className="status-dot" />{navigator.onLine ? 'System online' : 'Offline'}</span><button onClick={() => { audit('Admin', 'Logout', 'Administrator ended the session'); onExit() }}><Icon name="back" size={18} /><span>Logout</span></button></div></aside><section className="admin-content"><header className="admin-content__header"><div><span className="eyebrow">{stationName} · Admin console</span><h1>{heading}</h1><p role="status">{section === 'Overview' ? `${cloudStatus} · Last sync: ${lastSync}` : `Manage ${section.toLowerCase()} for this station.`}</p></div><div className="admin-header-actions"><Button variant="secondary" onClick={() => void syncRecords()} icon="refresh" loading={syncing}>{syncing ? 'Syncing…' : 'Sync now'}</Button><Button onClick={onStartGrading} icon="camera">Start grading</Button><div className="admin-avatar">AD</div></div></header>
@@ -372,10 +372,11 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
     setRpiState('Checking')
     const start = performance.now()
     try {
-      const data = await checkPiHealth(rpiUrl) as { model?: string }
+      const data = await checkPiHealth(rpiUrl)
       const latency = Math.round(performance.now() - start)
       setRpiState('Connected')
-      setRpiInfo(`Connected (${latency} ms) · AI Model: ${data.model || modelName}`)
+      const models = data.models ? Object.entries(data.models).filter(([, ready]) => ready).map(([name]) => name).join(' + ') : data.model
+      setRpiInfo(`Connected (${latency} ms) · AI Model: ${models || modelName}`)
       audit('Admin', 'RPi Diagnostic', `Raspberry Pi reachable in ${latency}ms`)
     } catch {
       setRpiState('Unreachable')
@@ -823,15 +824,14 @@ function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sam
       await onCapture(blob, URL.createObjectURL(blob))
     }
     catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      console.error('[TunaEye] Camera capture failed:', error)
-      setCameraError(`Camera capture failed: ${message}`)
+      console.error('[TunaEye] Snapshot capture failed:', error)
+      setCameraError(isDemoMode() ? 'Demo sample could not be loaded.' : error instanceof PiIntegrationError ? error.message : 'Snapshot failed. Try again or check the camera settings.')
     }
     finally { setBusy(null) }
   }
   const upload = async (file?: File) => {
     if (!file || busy) return
-    const demoGrade = parseDemoGradeFromFilename(file.name)
+    const demoGrade = isDemoMode() ? parseDemoGradeFromFilename(file.name) : null
     if (demoGrade) setDemoGradeHint(sample, demoGrade)
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setCameraError('Choose a JPEG, PNG, or WebP image.'); return }
     if (file.size === 0) { setCameraError('The selected image is empty. Choose another file.'); return }
@@ -839,16 +839,10 @@ function CameraScreen({ sample, index, total, onCapture, onBack, onHelp }: { sam
     setBusy('upload')
     try {
       const bitmap = await createImageBitmap(file)
-      const canvas = document.createElement('canvas')
-      canvas.width = bitmap.width
-      canvas.height = bitmap.height
-      canvas.getContext('2d')?.drawImage(bitmap, 0, 0)
       bitmap.close()
-      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', .92))
-      if (!blob) throw new Error()
       setCameraError('')
-      await onCapture(blob, URL.createObjectURL(blob))
-    } catch { setCameraError('TunaEye could not read this image. Choose another file.') }
+      await onCapture(file, URL.createObjectURL(file))
+    } catch (error) { console.error('[TunaEye] Uploaded image validation failed:', error); setCameraError('TunaEye could not read this image. Choose another file.') }
     finally { setBusy(null); if (uploadRef.current) uploadRef.current.value = '' }
   }
   return <div className="screen-stack screen-stack--camera"><div className="camera-layout"><div className="live-camera live-camera--demo"><img src={demoPreview ?? streamUrl} alt={demoPreview ? 'Demo specimen preview' : 'Live Raspberry Pi USB camera preview'} onLoad={() => setCameraError('')} onError={() => { if (!demoPreview) setCameraError('Raspberry Pi camera stream is unavailable.') }} /><div className="target-corners"><i /><i /><i /><i /></div>{demoPreview && <span className="camera-demo-badge">Demo specimen</span>}{cameraError && <div className="camera-error" role="alert"><Icon name="camera" size={28} /><span>{cameraError}</span><Button variant="secondary" icon="refresh" onClick={() => { setCameraError(''); setStreamKey(key => key + 1) }}>Reconnect</Button></div>}</div><aside className="camera-aside"><span className="eyebrow">Capture {index + 1} of {total}</span><div className="sample-context"><SampleArt sample={sample} /><span><strong>{sample}</strong><small>{demoPreview ? 'Demo video samples' : 'Raspberry Pi USB camera'}</small></span></div><h1>Align the sample in the guide.</h1><p>{demoPreview ? 'Capture uses the demo specimen.' : 'Keep the sample still and fully visible.'}</p><input ref={uploadRef} className="camera-upload-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload specimen image" onChange={event => void upload(event.target.files?.[0])} disabled={Boolean(busy)} />{busy === 'upload' ? <small className="camera-upload-note camera-upload-note--busy" role="status"><Spinner />Saving image…</small> : <small className="camera-upload-note" role="status">JPEG, PNG, or WebP · up to 10 MB</small>}</aside></div><BottomBar onBack={onBack} onHelp={onHelp} secondaryLabel={busy === 'upload' ? 'Uploading…' : 'Upload image'} secondaryLoading={busy === 'upload'} secondaryDisabled={Boolean(busy)} onSecondary={() => uploadRef.current?.click()} primary={() => void capture()} primaryLabel={busy === 'capture' ? 'Capturing…' : 'Capture'} primaryIcon="camera" primaryLoading={busy === 'capture'} primaryDisabled={Boolean(busy)} /></div>
@@ -1220,9 +1214,10 @@ function App() {
         const evidence = await getCapturedEvidence(recordId)
         if (!evidence) throw new Error('Captured evidence is missing.')
         const result = await gradePiImage(evidence.blob, sample)
-        if (!cancelled) dispatch({ type: 'finishAnalysis', outcome: result.outcome, grade: result.grade, confidence: result.confidence, inferenceId: result.id, captureId: result.captureId, scores: result.scores })
+        if (!cancelled) dispatch({ type: 'finishAnalysis', outcome: result.outcome, grade: result.grade, confidence: result.confidence, rawConfidence: result.rawConfidence, inferenceId: result.id, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource })
       } catch (error) {
         if (cancelled) return
+        console.error('[TunaEye] Raspberry Pi inference failed:', error)
         const message = error instanceof Error ? error.message : 'Inference failed.'
         setNoticeModal({ title: 'Raspberry Pi inference unavailable', message: `${message} The captured image remains saved on this device.`, icon: 'help' })
         go('review')
@@ -1232,7 +1227,7 @@ function App() {
     return () => { cancelled = true }
   }, [session.screen, sample, go])
   useEffect(() => { if (session.screen !== 'complete') return; const timeout = window.setTimeout(() => goHome(), 30000); return () => window.clearTimeout(timeout) }, [session.screen, goHome])
-  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
+  useEffect(() => { const completed = sampleOrder.flatMap((item, index) => { const result = session.results[item]; if (!result?.captured) return []; const { id: sessionId, timestamp } = gradingSessionRef.current; const grade = effectiveGrade(result) ?? 'Invalid'; return [{ id: `${sessionId}-${index + 1}`, sessionId, timestamp, time: new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), grader: session.graderName || 'Guest grader', sample: item, fish: result.fishId, weight: `${result.weight} kg`, grade, status: result.overrideGrade ? 'Override' : result.status === 'valid' ? 'Complete' : result.status === 'uncertain' ? 'Uncertain' : 'Invalid', capturedImageId: `${sessionId}-${index + 1}`, result: { status: result.status, originalGrade: result.originalGrade, originalConfidence: result.originalConfidence, rawConfidence: result.rawConfidence, overrideGrade: result.overrideGrade, overrideReason: result.overrideReason, inferenceId: result.inferenceId, captureId: result.captureId, scores: result.scores, imageType: result.imageType, modelSource: result.modelSource }, transaction: { currency: 'PHP', amount: null, syncState: 'pending' as const } }] }); if (!completed.length) return; const previous = loadRecords().filter(record => record.sessionId !== gradingSessionRef.current.id); saveRecords([...completed, ...previous]) }, [session.results, session.graderName])
   const openRole = (role: Role) => { gradingSessionRef.current = { id: crypto.randomUUID(), timestamp: Date.now() }; dispatch({ type: 'setRole', role }); go(role === 'admin' ? 'admin' : 'grader') }
   const fishWeights = session.fishWeights
   const print = () => {

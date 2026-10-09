@@ -5,6 +5,7 @@ import { ensureSupabaseUser, getSupabase, isSupabaseConfigured } from './supabas
 const BUCKET = 'grading-images'
 const sampleType = (sample: string) => sample === 'Tail cut' ? 'tail_cut' as const : 'sashibo_core' as const
 const grade = (record: GradingRecord) => ['A', 'B', 'C'].includes(record.grade) ? record.grade as 'A' | 'B' | 'C' : 'Invalid'
+const imageExtension = (mimeType: string) => ({ 'image/png': 'png', 'image/webp': 'webp' }[mimeType] ?? 'jpg')
 
 function setSyncState(id: string, syncState: 'syncing' | 'synced' | 'failed', lastSyncError?: string, remoteImagePath?: string) {
   saveRecords(loadRecords().map(record => record.id === id ? {
@@ -30,9 +31,10 @@ async function runPendingSync(): Promise<SyncSummary> {
     setSyncState(record.id, 'syncing')
     try {
       const evidence = record.capturedImageId ? await getCapturedEvidence(record.capturedImageId) : undefined
+      if (record.capturedImageId && !evidence) throw new Error('Captured evidence is missing. The record remains pending.')
       let imagePath = record.remoteImagePath ?? evidence?.remotePath ?? null
       if (evidence && !imagePath) {
-        imagePath = `${user.id}/${record.id}/${sampleType(record.sample)}.jpg`
+        imagePath = `${user.id}/${record.id}/${sampleType(record.sample)}.${imageExtension(evidence.mimeType)}`
         await updateEvidenceSyncState(evidence.id, 'syncing')
         const { error: uploadError } = await supabase.storage.from(BUCKET).upload(imagePath, evidence.blob, { contentType: evidence.mimeType, upsert: true })
         if (uploadError) throw uploadError
@@ -55,7 +57,7 @@ async function runPendingSync(): Promise<SyncSummary> {
         override_grade: record.result?.overrideGrade as 'A' | 'B' | 'C' | null | undefined,
         override_reason: record.result?.overrideReason || null,
         image_path: imagePath,
-        captured_at: new Date(record.timestamp).toISOString(),
+        captured_at: new Date(evidence?.capturedAt ?? record.timestamp).toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' })
       if (error) throw error
