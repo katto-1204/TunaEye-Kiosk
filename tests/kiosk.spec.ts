@@ -88,6 +88,17 @@ test('installed tablet opens kiosk welcome screen and enters tight workflow scre
   expect(isTight).toBe(true)
 })
 
+test('stale kiosk refresh returns to the kiosk landing route', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('tunaeye-installed', 'true')
+    localStorage.setItem('tunaeye-last-activity', String(Date.now() - 31 * 60 * 1000))
+  })
+  await page.goto('/kiosk/review')
+  await page.reload()
+  await expect(page).toHaveURL(/\/kiosk\/$/)
+  await expect(page.getByRole('heading', { name: /TUNAEYE/i })).toBeVisible({ timeout: 5000 })
+})
+
 test('kiosk landing fullscreen button forces Chrome fullscreen', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))

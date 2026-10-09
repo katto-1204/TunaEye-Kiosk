@@ -4,6 +4,7 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
   test.skip(!process.env.VITE_SUPABASE_URL, 'Run with mock Supabase Vite environment variables.')
   let upserts = 0
   let cloudRecord: Record<string, unknown> | null = null
+  let cloudPrices: Record<string, unknown>[] = []
   let rejectUpserts = false
 
   await page.route('http://supabase.test/**', async route => {
@@ -16,6 +17,16 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
       await route.fulfill(route.request().method() === 'GET'
         ? { contentType: 'image/jpeg', body: Buffer.from('jpeg') }
         : { contentType: 'application/json', body: JSON.stringify({ Key: url.pathname }) })
+      return
+    }
+    if (url.pathname === '/rest/v1/price_schedules' && route.request().method() === 'POST') {
+      const payload = route.request().postDataJSON() as Record<string, unknown>[]
+      cloudPrices = payload
+      await route.fulfill({ status: 201, contentType: 'application/json', body: '[]' })
+      return
+    }
+    if (url.pathname === '/rest/v1/price_schedules') {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(cloudPrices) })
       return
     }
     if (url.pathname === '/rest/v1/grading_records' && route.request().method() === 'POST') {
@@ -106,4 +117,8 @@ test('manual Supabase sync uploads evidence, upserts once, verifies, and marks l
   for (const [index, digit] of ['1', '2', '3', '4'].entries()) await page.getByLabel(`PIN digit ${index + 1}`).fill(digit)
   await page.getByRole('button', { name: 'Verify and continue' }).click()
   await expect(page.getByText('record-1')).toBeVisible()
+  await page.getByRole('button', { name: 'Price schedule' }).click()
+  await page.getByRole('button', { name: 'Save price schedule' }).click()
+  await expect(page.getByRole('heading', { name: 'Price schedule synced' })).toBeVisible()
+  expect(cloudPrices).toHaveLength(3)
 })

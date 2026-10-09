@@ -35,6 +35,11 @@
 - Added immersive fullscreen, device-owner Lock Task Mode, device-admin receiver, and the web-to-native exit bridge.
 - Added [ANDROID_KIOSK_SETUP.md](../ANDROID_KIOSK_SETUP.md) with build and provisioning steps.
 
+### Manual Supabase sync hardening
+
+- Record sync already verifies persisted rows and image bytes before marking local records synced.
+- Price schedule sync now reads all three persisted grades back from Supabase before reporting success.
+
 # Flattening image review screen — 2026-10-10
 
 - [x] Remove the oversized review card container.

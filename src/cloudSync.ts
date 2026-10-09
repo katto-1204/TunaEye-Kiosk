@@ -146,8 +146,22 @@ export async function syncPriceSchedule(prices: Record<'A' | 'B' | 'C', number>)
   const user = await ensureSupabaseUser()
   const stationId = localStorage.getItem('tunaeye-station') ?? 'TunaEye Station 01'
   const rows: Database['public']['Tables']['price_schedules']['Insert'][] = (['A', 'B', 'C'] as const).map(item => ({ user_id: user.id, station_id: stationId, grade: item, currency_code: 'PHP', price_per_kg: prices[item], updated_at: new Date().toISOString() }))
-  const { error } = await getSupabase().from('price_schedules').upsert(rows, { onConflict: 'user_id,station_id,grade' })
-  if (error) throw new Error(error.message)
+  const supabase = getSupabase()
+  const { error } = await supabase.from('price_schedules').upsert(rows, { onConflict: 'user_id,station_id,grade' })
+  if (error) throw new Error(`Price schedule sync failed: ${error.message}`)
+  const { data: verified, error: verifyError } = await supabase
+    .from('price_schedules')
+    .select('user_id,station_id,grade,currency_code,price_per_kg')
+    .eq('user_id', user.id)
+    .eq('station_id', stationId)
+  if (verifyError) throw new Error(`Price schedule verification failed: ${verifyError.message}`)
+  const verifiedByGrade = new Map((verified ?? []).map(row => [row.grade, row]))
+  for (const row of rows) {
+    const actual = verifiedByGrade.get(row.grade)
+    if (!actual || actual.user_id !== row.user_id || actual.station_id !== row.station_id || actual.currency_code !== row.currency_code || Number(actual.price_per_kg) !== row.price_per_kg) {
+      throw new Error(`Price schedule verification failed for Grade ${row.grade}. The local schedule was retained.`)
+    }
+  }
 }
 
 export async function fetchCloudRecords(): Promise<GradingRecord[]> {

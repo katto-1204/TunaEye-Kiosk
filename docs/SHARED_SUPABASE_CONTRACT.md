@@ -74,6 +74,10 @@ Local-only states are `pending`, `syncing`, `synced`, and `failed`. They are not
 8. Retain every unsynced record. After verification, retain the newest 200 synced records locally and prune only older verified metadata and evidence.
 9. On any error mark the local item `failed`; retain it for retry.
 
+Manual price schedule saves use the same authenticated Supabase session and are
+read back and verified for the station and all three grades before the UI
+reports a successful cloud sync.
+
 No polling and no Supabase Realtime subscription are part of this contract.
 
 ## Raspberry Pi boundary
