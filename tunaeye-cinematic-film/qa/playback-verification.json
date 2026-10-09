@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-10-09T23:01:07.861Z",
+  "passed": false,
+  "status": "pending",
+  "method": "Isolated headless Chrome HTML video playback through a localhost HTTP byte-range server; real final MP4 files, no mocked media",
+  "files": [
+    {
+      "file": "tunaeye-cinematic-product-film.mp4",
+      "status": "pending",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "seekAborts": [],
+      "httpErrors": [],
+      "samples": [],
+      "error": "Final export does not exist yet"
+    },
+    {
+      "file": "tunaeye-cinematic-product-film-no-narration.mp4",
+      "status": "pending",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "seekAborts": [],
+      "httpErrors": [],
+      "samples": [],
+      "error": "Final export does not exist yet"
+    },
+    {
+      "file": "tunaeye-preview.mp4",
+      "status": "pending",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "seekAborts": [],
+      "httpErrors": [],
+      "samples": [],
+      "error": "Final export does not exist yet"
+    }
+  ]
+}

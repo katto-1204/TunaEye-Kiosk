@@ -1,0 +1,979 @@
+{
+  "source": "Actual repository kiosk UI; production code unchanged",
+  "camera": "Real Capture button and /snapshot request; deterministic isolated PNG fixture, not physical camera footage",
+  "inference": "Isolated Playwright intercepted /grade responses, not live Pi predictions",
+  "printing": "Actual receipt animation; headless window.print intercepted and counted, no physical printing",
+  "runs": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "segments": [
+        {
+          "id": 1,
+          "targetDurationSeconds": 6,
+          "rawStartMs": 3433,
+          "rawEndMs": 9442
+        },
+        {
+          "id": 2,
+          "targetDurationSeconds": 6,
+          "rawStartMs": 9442,
+          "rawEndMs": 15457
+        },
+        {
+          "id": 3,
+          "targetDurationSeconds": 8,
+          "rawStartMs": 15457,
+          "rawEndMs": 23467
+        },
+        {
+          "id": 4,
+          "targetDurationSeconds": 7,
+          "rawStartMs": 23467,
+          "rawEndMs": 30473
+        },
+        {
+          "id": 5,
+          "targetDurationSeconds": 11,
+          "rawStartMs": 30473,
+          "rawEndMs": 41483
+        },
+        {
+          "id": 6,
+          "targetDurationSeconds": 8,
+          "rawStartMs": 41483,
+          "rawEndMs": 49486
+        },
+        {
+          "id": 7,
+          "targetDurationSeconds": 11,
+          "rawStartMs": 49486,
+          "rawEndMs": 60498
+        },
+        {
+          "id": 8,
+          "targetDurationSeconds": 10,
+          "rawStartMs": 60498,
+          "rawEndMs": 70500
+        },
+        {
+          "id": 9,
+          "targetDurationSeconds": 10,
+          "rawStartMs": 70500,
+          "rawEndMs": 80503
+        },
+        {
+          "id": 10,
+          "targetDurationSeconds": 8,
+          "rawStartMs": 80503,
+          "rawEndMs": 88516
+        }
+      ],
+      "events": [
+        {
+          "type": "tap",
+          "label": "Get started",
+          "rawMs": 7122,
+          "x": 640,
+          "y": 495.1875
+        },
+        {
+          "type": "tap",
+          "label": "Expert Grader",
+          "rawMs": 10521,
+          "x": 890,
+          "y": 448
+        },
+        {
+          "type": "typing",
+          "label": "Eli",
+          "rawMs": 11213
+        },
+        {
+          "type": "tap",
+          "label": "Start grading",
+          "rawMs": 12253,
+          "x": 1141.90625,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Select Tail cut",
+          "rawMs": 16686,
+          "x": 904,
+          "y": 414.125
+        },
+        {
+          "type": "tap",
+          "label": "Sample Continue",
+          "rawMs": 18037,
+          "x": 1157.578125,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Same fish",
+          "rawMs": 18920,
+          "x": 373,
+          "y": 190.078125
+        },
+        {
+          "type": "tap",
+          "label": "Association Continue",
+          "rawMs": 20270,
+          "x": 1157.578125,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Tutorial Next 1",
+          "rawMs": 23969,
+          "x": 1175.2109375,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Tutorial Next 2",
+          "rawMs": 24520,
+          "x": 1175.2109375,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Enter weight",
+          "rawMs": 25069,
+          "x": 1143.8359375,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Weight 3",
+          "rawMs": 25357,
+          "x": 1085.78125,
+          "y": 331.3672790527344
+        },
+        {
+          "type": "tap",
+          "label": "Weight 6",
+          "rawMs": 25971,
+          "x": 1085.78125,
+          "y": 424.703125
+        },
+        {
+          "type": "tap",
+          "label": "Weight .",
+          "rawMs": 26487,
+          "x": 648.9140625,
+          "y": 498.890625
+        },
+        {
+          "type": "tap",
+          "label": "Weight 2",
+          "rawMs": 27104,
+          "x": 867.34375,
+          "y": 326.109375
+        },
+        {
+          "type": "tap",
+          "label": "Start capture",
+          "rawMs": 28003,
+          "x": 1141.7265625,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Capture sashibo core",
+          "rawMs": 33320,
+          "x": 1052.3515625,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Sashibo Use Image",
+          "rawMs": 41686,
+          "x": 1116.375,
+          "y": 425.875
+        },
+        {
+          "type": "tap",
+          "label": "Next sample",
+          "rawMs": 49686,
+          "x": 969.5,
+          "y": 748
+        },
+        {
+          "type": "tap",
+          "label": "Capture tail cut",
+          "rawMs": 51120,
+          "x": 1052.3515625,
+          "y": 740
+        },
+        {
+          "type": "tap",
+          "label": "Tail Use Image",
+          "rawMs": 53503,
+          "x": 1116.375,
+          "y": 425.875
+        },
+        {
+          "type": "tap",
+          "label": "Manual override",
+          "rawMs": 60703,
+          "x": 415.703125,
+          "y": 748
+        },
+        {
+          "type": "tap",
+          "label": "PIN 1",
+          "rawMs": 61236,
+          "x": 556.6640625,
+          "y": 398.25
+        },
+        {
+          "type": "tap",
+          "label": "PIN 2",
+          "rawMs": 61503,
+          "x": 639.9921875,
+          "y": 398.25
+        },
+        {
+          "type": "tap",
+          "label": "PIN 3",
+          "rawMs": 61753,
+          "x": 723.328125,
+          "y": 398.25
+        },
+        {
+          "type": "tap",
+          "label": "PIN 4",
+          "rawMs": 62003,
+          "x": 556.6640625,
+          "y": 460.25
+        },
+        {
+          "type": "tap",
+          "label": "Unlock override",
+          "rawMs": 62270,
+          "x": 776.5,
+          "y": 683.25
+        },
+        {
+          "type": "tap",
+          "label": "Expert Grade B",
+          "rawMs": 62636,
+          "x": 640.9921875,
+          "y": 341.09375
+        },
+        {
+          "type": "tap",
+          "label": "Save override",
+          "rawMs": 64203,
+          "x": 776.5,
+          "y": 591.09375
+        },
+        {
+          "type": "tap",
+          "label": "View results overview",
+          "rawMs": 64719,
+          "x": 840.328125,
+          "y": 748
+        },
+        {
+          "type": "tap",
+          "label": "Print separate copies",
+          "rawMs": 70703,
+          "x": 1110.34375,
+          "y": 641.625
+        },
+        {
+          "type": "tap",
+          "label": "Print Sashibo core",
+          "rawMs": 72236,
+          "x": 886.703125,
+          "y": 735
+        },
+        {
+          "type": "tap",
+          "label": "Print Tail cut",
+          "rawMs": 74489,
+          "x": 899.71875,
+          "y": 735
+        },
+        {
+          "type": "tap",
+          "label": "Dashboard",
+          "rawMs": 80703,
+          "x": 506.5,
+          "y": 580.34375
+        },
+        {
+          "type": "tap",
+          "label": "Open Tail cut record",
+          "rawMs": 82486,
+          "x": 883.1953125,
+          "y": 248.109375
+        }
+      ],
+      "screenshots": [
+        {
+          "name": "01-welcome",
+          "file": "captures/1280x800/01-welcome.png",
+          "rawMs": 3884,
+          "route": "/kiosk/"
+        },
+        {
+          "name": "02-role",
+          "file": "captures/1280x800/02-role.png",
+          "rawMs": 9714,
+          "route": "/select-role"
+        },
+        {
+          "name": "03-grader-eli",
+          "file": "captures/1280x800/03-grader-eli.png",
+          "rawMs": 11548,
+          "route": "/kiosk/grader"
+        },
+        {
+          "name": "04-both-samples",
+          "file": "captures/1280x800/04-both-samples.png",
+          "rawMs": 17117,
+          "route": "/kiosk/sample"
+        },
+        {
+          "name": "05-same-fish",
+          "file": "captures/1280x800/05-same-fish.png",
+          "rawMs": 19467,
+          "route": "/kiosk/association"
+        },
+        {
+          "name": "06-placement-guide",
+          "file": "captures/1280x800/06-placement-guide.png",
+          "rawMs": 23767,
+          "route": "/kiosk/tutorial"
+        },
+        {
+          "name": "07-weight-36-2",
+          "file": "captures/1280x800/07-weight-36-2.png",
+          "rawMs": 27792,
+          "route": "/kiosk/weight"
+        },
+        {
+          "name": "08-sashibo-camera",
+          "file": "captures/1280x800/08-sashibo-camera.png",
+          "rawMs": 30811,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "09-sashibo-review",
+          "file": "captures/1280x800/09-sashibo-review.png",
+          "rawMs": 35047,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "10-sashibo-analysis",
+          "file": "captures/1280x800/10-sashibo-analysis.png",
+          "rawMs": 42215,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "11-sashibo-result",
+          "file": "captures/1280x800/11-sashibo-result.png",
+          "rawMs": 44838,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "12-tail-camera",
+          "file": "captures/1280x800/12-tail-camera.png",
+          "rawMs": 50017,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "13-tail-review",
+          "file": "captures/1280x800/13-tail-review.png",
+          "rawMs": 52804,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "14-tail-analysis",
+          "file": "captures/1280x800/14-tail-analysis.png",
+          "rawMs": 54081,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "15-tail-result",
+          "file": "captures/1280x800/15-tail-result.png",
+          "rawMs": 56221,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "16-override-pin",
+          "file": "captures/1280x800/16-override-pin.png",
+          "rawMs": 61028,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "17-override-grade-reason",
+          "file": "captures/1280x800/17-override-grade-reason.png",
+          "rawMs": 63988,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "18-tail-expert-result",
+          "file": "captures/1280x800/18-tail-expert-result.png",
+          "rawMs": 64511,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "19-overview",
+          "file": "captures/1280x800/19-overview.png",
+          "rawMs": 65078,
+          "route": "/kiosk/overview"
+        },
+        {
+          "name": "20-receipt-core",
+          "file": "captures/1280x800/20-receipt-core.png",
+          "rawMs": 72015,
+          "route": "/kiosk/overview"
+        },
+        {
+          "name": "21-receipt-print-animation",
+          "file": "captures/1280x800/21-receipt-print-animation.png",
+          "rawMs": 73036,
+          "route": "/kiosk/overview"
+        },
+        {
+          "name": "22-complete",
+          "file": "captures/1280x800/22-complete.png",
+          "rawMs": 76621,
+          "route": "/kiosk/complete"
+        },
+        {
+          "name": "23-dashboard-records",
+          "file": "captures/1280x800/23-dashboard-records.png",
+          "rawMs": 81072,
+          "route": "/kiosk/grader-dashboard"
+        },
+        {
+          "name": "24-record-detail",
+          "file": "captures/1280x800/24-record-detail.png",
+          "rawMs": 82814,
+          "route": "/kiosk/grader-dashboard"
+        }
+      ],
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "failedRequests": [],
+      "abortedLocalResources": [],
+      "unexpectedExternalRequests": [],
+      "checks": [
+        "Ordered real kiosk workflow",
+        "Both samples selected",
+        "Same Fish 1 association",
+        "Three placement tutorial pages",
+        "36.2 kg manual weight before camera",
+        "Real Capture button, two intercepted /snapshot requests and image review",
+        "Two intercepted /grade requests",
+        "Individual 96.3% and 94.1% Grade A results",
+        "PIN-protected tail Grade B expert override with preserved Grade A prediction",
+        "Two-sample overview",
+        "Two real receipt animations and intercepted browser print calls",
+        "Complete screen",
+        "Eli dashboard with 1 session and 2 local pending records",
+        "Record detail preserves evidence and override reason",
+        "No horizontal overflow or broken images on captured screens",
+        "Every clicked control fully in viewport",
+        "No console errors or failed requests"
+      ],
+      "videoLeadMs": 3433,
+      "status": "passed",
+      "video": "captures/raw-workflow.webm"
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 600
+      },
+      "segments": [
+        {
+          "id": 1,
+          "targetDurationSeconds": 6,
+          "rawStartMs": 2412,
+          "rawEndMs": 3213
+        },
+        {
+          "id": 2,
+          "targetDurationSeconds": 6,
+          "rawStartMs": 3213,
+          "rawEndMs": 4435
+        },
+        {
+          "id": 3,
+          "targetDurationSeconds": 8,
+          "rawStartMs": 4435,
+          "rawEndMs": 6098
+        },
+        {
+          "id": 4,
+          "targetDurationSeconds": 7,
+          "rawStartMs": 6098,
+          "rawEndMs": 8625
+        },
+        {
+          "id": 5,
+          "targetDurationSeconds": 11,
+          "rawStartMs": 8625,
+          "rawEndMs": 10682
+        },
+        {
+          "id": 6,
+          "targetDurationSeconds": 8,
+          "rawStartMs": 10682,
+          "rawEndMs": 11786
+        },
+        {
+          "id": 7,
+          "targetDurationSeconds": 11,
+          "rawStartMs": 11786,
+          "rawEndMs": 15040
+        },
+        {
+          "id": 8,
+          "targetDurationSeconds": 10,
+          "rawStartMs": 15040,
+          "rawEndMs": 17123
+        },
+        {
+          "id": 9,
+          "targetDurationSeconds": 10,
+          "rawStartMs": 17123,
+          "rawEndMs": 21646
+        },
+        {
+          "id": 10,
+          "targetDurationSeconds": 8,
+          "rawStartMs": 21646,
+          "rawEndMs": 22424
+        }
+      ],
+      "events": [
+        {
+          "type": "tap",
+          "label": "Get started",
+          "rawMs": 2947,
+          "x": 512,
+          "y": 390.2013244628906
+        },
+        {
+          "type": "tap",
+          "label": "Expert Grader",
+          "rawMs": 3578,
+          "x": 756.46875,
+          "y": 311.75
+        },
+        {
+          "type": "typing",
+          "label": "Eli",
+          "rawMs": 3949
+        },
+        {
+          "type": "tap",
+          "label": "Start grading",
+          "rawMs": 4380,
+          "x": 921.90625,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Select Tail cut",
+          "rawMs": 4563,
+          "x": 764.5,
+          "y": 350.19537353515625
+        },
+        {
+          "type": "tap",
+          "label": "Sample Continue",
+          "rawMs": 5201,
+          "x": 937.578125,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Same fish",
+          "rawMs": 5398,
+          "x": 256,
+          "y": 208.25225448608398
+        },
+        {
+          "type": "tap",
+          "label": "Association Continue",
+          "rawMs": 6045,
+          "x": 937.578125,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Tutorial Next 1",
+          "rawMs": 6411,
+          "x": 955.2109375,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Tutorial Next 2",
+          "rawMs": 6562,
+          "x": 955.2109375,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Enter weight",
+          "rawMs": 6711,
+          "x": 923.8359375,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Weight 3",
+          "rawMs": 6813,
+          "x": 882.4921875,
+          "y": 206.07069396972656
+        },
+        {
+          "type": "tap",
+          "label": "Weight 6",
+          "rawMs": 7198,
+          "x": 882.4921875,
+          "y": 295
+        },
+        {
+          "type": "tap",
+          "label": "Weight .",
+          "rawMs": 7597,
+          "x": 516.46875,
+          "y": 363.5
+        },
+        {
+          "type": "tap",
+          "label": "Weight 2",
+          "rawMs": 7946,
+          "x": 699.4765625,
+          "y": 201.5
+        },
+        {
+          "type": "tap",
+          "label": "Start capture",
+          "rawMs": 8562,
+          "x": 921.7265625,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Capture sashibo core",
+          "rawMs": 8980,
+          "x": 842.3359375,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Sashibo Use Image",
+          "rawMs": 10698,
+          "x": 911.265625,
+          "y": 315.765625
+        },
+        {
+          "type": "tap",
+          "label": "Next sample",
+          "rawMs": 11800,
+          "x": 841.5,
+          "y": 562
+        },
+        {
+          "type": "tap",
+          "label": "Capture tail cut",
+          "rawMs": 12198,
+          "x": 842.3359375,
+          "y": 554
+        },
+        {
+          "type": "tap",
+          "label": "Tail Use Image",
+          "rawMs": 13945,
+          "x": 911.265625,
+          "y": 315.765625
+        },
+        {
+          "type": "tap",
+          "label": "Manual override",
+          "rawMs": 15078,
+          "x": 287.703125,
+          "y": 562
+        },
+        {
+          "type": "tap",
+          "label": "PIN 1",
+          "rawMs": 15478,
+          "x": 429.6640625,
+          "y": 320.5
+        },
+        {
+          "type": "tap",
+          "label": "PIN 2",
+          "rawMs": 15545,
+          "x": 511.9921875,
+          "y": 320.5
+        },
+        {
+          "type": "tap",
+          "label": "PIN 3",
+          "rawMs": 15611,
+          "x": 594.328125,
+          "y": 320.5
+        },
+        {
+          "type": "tap",
+          "label": "PIN 4",
+          "rawMs": 15678,
+          "x": 429.6640625,
+          "y": 371.5
+        },
+        {
+          "type": "tap",
+          "label": "Unlock override",
+          "rawMs": 15745,
+          "x": 655.5,
+          "y": 568.5
+        },
+        {
+          "type": "tap",
+          "label": "Expert Grade B",
+          "rawMs": 15811,
+          "x": 513,
+          "y": 241.09375
+        },
+        {
+          "type": "tap",
+          "label": "Save override",
+          "rawMs": 16478,
+          "x": 655.5,
+          "y": 491.09375
+        },
+        {
+          "type": "tap",
+          "label": "View results overview",
+          "rawMs": 16795,
+          "x": 712.328125,
+          "y": 562
+        },
+        {
+          "type": "tap",
+          "label": "Print separate copies",
+          "rawMs": 17136,
+          "x": 890.34375,
+          "y": 525.015625
+        },
+        {
+          "type": "tap",
+          "label": "Print Sashibo core",
+          "rawMs": 17628,
+          "x": 709.0625,
+          "y": 549
+        },
+        {
+          "type": "tap",
+          "label": "Print Tail cut",
+          "rawMs": 19478,
+          "x": 722.765625,
+          "y": 549
+        },
+        {
+          "type": "tap",
+          "label": "Dashboard",
+          "rawMs": 21678,
+          "x": 378.5,
+          "y": 474.84375
+        },
+        {
+          "type": "tap",
+          "label": "Open Tail cut record",
+          "rawMs": 22100,
+          "x": 668,
+          "y": 243.109375
+        }
+      ],
+      "screenshots": [
+        {
+          "name": "01-welcome",
+          "file": "captures/1024x600/01-welcome.png",
+          "rawMs": 2824,
+          "route": "/kiosk/"
+        },
+        {
+          "name": "02-role",
+          "file": "captures/1024x600/02-role.png",
+          "rawMs": 3483,
+          "route": "/select-role"
+        },
+        {
+          "name": "03-grader-eli",
+          "file": "captures/1024x600/03-grader-eli.png",
+          "rawMs": 4282,
+          "route": "/kiosk/grader"
+        },
+        {
+          "name": "04-both-samples",
+          "file": "captures/1024x600/04-both-samples.png",
+          "rawMs": 5092,
+          "route": "/kiosk/sample"
+        },
+        {
+          "name": "05-same-fish",
+          "file": "captures/1024x600/05-same-fish.png",
+          "rawMs": 5952,
+          "route": "/kiosk/association"
+        },
+        {
+          "name": "06-placement-guide",
+          "file": "captures/1024x600/06-placement-guide.png",
+          "rawMs": 6389,
+          "route": "/kiosk/tutorial"
+        },
+        {
+          "name": "07-weight-36-2",
+          "file": "captures/1024x600/07-weight-36-2.png",
+          "rawMs": 8535,
+          "route": "/kiosk/weight"
+        },
+        {
+          "name": "08-sashibo-camera",
+          "file": "captures/1024x600/08-sashibo-camera.png",
+          "rawMs": 8888,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "09-sashibo-review",
+          "file": "captures/1024x600/09-sashibo-review.png",
+          "rawMs": 10682,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "10-sashibo-analysis",
+          "file": "captures/1024x600/10-sashibo-analysis.png",
+          "rawMs": 11220,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "11-sashibo-result",
+          "file": "captures/1024x600/11-sashibo-result.png",
+          "rawMs": 11786,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "12-tail-camera",
+          "file": "captures/1024x600/12-tail-camera.png",
+          "rawMs": 12112,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "13-tail-review",
+          "file": "captures/1024x600/13-tail-review.png",
+          "rawMs": 13850,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "14-tail-analysis",
+          "file": "captures/1024x600/14-tail-analysis.png",
+          "rawMs": 14452,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "15-tail-result",
+          "file": "captures/1024x600/15-tail-result.png",
+          "rawMs": 15040,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "16-override-pin",
+          "file": "captures/1024x600/16-override-pin.png",
+          "rawMs": 15445,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "17-override-grade-reason",
+          "file": "captures/1024x600/17-override-grade-reason.png",
+          "rawMs": 16447,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "18-tail-expert-result",
+          "file": "captures/1024x600/18-tail-expert-result.png",
+          "rawMs": 16773,
+          "route": "/kiosk/camera"
+        },
+        {
+          "name": "19-overview",
+          "file": "captures/1024x600/19-overview.png",
+          "rawMs": 17123,
+          "route": "/kiosk/overview"
+        },
+        {
+          "name": "20-receipt-core",
+          "file": "captures/1024x600/20-receipt-core.png",
+          "rawMs": 17599,
+          "route": "/kiosk/overview"
+        },
+        {
+          "name": "21-receipt-print-animation",
+          "file": "captures/1024x600/21-receipt-print-animation.png",
+          "rawMs": 18033,
+          "route": "/kiosk/overview"
+        },
+        {
+          "name": "22-complete",
+          "file": "captures/1024x600/22-complete.png",
+          "rawMs": 21644,
+          "route": "/kiosk/complete"
+        },
+        {
+          "name": "23-dashboard-records",
+          "file": "captures/1024x600/23-dashboard-records.png",
+          "rawMs": 22013,
+          "route": "/kiosk/grader-dashboard"
+        },
+        {
+          "name": "24-record-detail",
+          "file": "captures/1024x600/24-record-detail.png",
+          "rawMs": 22424,
+          "route": "/kiosk/grader-dashboard"
+        }
+      ],
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "failedRequests": [],
+      "abortedLocalResources": [],
+      "unexpectedExternalRequests": [],
+      "checks": [
+        "Ordered real kiosk workflow",
+        "Both samples selected",
+        "Same Fish 1 association",
+        "Three placement tutorial pages",
+        "36.2 kg manual weight before camera",
+        "Real Capture button, two intercepted /snapshot requests and image review",
+        "Two intercepted /grade requests",
+        "Individual 96.3% and 94.1% Grade A results",
+        "PIN-protected tail Grade B expert override with preserved Grade A prediction",
+        "Two-sample overview",
+        "Two real receipt animations and intercepted browser print calls",
+        "Complete screen",
+        "Eli dashboard with 1 session and 2 local pending records",
+        "Record detail preserves evidence and override reason",
+        "No horizontal overflow or broken images on captured screens",
+        "Every clicked control fully in viewport",
+        "No console errors or failed requests"
+      ],
+      "videoLeadMs": 2412,
+      "status": "passed"
+    }
+  ]
+}

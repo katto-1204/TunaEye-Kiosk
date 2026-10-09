@@ -1,0 +1,80 @@
+{
+  "duration": 120,
+  "sampleRate": 48000,
+  "channels": 2,
+  "targetLUFS": -14,
+  "truePeakCeiling": -1.5,
+  "musicDucking": "Automatic 5:1 compressor keyed by voice; 18ms attack and 450ms release",
+  "mixes": [
+    {
+      "name": "final_mix.wav",
+      "firstPass": {
+        "input_i": "-19.63",
+        "input_tp": "-2.96",
+        "input_lra": "8.40",
+        "input_thresh": "-29.99",
+        "output_i": "-14.34",
+        "output_tp": "-1.50",
+        "output_lra": "6.60",
+        "output_thresh": "-24.57",
+        "normalization_type": "dynamic",
+        "target_offset": "0.34"
+      },
+      "mastering": {
+        "input_i": "-19.63",
+        "input_tp": "-2.96",
+        "input_lra": "8.40",
+        "input_thresh": "-29.99",
+        "output_i": "-14.15",
+        "output_tp": "-1.50",
+        "output_lra": "6.50",
+        "output_thresh": "-24.37",
+        "normalization_type": "dynamic",
+        "target_offset": "0.15"
+      },
+      "verified": {
+        "lufs": -14.18,
+        "truePeak": -1.42,
+        "loudnessRange": 6.5,
+        "duration": 120,
+        "sampleRate": 48000,
+        "channels": 2
+      }
+    },
+    {
+      "name": "no_narration_mix.wav",
+      "firstPass": {
+        "input_i": "-25.19",
+        "input_tp": "-3.70",
+        "input_lra": "5.80",
+        "input_thresh": "-35.39",
+        "output_i": "-13.43",
+        "output_tp": "-1.50",
+        "output_lra": "3.50",
+        "output_thresh": "-23.45",
+        "normalization_type": "dynamic",
+        "target_offset": "-0.57"
+      },
+      "mastering": {
+        "input_i": "-25.19",
+        "input_tp": "-3.70",
+        "input_lra": "5.80",
+        "input_thresh": "-35.39",
+        "output_i": "-13.90",
+        "output_tp": "-1.50",
+        "output_lra": "3.60",
+        "output_thresh": "-23.92",
+        "normalization_type": "dynamic",
+        "target_offset": "-0.10"
+      },
+      "verified": {
+        "lufs": -13.89,
+        "truePeak": -1.35,
+        "loudnessRange": 3.6,
+        "duration": 120,
+        "sampleRate": 48000,
+        "channels": 2
+      }
+    }
+  ]
+}

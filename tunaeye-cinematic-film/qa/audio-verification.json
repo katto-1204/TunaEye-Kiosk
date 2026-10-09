@@ -1,0 +1,551 @@
+{
+  "passed": true,
+  "acts": [
+    {
+      "act": 1,
+      "start": 3.2,
+      "end": 9.32,
+      "rms": 0.0819473027024432,
+      "tempo": 1
+    },
+    {
+      "act": 2,
+      "start": 15.4,
+      "end": 26.992,
+      "rms": 0.08772411724257671,
+      "tempo": 1
+    },
+    {
+      "act": 3,
+      "start": 30.6,
+      "end": 38.832,
+      "rms": 0.08199868704368776,
+      "tempo": 1
+    },
+    {
+      "act": 4,
+      "start": 44.1,
+      "end": 52.38,
+      "rms": 0.08886586239101958,
+      "tempo": 1
+    },
+    {
+      "act": 5,
+      "start": 55.6,
+      "end": 64.864,
+      "rms": 0.08808254167131715,
+      "tempo": 1
+    },
+    {
+      "act": 6,
+      "start": 72.7,
+      "end": 80.74000000000001,
+      "rms": 0.08495626789445412,
+      "tempo": 1
+    },
+    {
+      "act": 7,
+      "start": 95.4,
+      "end": 106.72800000000001,
+      "rms": 0.0820333021950544,
+      "tempo": 1
+    },
+    {
+      "act": 8,
+      "start": 108.1,
+      "end": 118.972,
+      "rms": 0.08765824268148727,
+      "tempo": 1
+    }
+  ],
+  "synchronizedCues": [
+    {
+      "seconds": 1.2,
+      "frame": 72,
+      "label": "opening-beam",
+      "type": "sweep",
+      "rms": 0.023427508344484434
+    },
+    {
+      "seconds": 3.2,
+      "frame": 192,
+      "label": "every-tuna-headline",
+      "type": "impact",
+      "rms": 0.1369860841258846
+    },
+    {
+      "seconds": 6.4,
+      "frame": 384,
+      "label": "tells-a-story",
+      "type": "sweep",
+      "rms": 0.024171901802119148
+    },
+    {
+      "seconds": 9,
+      "frame": 540,
+      "label": "quality",
+      "type": "impact",
+      "rms": 0.1366959507448148
+    },
+    {
+      "seconds": 10.8,
+      "frame": 648,
+      "label": "freshness",
+      "type": "impact",
+      "rms": 0.13694199928884562
+    },
+    {
+      "seconds": 12.6,
+      "frame": 756,
+      "label": "value",
+      "type": "impact",
+      "rms": 0.13636418349706453
+    },
+    {
+      "seconds": 15,
+      "frame": 900,
+      "label": "sashibo-panel",
+      "type": "sweep",
+      "rms": 0.023709450027177975
+    },
+    {
+      "seconds": 17,
+      "frame": 1020,
+      "label": "tail-panel",
+      "type": "sweep",
+      "rms": 0.023651280646532956
+    },
+    {
+      "seconds": 21,
+      "frame": 1260,
+      "label": "precision-reticle",
+      "type": "scan",
+      "rms": 0.03081334505570213
+    },
+    {
+      "seconds": 25,
+      "frame": 1500,
+      "label": "trained-eye",
+      "type": "scan",
+      "rms": 0.030885895687304012
+    },
+    {
+      "seconds": 30,
+      "frame": 1800,
+      "label": "expertise-matters",
+      "type": "impact",
+      "rms": 0.13734043296901483
+    },
+    {
+      "seconds": 34,
+      "frame": 2040,
+      "label": "technology-question",
+      "type": "sweep",
+      "rms": 0.023933073315859973
+    },
+    {
+      "seconds": 42,
+      "frame": 2520,
+      "label": "reveal-riser",
+      "type": "riser",
+      "rms": 0.015402916343629749
+    },
+    {
+      "seconds": 43,
+      "frame": 2580,
+      "label": "product-reveal",
+      "type": "reveal",
+      "rms": 0.21046186790307236
+    },
+    {
+      "seconds": 45,
+      "frame": 2700,
+      "label": "logo-settle",
+      "type": "logo",
+      "rms": 0.11101471832060165
+    },
+    {
+      "seconds": 48,
+      "frame": 2880,
+      "label": "sea-beyond-the-cut",
+      "type": "shine",
+      "rms": 0.026966352517555178
+    },
+    {
+      "seconds": 51,
+      "frame": 3060,
+      "label": "tablet-reveal",
+      "type": "sweep",
+      "rms": 0.023828929260498937
+    },
+    {
+      "seconds": 55,
+      "frame": 3300,
+      "label": "image-input",
+      "type": "data",
+      "rms": 0.027992500205146927
+    },
+    {
+      "seconds": 59,
+      "frame": 3540,
+      "label": "network-layer-one",
+      "type": "data",
+      "rms": 0.02839376800032956
+    },
+    {
+      "seconds": 63,
+      "frame": 3780,
+      "label": "network-layer-two",
+      "type": "data",
+      "rms": 0.02806462416200914
+    },
+    {
+      "seconds": 68,
+      "frame": 4080,
+      "label": "classification",
+      "type": "confirm",
+      "rms": 0.04005417998965388
+    },
+    {
+      "seconds": 72,
+      "frame": 4320,
+      "label": "01-welcome",
+      "type": "sweep",
+      "rms": 0.023624791626802522
+    },
+    {
+      "seconds": 72.6,
+      "frame": 4356,
+      "label": "Get started",
+      "type": "click",
+      "rms": 0.012215187729352244
+    },
+    {
+      "seconds": 74,
+      "frame": 4440,
+      "label": "02-role",
+      "type": "sweep",
+      "rms": 0.023401575656322733
+    },
+    {
+      "seconds": 75,
+      "frame": 4500,
+      "label": "Expert Grader",
+      "type": "click",
+      "rms": 0.01224439061039832
+    },
+    {
+      "seconds": 75.7,
+      "frame": 4542,
+      "label": "Eli",
+      "type": "typing",
+      "rms": 0.020203438476043507
+    },
+    {
+      "seconds": 76,
+      "frame": 4560,
+      "label": "03-name",
+      "type": "sweep",
+      "rms": 0.027127774710807632
+    },
+    {
+      "seconds": 76,
+      "frame": 4560,
+      "label": "Expert Grader",
+      "type": "click",
+      "rms": 0.027127774710807632
+    },
+    {
+      "seconds": 76.7,
+      "frame": 4602,
+      "label": "Eli",
+      "type": "typing",
+      "rms": 0.007136100163511553
+    },
+    {
+      "seconds": 77.73333333333333,
+      "frame": 4664,
+      "label": "Start grading",
+      "type": "click",
+      "rms": 0.0269601404091383
+    },
+    {
+      "seconds": 78,
+      "frame": 4680,
+      "label": "04-samples",
+      "type": "sweep",
+      "rms": 0.02318519717410727
+    },
+    {
+      "seconds": 78.6,
+      "frame": 4716,
+      "label": "Select Tail cut",
+      "type": "click",
+      "rms": 0.01224654245033322
+    },
+    {
+      "seconds": 79.95,
+      "frame": 4797,
+      "label": "Sample Continue",
+      "type": "click",
+      "rms": 0.03207878581164231
+    },
+    {
+      "seconds": 80,
+      "frame": 4800,
+      "label": "05-association",
+      "type": "sweep",
+      "rms": 0.024059862226045843
+    },
+    {
+      "seconds": 80.5,
+      "frame": 4830,
+      "label": "Same fish",
+      "type": "click",
+      "rms": 0.012479042812425102
+    },
+    {
+      "seconds": 81.85,
+      "frame": 4911,
+      "label": "Association Continue",
+      "type": "click",
+      "rms": 0.03742641329681918
+    },
+    {
+      "seconds": 82,
+      "frame": 4920,
+      "label": "06-tutorial",
+      "type": "sweep",
+      "rms": 0.023305153319378033
+    },
+    {
+      "seconds": 82.4,
+      "frame": 4944,
+      "label": "Tutorial Next 1",
+      "type": "click",
+      "rms": 0.012433083706235679
+    },
+    {
+      "seconds": 82.95,
+      "frame": 4977,
+      "label": "Tutorial Next 2",
+      "type": "click",
+      "rms": 0.012561465353873015
+    },
+    {
+      "seconds": 83.5,
+      "frame": 5010,
+      "label": "Enter weight",
+      "type": "click",
+      "rms": 0.012391765096185517
+    },
+    {
+      "seconds": 83.78333333333333,
+      "frame": 5027,
+      "label": "Weight 3",
+      "type": "click",
+      "rms": 0.032813333378361835
+    },
+    {
+      "seconds": 84,
+      "frame": 5040,
+      "label": "07-weight",
+      "type": "sweep",
+      "rms": 0.025404360815398937
+    },
+    {
+      "seconds": 84.15,
+      "frame": 5049,
+      "label": "Weight 3",
+      "type": "click",
+      "rms": 0.013612786376013075
+    },
+    {
+      "seconds": 84.76666666666667,
+      "frame": 5086,
+      "label": "Weight 6",
+      "type": "click",
+      "rms": 0.012566435250918885
+    },
+    {
+      "seconds": 85.28333333333333,
+      "frame": 5117,
+      "label": "Weight .",
+      "type": "click",
+      "rms": 0.012256295592300308
+    },
+    {
+      "seconds": 85.9,
+      "frame": 5154,
+      "label": "Weight 2",
+      "type": "click",
+      "rms": 0.01221919259541683
+    },
+    {
+      "seconds": 86.5,
+      "frame": 5190,
+      "label": "08-capture",
+      "type": "sweep",
+      "rms": 0.023530660346626323
+    },
+    {
+      "seconds": 87,
+      "frame": 5220,
+      "label": "Capture sashibo core",
+      "type": "shutter",
+      "rms": 0.041295685627386954
+    },
+    {
+      "seconds": 88.5,
+      "frame": 5310,
+      "label": "09-review",
+      "type": "sweep",
+      "rms": 0.023182932544452795
+    },
+    {
+      "seconds": 90.5,
+      "frame": 5430,
+      "label": "10-use-image",
+      "type": "sweep",
+      "rms": 0.023215410257196693
+    },
+    {
+      "seconds": 91,
+      "frame": 5460,
+      "label": "Sashibo Use Image",
+      "type": "confirm",
+      "rms": 0.04003533078441108
+    },
+    {
+      "seconds": 93,
+      "frame": 5580,
+      "label": "11-analysis-result",
+      "type": "sweep",
+      "rms": 0.02320264593920078
+    },
+    {
+      "seconds": 95.5,
+      "frame": 5730,
+      "label": "grade-a",
+      "type": "grade",
+      "rms": 0.1304909075258508
+    },
+    {
+      "seconds": 96.08333333333333,
+      "frame": 5765,
+      "label": "grade-b",
+      "type": "grade",
+      "rms": 0.13178181390804258
+    },
+    {
+      "seconds": 96.66666666666667,
+      "frame": 5800,
+      "label": "grade-c",
+      "type": "grade",
+      "rms": 0.13167844890729954
+    },
+    {
+      "seconds": 98.6,
+      "frame": 5916,
+      "label": "invalid",
+      "type": "grade",
+      "rms": 0.13097115627040867
+    },
+    {
+      "seconds": 102.5,
+      "frame": 6150,
+      "label": "individual-result",
+      "type": "confirm",
+      "rms": 0.04005417998965388
+    },
+    {
+      "seconds": 106.5,
+      "frame": 6390,
+      "label": "tail-result",
+      "type": "confirm",
+      "rms": 0.04005417998965388
+    },
+    {
+      "seconds": 108,
+      "frame": 6480,
+      "label": "expert-override",
+      "type": "click",
+      "rms": 0.012425405723867348
+    },
+    {
+      "seconds": 110.4,
+      "frame": 6624,
+      "label": "grading-overview",
+      "type": "sweep",
+      "rms": 0.0234733210737285
+    },
+    {
+      "seconds": 112.2,
+      "frame": 6732,
+      "label": "receipt",
+      "type": "paper",
+      "rms": 0.09728390800280723
+    },
+    {
+      "seconds": 113.8,
+      "frame": 6828,
+      "label": "local-record-save",
+      "type": "confirm",
+      "rms": 0.04008323105812521
+    },
+    {
+      "seconds": 115.5,
+      "frame": 6930,
+      "label": "brand-finale",
+      "type": "logo",
+      "rms": 0.11125578041782462
+    }
+  ],
+  "musicDucking": {
+    "voicedWindows": 229,
+    "medianAttenuationDB": -17.641583782027478
+  },
+  "stems": [
+    {
+      "name": "narration.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -6.008303467407203,
+      "rms": 0.06712666881141223
+    },
+    {
+      "name": "music.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -6.375177064506227,
+      "rms": 0.06057330576435131
+    },
+    {
+      "name": "sfx.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -5.514483076862148,
+      "rms": 0.026590698735603345
+    },
+    {
+      "name": "final_mix.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -1.4165074505369113,
+      "rms": 0.1438182878568583
+    },
+    {
+      "name": "no_narration_mix.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "peakDbFS": -1.3493362686076549,
+      "rms": 0.16962977165351426
+    }
+  ],
+  "limits": "Numerical waveform, loudness, event and pace checks; final audiovisual playback review remains necessary."
+}

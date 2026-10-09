@@ -696,7 +696,7 @@ test('completed grading session remains local and pending until cloud sync', asy
 
   await page.context().setOffline(true)
   await page.getByRole('button', { name: 'Sync now' }).click()
-  await expect(page.getByRole('heading', { name: 'Sync unavailable' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Waiting for internet|Sync unavailable/ })).toBeVisible()
   const afterFailedSync = await page.evaluate(() => JSON.parse(localStorage.getItem('tunaeye-records') ?? '[]'))
   expect(afterFailedSync[0].transaction.syncState).toBe('pending')
   await page.context().setOffline(false)

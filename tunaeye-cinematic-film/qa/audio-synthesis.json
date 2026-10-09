@@ -1,0 +1,26 @@
+{
+  "bpm": 128,
+  "seed": 230910,
+  "composition": "Original D minor / B flat / F / C progression, D major emotional finale; detuned harmonic pads, mallet motif, syncopated arpeggios, saturated bass, synthesized percussion, deterministic stereo sound design",
+  "events": 63,
+  "stems": [
+    {
+      "name": "music.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "bits": 24,
+      "peak": 0.48,
+      "rms": 0.0605733129649021
+    },
+    {
+      "name": "sfx.wav",
+      "duration": 120,
+      "sampleRate": 48000,
+      "channels": 2,
+      "bits": 24,
+      "peak": 0.53,
+      "rms": 0.026590701899040368
+    }
+  ]
+}

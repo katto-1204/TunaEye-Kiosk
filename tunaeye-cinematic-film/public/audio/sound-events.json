@@ -1,0 +1,396 @@
+{
+  "fps": 60,
+  "bpm": 128,
+  "originalComposition": true,
+  "actBoundaries": [
+    0,
+    15,
+    30,
+    43,
+    55,
+    72,
+    95,
+    108,
+    120
+  ],
+  "events": [
+    {
+      "seconds": 1.2,
+      "frame": 72,
+      "label": "opening-beam",
+      "type": "sweep"
+    },
+    {
+      "seconds": 3.2,
+      "frame": 192,
+      "label": "every-tuna-headline",
+      "type": "impact"
+    },
+    {
+      "seconds": 6.4,
+      "frame": 384,
+      "label": "tells-a-story",
+      "type": "sweep"
+    },
+    {
+      "seconds": 9,
+      "frame": 540,
+      "label": "quality",
+      "type": "impact"
+    },
+    {
+      "seconds": 10.8,
+      "frame": 648,
+      "label": "freshness",
+      "type": "impact"
+    },
+    {
+      "seconds": 12.6,
+      "frame": 756,
+      "label": "value",
+      "type": "impact"
+    },
+    {
+      "seconds": 15,
+      "frame": 900,
+      "label": "sashibo-panel",
+      "type": "sweep"
+    },
+    {
+      "seconds": 17,
+      "frame": 1020,
+      "label": "tail-panel",
+      "type": "sweep"
+    },
+    {
+      "seconds": 21,
+      "frame": 1260,
+      "label": "precision-reticle",
+      "type": "scan"
+    },
+    {
+      "seconds": 25,
+      "frame": 1500,
+      "label": "trained-eye",
+      "type": "scan"
+    },
+    {
+      "seconds": 30,
+      "frame": 1800,
+      "label": "expertise-matters",
+      "type": "impact"
+    },
+    {
+      "seconds": 34,
+      "frame": 2040,
+      "label": "technology-question",
+      "type": "sweep"
+    },
+    {
+      "seconds": 42,
+      "frame": 2520,
+      "label": "reveal-riser",
+      "type": "riser"
+    },
+    {
+      "seconds": 43,
+      "frame": 2580,
+      "label": "product-reveal",
+      "type": "reveal"
+    },
+    {
+      "seconds": 45,
+      "frame": 2700,
+      "label": "logo-settle",
+      "type": "logo"
+    },
+    {
+      "seconds": 48,
+      "frame": 2880,
+      "label": "sea-beyond-the-cut",
+      "type": "shine"
+    },
+    {
+      "seconds": 51,
+      "frame": 3060,
+      "label": "tablet-reveal",
+      "type": "sweep"
+    },
+    {
+      "seconds": 55,
+      "frame": 3300,
+      "label": "image-input",
+      "type": "data"
+    },
+    {
+      "seconds": 59,
+      "frame": 3540,
+      "label": "network-layer-one",
+      "type": "data"
+    },
+    {
+      "seconds": 63,
+      "frame": 3780,
+      "label": "network-layer-two",
+      "type": "data"
+    },
+    {
+      "seconds": 68,
+      "frame": 4080,
+      "label": "classification",
+      "type": "confirm"
+    },
+    {
+      "seconds": 72,
+      "frame": 4320,
+      "label": "01-welcome",
+      "type": "sweep"
+    },
+    {
+      "seconds": 72.6,
+      "frame": 4356,
+      "label": "Get started",
+      "type": "click"
+    },
+    {
+      "seconds": 74,
+      "frame": 4440,
+      "label": "02-role",
+      "type": "sweep"
+    },
+    {
+      "seconds": 75,
+      "frame": 4500,
+      "label": "Expert Grader",
+      "type": "click"
+    },
+    {
+      "seconds": 75.7,
+      "frame": 4542,
+      "label": "Eli",
+      "type": "typing"
+    },
+    {
+      "seconds": 76,
+      "frame": 4560,
+      "label": "03-name",
+      "type": "sweep"
+    },
+    {
+      "seconds": 76,
+      "frame": 4560,
+      "label": "Expert Grader",
+      "type": "click"
+    },
+    {
+      "seconds": 76.7,
+      "frame": 4602,
+      "label": "Eli",
+      "type": "typing"
+    },
+    {
+      "seconds": 77.73333333333333,
+      "frame": 4664,
+      "label": "Start grading",
+      "type": "click"
+    },
+    {
+      "seconds": 78,
+      "frame": 4680,
+      "label": "04-samples",
+      "type": "sweep"
+    },
+    {
+      "seconds": 78.6,
+      "frame": 4716,
+      "label": "Select Tail cut",
+      "type": "click"
+    },
+    {
+      "seconds": 79.95,
+      "frame": 4797,
+      "label": "Sample Continue",
+      "type": "click"
+    },
+    {
+      "seconds": 80,
+      "frame": 4800,
+      "label": "05-association",
+      "type": "sweep"
+    },
+    {
+      "seconds": 80.5,
+      "frame": 4830,
+      "label": "Same fish",
+      "type": "click"
+    },
+    {
+      "seconds": 81.85,
+      "frame": 4911,
+      "label": "Association Continue",
+      "type": "click"
+    },
+    {
+      "seconds": 82,
+      "frame": 4920,
+      "label": "06-tutorial",
+      "type": "sweep"
+    },
+    {
+      "seconds": 82.4,
+      "frame": 4944,
+      "label": "Tutorial Next 1",
+      "type": "click"
+    },
+    {
+      "seconds": 82.95,
+      "frame": 4977,
+      "label": "Tutorial Next 2",
+      "type": "click"
+    },
+    {
+      "seconds": 83.5,
+      "frame": 5010,
+      "label": "Enter weight",
+      "type": "click"
+    },
+    {
+      "seconds": 83.78333333333333,
+      "frame": 5027,
+      "label": "Weight 3",
+      "type": "click"
+    },
+    {
+      "seconds": 84,
+      "frame": 5040,
+      "label": "07-weight",
+      "type": "sweep"
+    },
+    {
+      "seconds": 84.15,
+      "frame": 5049,
+      "label": "Weight 3",
+      "type": "click"
+    },
+    {
+      "seconds": 84.76666666666667,
+      "frame": 5086,
+      "label": "Weight 6",
+      "type": "click"
+    },
+    {
+      "seconds": 85.28333333333333,
+      "frame": 5117,
+      "label": "Weight .",
+      "type": "click"
+    },
+    {
+      "seconds": 85.9,
+      "frame": 5154,
+      "label": "Weight 2",
+      "type": "click"
+    },
+    {
+      "seconds": 86.5,
+      "frame": 5190,
+      "label": "08-capture",
+      "type": "sweep"
+    },
+    {
+      "seconds": 87,
+      "frame": 5220,
+      "label": "Capture sashibo core",
+      "type": "shutter"
+    },
+    {
+      "seconds": 88.5,
+      "frame": 5310,
+      "label": "09-review",
+      "type": "sweep"
+    },
+    {
+      "seconds": 90.5,
+      "frame": 5430,
+      "label": "10-use-image",
+      "type": "sweep"
+    },
+    {
+      "seconds": 91,
+      "frame": 5460,
+      "label": "Sashibo Use Image",
+      "type": "confirm"
+    },
+    {
+      "seconds": 93,
+      "frame": 5580,
+      "label": "11-analysis-result",
+      "type": "sweep"
+    },
+    {
+      "seconds": 95.5,
+      "frame": 5730,
+      "label": "grade-a",
+      "type": "grade"
+    },
+    {
+      "seconds": 96.08333333333333,
+      "frame": 5765,
+      "label": "grade-b",
+      "type": "grade"
+    },
+    {
+      "seconds": 96.66666666666667,
+      "frame": 5800,
+      "label": "grade-c",
+      "type": "grade"
+    },
+    {
+      "seconds": 98.6,
+      "frame": 5916,
+      "label": "invalid",
+      "type": "grade"
+    },
+    {
+      "seconds": 102.5,
+      "frame": 6150,
+      "label": "individual-result",
+      "type": "confirm"
+    },
+    {
+      "seconds": 106.5,
+      "frame": 6390,
+      "label": "tail-result",
+      "type": "confirm"
+    },
+    {
+      "seconds": 108,
+      "frame": 6480,
+      "label": "expert-override",
+      "type": "click"
+    },
+    {
+      "seconds": 110.4,
+      "frame": 6624,
+      "label": "grading-overview",
+      "type": "sweep"
+    },
+    {
+      "seconds": 112.2,
+      "frame": 6732,
+      "label": "receipt",
+      "type": "paper"
+    },
+    {
+      "seconds": 113.8,
+      "frame": 6828,
+      "label": "local-record-save",
+      "type": "confirm"
+    },
+    {
+      "seconds": 115.5,
+      "frame": 6930,
+      "label": "brand-finale",
+      "type": "logo"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "source": "Microsoft Edge word-boundary metadata; regenerated act-seven speech returned byte-identical audio",
+  "voiceFile": "public/audio/voice-07.mp3",
+  "narrationDelaySeconds": 95.4,
+  "metadataTicksPerSecond": 10000000,
+  "fps": 60,
+  "alignedEvents": [
+    {"phrase":"Grade A","spokenOnsetSeconds":95.501,"visualAndImpactFrame":5730,"visualAndImpactSeconds":95.5},
+    {"phrase":"Grade B","spokenOnsetSeconds":96.087750,"visualAndImpactFrame":5765,"visualAndImpactSeconds":96.08333333333333},
+    {"phrase":"Grade C","spokenOnsetSeconds":96.661750,"visualAndImpactFrame":5800,"visualAndImpactSeconds":96.66666666666667},
+    {"phrase":"Invalid","spokenOnsetSeconds":98.601541,"visualAndImpactFrame":5916,"visualAndImpactSeconds":98.6},
+    {"phrase":"Each result","spokenOnsetSeconds":102.479083,"resultUIAndConfirmationFrame":6150,"resultUIAndConfirmationSeconds":102.5}
+  ],
+  "renderCorrection": "Frames5700-6479 were replaced by a fresh780-frame Remotion render; concat preserves frame count and the full-range source color encoding before final BT.709 conversion. Future full renders use the corrected authored source directly."
+}

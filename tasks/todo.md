@@ -4,9 +4,18 @@
 - [x] Add bounded cloud reachability checks and friendly waiting states for both sync entry points.
 - [x] Show verified Synced / saved-local labels on captured images and current record review.
 - [x] Show one dismissible Internet is back toast after confirmed recovery; preserve manual sync.
-- [ ] Verify hotspot, recovery, partial disconnect and image labels in Playwright; run existing suite and Pi build.
+- [x] Verify hotspot, recovery, partial disconnect and image labels in Playwright; run existing suite and Pi build.
 
 Scope: existing cloud modules, shared records UI, existing toast style and focused tests. Keep all grading data and cloud verification requirements.
+
+### Internet recovery review
+- A five-second uncached cloud check runs at kiosk entry, foreground/focus, online events and every 15 seconds while visible. It never starts record uploads. Wi-Fi alone does not show recovery; the toast appears once after confirmed unavailable-to-available transition, is dismissible, and clears after eight seconds.
+- Both record sync actions show Waiting for internet and preserve data. A connection lost during upload/readback returns the current record/evidence to pending and stops further attempts; other authentication, database and verification errors stay distinct. Last-sync time only advances when records are actually synchronized.
+- Captured image thumbnails and review show Saved locally, Syncing, Synced or Sync needs retry. Synced remains tied to existing cloud row and image-byte verification. Open review derives its current record by ID.
+- The service worker bypasses no-store requests so cached health/app-shell responses cannot fake internet recovery. The browser regression verifies periodic recovery without a Wi-Fi event, no false/duplicate toast, no automatic writes, retained financial data, distinct authentication failure and successful manual retry after mid-sync disconnect.
+- Standard suite: 37 passed, 4 environment-specific skips, 2 failures resolved (compact badge row spacing and the old offline notice expectation); both affected tests passed on rerun. Final Pi-focused run: 4 passed, including same-origin Pi routes and offline cache check. Final 1024x600 tablet QA passed; 1000x650 record row/review screenshots inspected.
+- Live read-only Supabase health GET and apikey preflight passed with the effective Pi config and Origin http://10.42.0.1:5000. Actual hotspot-device internet, live cloud record/image writes, physical hardware and deployment remain unverified. No cloud data was written by the live probe.
+- Final TypeScript and Pi production build passed. Updated dist/ includes the final badge spacing, recovery UI and service-worker bypass. Diff whitespace checks passed.
 
 - [x] Inspect the persistence and sync flow that marks records as syncing before manual sync is requested.
 - [x] Remove the unintended automatic sync trigger during kiosk startup/reconnect handling.
@@ -61,3 +70,13 @@ Scope: shared demoMode initializer, focused regression tests, task notes. Preser
 - Existing suite plus new regressions: 38 eligible tests passed across full run and retry; 3 deployment-specific checks skipped. The sole initial failure was a tablet height measured as 67.999992px against a 68px threshold and passed on retry.
 - Pi-mode run: all 4 checks passed, including same-origin API/camera routing. Standard production and Pi builds passed; `dist/` now contains the Pi build.
 - Live Pi `/status` timed out from this workstation. Physical camera/inference and deployment were not verified; the running or installed app must load the rebuilt assets to receive the fix.
+## 120-second cinematic product launch film (2026-10-10)
+
+Scope: new `tunaeye-cinematic-film/` project; preserve production app and existing 90-second demo. 1920x1080, 60fps, 7200 frames, H.264/AAC stereo 48kHz. Eight acts at 0/15/30/43/55/72/95/108/120 seconds. Actual UI and repository samples; isolated simulated inference visibly labelled. Procedural graphics represent classification conceptually, never measured feature maps or Grad-CAM.
+
+- [x] Audit current product claims/assets and capture real ordered browser workflow.
+- [x] Produce eight spoken narration clips, original 128 BPM score, frame-synchronized effects and ducked mastered stems.
+- [x] Build eight editable cinematic Remotion scenes with distinct compositions, shared visual transitions and readable UI.
+- [x] Typecheck, browser verification, existing Playwright suite and critical-frame visual review.
+- [ ] Render all 7200 frames; mux narrated and narration-free finals; create preview.
+- [ ] Verify duration/frame count/resolution/audio/loudness/playback; deliver README and storyboard with evidence and limits.

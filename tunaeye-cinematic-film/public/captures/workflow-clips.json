@@ -1,0 +1,280 @@
+{
+  "source": "Fresh actual kiosk Playwright recording; camera/inference fixtures; original UI preserved",
+  "durationSeconds": 23,
+  "video": "captures/hero-workflow.mp4",
+  "clips": [
+    {
+      "name": "01-welcome",
+      "file": "captures/clips/01-welcome.mp4",
+      "sourceStartSeconds": 6.522,
+      "durationSeconds": 2,
+      "montageStartSeconds": 0,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Get started",
+          "rawMs": 7122,
+          "x": 640,
+          "y": 495.1875,
+          "clipSeconds": 0.5999999999999996,
+          "montageSeconds": 0.5999999999999996
+        }
+      ]
+    },
+    {
+      "name": "02-role",
+      "file": "captures/clips/02-role.mp4",
+      "sourceStartSeconds": 9.521,
+      "durationSeconds": 2,
+      "montageStartSeconds": 2,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Expert Grader",
+          "rawMs": 10521,
+          "x": 890,
+          "y": 448,
+          "clipSeconds": 1,
+          "montageSeconds": 3
+        },
+        {
+          "type": "typing",
+          "label": "Eli",
+          "rawMs": 11213,
+          "clipSeconds": 1.6919999999999984,
+          "montageSeconds": 3.6919999999999984
+        }
+      ]
+    },
+    {
+      "name": "03-name",
+      "file": "captures/clips/03-name.mp4",
+      "sourceStartSeconds": 10.513,
+      "durationSeconds": 2,
+      "montageStartSeconds": 4,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Expert Grader",
+          "rawMs": 10521,
+          "x": 890,
+          "y": 448,
+          "clipSeconds": 0.008000000000000895,
+          "montageSeconds": 4.008000000000001
+        },
+        {
+          "type": "typing",
+          "label": "Eli",
+          "rawMs": 11213,
+          "clipSeconds": 0.6999999999999993,
+          "montageSeconds": 4.699999999999999
+        },
+        {
+          "type": "tap",
+          "label": "Start grading",
+          "rawMs": 12253,
+          "x": 1141.90625,
+          "y": 740,
+          "clipSeconds": 1.7400000000000002,
+          "montageSeconds": 5.74
+        }
+      ]
+    },
+    {
+      "name": "04-samples",
+      "file": "captures/clips/04-samples.mp4",
+      "sourceStartSeconds": 16.086,
+      "durationSeconds": 2,
+      "montageStartSeconds": 6,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Select Tail cut",
+          "rawMs": 16686,
+          "x": 904,
+          "y": 414.125,
+          "clipSeconds": 0.6000000000000014,
+          "montageSeconds": 6.600000000000001
+        },
+        {
+          "type": "tap",
+          "label": "Sample Continue",
+          "rawMs": 18037,
+          "x": 1157.578125,
+          "y": 740,
+          "clipSeconds": 1.9510000000000005,
+          "montageSeconds": 7.9510000000000005
+        }
+      ]
+    },
+    {
+      "name": "05-association",
+      "file": "captures/clips/05-association.mp4",
+      "sourceStartSeconds": 18.42,
+      "durationSeconds": 2,
+      "montageStartSeconds": 8,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Same fish",
+          "rawMs": 18920,
+          "x": 373,
+          "y": 190.078125,
+          "clipSeconds": 0.5,
+          "montageSeconds": 8.5
+        },
+        {
+          "type": "tap",
+          "label": "Association Continue",
+          "rawMs": 20270,
+          "x": 1157.578125,
+          "y": 740,
+          "clipSeconds": 1.8499999999999979,
+          "montageSeconds": 9.849999999999998
+        }
+      ]
+    },
+    {
+      "name": "06-tutorial",
+      "file": "captures/clips/06-tutorial.mp4",
+      "sourceStartSeconds": 23.569000000000003,
+      "durationSeconds": 2,
+      "montageStartSeconds": 10,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Tutorial Next 1",
+          "rawMs": 23969,
+          "x": 1175.2109375,
+          "y": 740,
+          "clipSeconds": 0.3999999999999986,
+          "montageSeconds": 10.399999999999999
+        },
+        {
+          "type": "tap",
+          "label": "Tutorial Next 2",
+          "rawMs": 24520,
+          "x": 1175.2109375,
+          "y": 740,
+          "clipSeconds": 0.950999999999997,
+          "montageSeconds": 10.950999999999993
+        },
+        {
+          "type": "tap",
+          "label": "Enter weight",
+          "rawMs": 25069,
+          "x": 1143.8359375,
+          "y": 740,
+          "clipSeconds": 1.4999999999999964,
+          "montageSeconds": 11.5
+        },
+        {
+          "type": "tap",
+          "label": "Weight 3",
+          "rawMs": 25357,
+          "x": 1085.78125,
+          "y": 331.3672790527344,
+          "clipSeconds": 1.7879999999999967,
+          "montageSeconds": 11.787999999999997
+        }
+      ]
+    },
+    {
+      "name": "07-weight",
+      "file": "captures/clips/07-weight.mp4",
+      "sourceStartSeconds": 25.207,
+      "durationSeconds": 2.5,
+      "montageStartSeconds": 12,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Weight 3",
+          "rawMs": 25357,
+          "x": 1085.78125,
+          "y": 331.3672790527344,
+          "clipSeconds": 0.14999999999999858,
+          "montageSeconds": 12.149999999999999
+        },
+        {
+          "type": "tap",
+          "label": "Weight 6",
+          "rawMs": 25971,
+          "x": 1085.78125,
+          "y": 424.703125,
+          "clipSeconds": 0.7639999999999993,
+          "montageSeconds": 12.764000000000003
+        },
+        {
+          "type": "tap",
+          "label": "Weight .",
+          "rawMs": 26487,
+          "x": 648.9140625,
+          "y": 498.890625,
+          "clipSeconds": 1.2799999999999976,
+          "montageSeconds": 13.279999999999994
+        },
+        {
+          "type": "tap",
+          "label": "Weight 2",
+          "rawMs": 27104,
+          "x": 867.34375,
+          "y": 326.109375,
+          "clipSeconds": 1.8969999999999985,
+          "montageSeconds": 13.896999999999998
+        }
+      ]
+    },
+    {
+      "name": "08-capture",
+      "file": "captures/clips/08-capture.mp4",
+      "sourceStartSeconds": 32.82,
+      "durationSeconds": 2,
+      "montageStartSeconds": 14.5,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Capture sashibo core",
+          "rawMs": 33320,
+          "x": 1052.3515625,
+          "y": 740,
+          "clipSeconds": 0.5,
+          "montageSeconds": 15
+        }
+      ]
+    },
+    {
+      "name": "09-review",
+      "file": "captures/clips/09-review.mp4",
+      "sourceStartSeconds": 38.086,
+      "durationSeconds": 2,
+      "montageStartSeconds": 16.5,
+      "events": []
+    },
+    {
+      "name": "10-use-image",
+      "file": "captures/clips/10-use-image.mp4",
+      "sourceStartSeconds": 41.186,
+      "durationSeconds": 2.5,
+      "montageStartSeconds": 18.5,
+      "events": [
+        {
+          "type": "tap",
+          "label": "Sashibo Use Image",
+          "rawMs": 41686,
+          "x": 1116.375,
+          "y": 425.875,
+          "clipSeconds": 0.5,
+          "montageSeconds": 19
+        }
+      ]
+    },
+    {
+      "name": "11-analysis-result",
+      "file": "captures/clips/11-analysis-result.mp4",
+      "sourceStartSeconds": 43.386,
+      "durationSeconds": 2,
+      "montageStartSeconds": 21,
+      "events": []
+    }
+  ]
+}

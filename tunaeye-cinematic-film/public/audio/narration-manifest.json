@@ -1,0 +1,82 @@
+{
+  "voice": "en-US-GuyNeural",
+  "service": "Microsoft Edge online neural TTS",
+  "pronunciationAdaptations": [
+    "TunaEye => Tuna Eye",
+    "MobileNetV3 => MobileNet V three"
+  ],
+  "scenes": [
+    {
+      "start": 0,
+      "end": 15,
+      "delay": 3.2,
+      "text": "Every tuna tells a story. A story of quality, freshness, and value.",
+      "file": "voice-01.mp3",
+      "duration": 6.12,
+      "tempo": 1
+    },
+    {
+      "start": 15,
+      "end": 30,
+      "delay": 15.4,
+      "text": "But determining that quality requires experience, precision, and a trained eye. Expert graders examine critical visual indicators, including sashibo core and tail-cut.",
+      "file": "voice-02.mp3",
+      "duration": 11.592,
+      "tempo": 1
+    },
+    {
+      "start": 30,
+      "end": 43,
+      "delay": 30.6,
+      "text": "Their expertise matters. But what if technology could help make grading more consistent, efficient, and accessible?",
+      "file": "voice-03.mp3",
+      "duration": 8.232,
+      "tempo": 1
+    },
+    {
+      "start": 43,
+      "end": 55,
+      "delay": 44.1,
+      "text": "Introducing Tuna Eye. A computer vision-powered tuna quality grading system designed to support expert judgment.",
+      "file": "voice-04.mp3",
+      "duration": 8.28,
+      "tempo": 1
+    },
+    {
+      "start": 55,
+      "end": 72,
+      "delay": 55.6,
+      "text": "Powered by MobileNet V three, Tuna Eye analyzes sashibo-core and tail-cut images, examining visual characteristics such as color and clarity.",
+      "file": "voice-05.mp3",
+      "duration": 9.264,
+      "tempo": 1
+    },
+    {
+      "start": 72,
+      "end": 95,
+      "delay": 72.7,
+      "text": "With a guided kiosk interface, users select samples, record weight, capture images, and review each step before analysis.",
+      "file": "voice-06.mp3",
+      "duration": 8.04,
+      "tempo": 1
+    },
+    {
+      "start": 95,
+      "end": 108,
+      "delay": 95.4,
+      "text": "Grade A. Grade B. Grade C. Or Invalid when the image cannot be reliably classified. Each result includes confidence to support interpretation.",
+      "file": "voice-07.mp3",
+      "duration": 11.328,
+      "tempo": 1
+    },
+    {
+      "start": 108,
+      "end": 120,
+      "delay": 108.1,
+      "text": "Because Tuna Eye doesn't replace expert judgment. It supports review, documents results, and extends expert-informed grading into a streamlined digital workflow.",
+      "file": "voice-08.mp3",
+      "duration": 10.872,
+      "tempo": 1
+    }
+  ]
+}

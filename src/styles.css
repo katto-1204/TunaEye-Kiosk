@@ -431,7 +431,7 @@ h1,h2,h3,.role-title-v2,.role-card-v2 strong,.grader-hello__header h1,.grader-in
 .record-sample-cell{display:grid!important;grid-template-columns:42px minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-items:center}
 .record-sample-cell img{grid-row:1 / span 2;width:42px;height:34px;object-fit:cover;border-radius:7px;background:#eef3f8}
 .record-sample-cell strong,.record-sample-cell small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.image-sync-label{display:inline-flex!important;align-items:center;justify-self:start;padding:2px 6px;border-radius:6px;background:#eef3f8;color:var(--secondary);font-size:11px;font-weight:700;line-height:1.3;white-space:nowrap}
+.image-sync-label{display:inline-flex!important;align-items:center;justify-self:start;padding:1px 6px;border-radius:6px;background:#eef3f8;color:var(--secondary);font-size:11px;font-weight:700;line-height:1.3;white-space:nowrap}
 .record-sample-cell>.image-sync-label{grid-column:2}
 .image-sync-label--synced{background:#e9f6ef;color:var(--green)}
 .image-sync-label--failed{background:#fff0e7;color:#9c4716}
