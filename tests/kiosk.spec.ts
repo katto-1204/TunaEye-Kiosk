@@ -83,6 +83,24 @@ test('installed tablet opens kiosk welcome screen and enters tight workflow scre
   expect(isTight).toBe(true)
 })
 
+test('kiosk landing fullscreen button forces Chrome fullscreen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))
+  await page.goto('/')
+  const enter = page.getByRole('button', { name: 'Enter fullscreen' })
+  await expect(enter).toBeVisible()
+  await page.evaluate(() => {
+    HTMLElement.prototype.requestFullscreen = async function (options?: FullscreenOptions) {
+      ;(window as Window & { __fullscreenOptions?: FullscreenOptions }).__fullscreenOptions = options
+      Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => this })
+      document.dispatchEvent(new Event('fullscreenchange'))
+    }
+  })
+  await enter.click()
+  await expect.poll(() => page.evaluate(() => (window as Window & { __fullscreenOptions?: FullscreenOptions }).__fullscreenOptions)).toEqual({ navigationUI: 'hide' })
+  await expect(page.getByRole('button', { name: 'Exit fullscreen' })).toBeVisible()
+})
+
 test('role selector uses distinct role icons, focus states, and destinations', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 600 })
   await page.addInitScript(() => localStorage.setItem('tunaeye-installed', 'true'))

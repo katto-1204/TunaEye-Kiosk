@@ -1,3 +1,16 @@
+# Kiosk landing Chrome fullscreen button — 2026-10-10
+
+- [x] Add a small fullscreen control on the kiosk welcome screen.
+- [x] Force Chrome Fullscreen API with `navigationUI: 'hide'` (plus webkit fallback).
+- [x] Keep the control visible on tablet viewports and verify with Playwright plus browser.
+
+### Review
+
+- Small top-right fullscreen button on the kiosk welcome screen calls `requestFullscreen({ navigationUI: 'hide' })` so Chrome tablet UI hides.
+- Playwright confirmed the click sends that Fullscreen API option; the Cursor embedded browser reports fullscreen enabled but does not actually take over the host window.
+
+---
+
 # 1000x650 responsive UI, pricing, and idempotent sync — 2026-10-10
 
 - [x] Audit the selector, review, loading, receipt, grader dashboard, admin tables, and record modal at 1000x650.
@@ -7,13 +20,15 @@
 - [x] Keep record sync idempotent and label grader sync progress/results by name.
 - [x] Add pricing fields and a price schedule table through an additive Supabase migration.
 - [x] Apply migration `202610100001_grading_prices.sql` to the live project.
-- [ ] Run final full regression and normal/Pi production builds.
+- [x] Run final full regression and normal/Pi production builds.
 
 ### Review
 
 - Exact 1000x650 Playwright checks pass for the workflow surfaces, seeded grader records, and record review modal.
 - Mocked Supabase test passes for timestamp normalization, pricing provenance, retry preservation, and idempotent upsert.
 - Live database migration completed successfully; existing rows remain valid with nullable historical price fields.
+- Full kiosk regression: 31 passed and 2 environment-gated skipped; the two browser/network flakes passed on isolated rerun.
+- Normal and Raspberry Pi TypeScript/Vite builds passed. Existing 500 kB bundle warning remains.
 
 ---
 

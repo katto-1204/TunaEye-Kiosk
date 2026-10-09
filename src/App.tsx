@@ -28,7 +28,32 @@ const marketingPageForPath = (path: string): MarketingPage => { const page = pat
 const unfinishedScreens = new Set<Screen>(['sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print'])
 const wasReloaded = () => (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'reload'
 
-type IconName = 'arrow' | 'back' | 'camera' | 'check' | 'chevron' | 'help' | 'home' | 'lock' | 'play' | 'printer' | 'refresh' | 'scale' | 'shield' | 'spark' | 'tutorial' | 'users' | 'database' | 'settings'
+type IconName = 'arrow' | 'back' | 'camera' | 'check' | 'chevron' | 'compress' | 'expand' | 'help' | 'home' | 'lock' | 'play' | 'printer' | 'refresh' | 'scale' | 'shield' | 'spark' | 'tutorial' | 'users' | 'database' | 'settings'
+type FullscreenHost = HTMLElement & {
+  webkitRequestFullscreen?: (options?: FullscreenOptions) => Promise<void> | void
+  webkitRequestFullScreen?: (options?: FullscreenOptions) => Promise<void> | void
+}
+const fullscreenElement = () => document.fullscreenElement ?? (document as Document & { webkitFullscreenElement?: Element | null }).webkitFullscreenElement ?? null
+const forceBrowserFullscreen = async () => {
+  const targets: FullscreenHost[] = [document.documentElement, document.body]
+  const options: FullscreenOptions = { navigationUI: 'hide' }
+  for (const target of targets) {
+    try {
+      if (target.requestFullscreen) { await target.requestFullscreen(options); break }
+      if (target.webkitRequestFullscreen) { await target.webkitRequestFullscreen(options); break }
+      if (target.webkitRequestFullScreen) { await target.webkitRequestFullScreen(options); break }
+    } catch { /* try the next host */ }
+  }
+  try { await (screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> }).lock?.('landscape') } catch { /* lock is optional after fullscreen */ }
+}
+const exitBrowserFullscreen = async () => {
+  const doc = document as Document & { webkitExitFullscreen?: () => Promise<void> | void; webkitCancelFullScreen?: () => Promise<void> | void }
+  try {
+    if (document.exitFullscreen) await document.exitFullscreen()
+    else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen()
+    else if (doc.webkitCancelFullScreen) await doc.webkitCancelFullScreen()
+  } catch { /* already left fullscreen */ }
+}
 function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
   switch (name) {
@@ -37,6 +62,8 @@ function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
     case 'camera': return <svg {...common}><path d="M4 8.5h3l1.5-2h7L17 8.5h3v10H4z" /><circle cx="12" cy="13.5" r="3.5" /></svg>
     case 'check': return <svg {...common}><path d="m5 12 4.2 4.2L19 6.5" /></svg>
     case 'chevron': return <svg {...common}><path d="m9 5 7 7-7 7" /></svg>
+    case 'compress': return <svg {...common}><path d="M9 3v6H3" /><path d="M15 21v-6h6" /><path d="M21 9h-6V3" /><path d="M3 15h6v6" /></svg>
+    case 'expand': return <svg {...common}><path d="M9 3H3v6" /><path d="M15 21h6v-6" /><path d="M21 9V3h-6" /><path d="M3 15v6h6" /></svg>
     case 'help': return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M9.8 9.3a2.3 2.3 0 1 1 3.3 2.1c-.9.4-1.1.9-1.1 1.8" /><path d="M12 16.5h.01" /></svg>
     case 'home': return <svg {...common}><path d="m4 10 8-6 8 6" /><path d="M6 9.5V20h12V9.5" /><path d="M10 20v-5h4v5" /></svg>
     case 'lock': return <svg {...common}><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
@@ -152,7 +179,18 @@ function LoadingScreen() {
 
 function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart: () => void; onInstall: () => void; onTutorial: () => void; installed: boolean }) {
   const [entered, setEntered] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(() => Boolean(fullscreenElement()))
   useEffect(() => { const t = setTimeout(() => setEntered(true), 100); return () => clearTimeout(t) }, [])
+  useEffect(() => {
+    const sync = () => setIsFullscreen(Boolean(fullscreenElement()))
+    document.addEventListener('fullscreenchange', sync)
+    document.addEventListener('webkitfullscreenchange', sync)
+    return () => {
+      document.removeEventListener('fullscreenchange', sync)
+      document.removeEventListener('webkitfullscreenchange', sync)
+    }
+  }, [])
+  const toggleFullscreen = () => { void (isFullscreen ? exitBrowserFullscreen() : forceBrowserFullscreen()) }
   return (
     <div className={`welcome-screen welcome-screen--v2 ${entered ? 'is-entered' : ''}`}>
       <div className="welcome-screen__bg" />
@@ -167,6 +205,7 @@ function WelcomeScreen({ onStart, onInstall, onTutorial, installed }: { onStart:
           {!installed && <Button variant="ghost" onClick={onInstall} icon="home" className="welcome-btn--install">Install App</Button>}
         </div>
       </div>
+      <button className="welcome-fullscreen-btn" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}><Icon name={isFullscreen ? 'compress' : 'expand'} size={18} /></button>
       <button className="tutorial-fab tutorial-fab--glass" onClick={onTutorial} aria-label="Guided Tutorial"><Icon name="tutorial" size={20} /></button>
     </div>
   )
@@ -1288,7 +1327,7 @@ function App() {
       setNoticeModal({ title: 'Installation unavailable', message: 'The browser could not start installation. Use the browser menu and choose Install app or Add to Home Screen.', icon: 'help' })
     } finally { setIsInstalling(false) }
   }
-  const enterFullscreen = () => { if (installed && document.fullscreenEnabled && !document.fullscreenElement) void document.documentElement.requestFullscreen().catch(() => undefined) }
+  const enterFullscreen = () => { if (!fullscreenElement()) void forceBrowserFullscreen() }
   const renderScreen = () => {
     switch (session.screen) {
       case 'welcome': return <WelcomeScreen onStart={() => { enterFullscreen(); go('select-role') }} onInstall={installApp} installed={installed} onTutorial={() => setTutorialOpen(true)} />
