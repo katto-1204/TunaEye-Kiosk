@@ -1,41 +1,623 @@
 {
-  "checkedAt": "2026-10-09T23:01:07.861Z",
-  "passed": false,
-  "status": "pending",
+  "checkedAt": "2026-10-09T23:14:40.620Z",
+  "passed": true,
+  "status": "passed",
   "method": "Isolated headless Chrome HTML video playback through a localhost HTTP byte-range server; real final MP4 files, no mocked media",
   "files": [
     {
       "file": "tunaeye-cinematic-product-film.mp4",
-      "status": "pending",
+      "status": "passed",
       "consoleErrors": [],
+      "consoleWarnings": [],
       "pageErrors": [],
       "failedRequests": [],
-      "seekAborts": [],
+      "seekAborts": [
+        {
+          "url": "http://127.0.0.1:54348/tunaeye-cinematic-product-film.mp4",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://127.0.0.1:54348/tunaeye-cinematic-product-film.mp4",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
       "httpErrors": [],
-      "samples": [],
-      "error": "Final export does not exist yet"
+      "samples": [
+        {
+          "seconds": 3,
+          "currentTime": 3.145773,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 111934,
+          "videoDecodedBytes": 1127985,
+          "decodedFrames": 198
+        },
+        {
+          "seconds": 8,
+          "currentTime": 8.133951,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 244592,
+          "videoDecodedBytes": 2330743,
+          "decodedFrames": 442
+        },
+        {
+          "seconds": 25.75,
+          "currentTime": 25.891684,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 342406,
+          "videoDecodedBytes": 2869408,
+          "decodedFrames": 601
+        },
+        {
+          "seconds": 49,
+          "currentTime": 49.13582,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 421823,
+          "videoDecodedBytes": 2948849,
+          "decodedFrames": 725
+        },
+        {
+          "seconds": 70,
+          "currentTime": 70.138176,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 533098,
+          "videoDecodedBytes": 4067610,
+          "decodedFrames": 889
+        },
+        {
+          "seconds": 74,
+          "currentTime": 74.142959,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 648206,
+          "videoDecodedBytes": 4972745,
+          "decodedFrames": 1043
+        },
+        {
+          "seconds": 82,
+          "currentTime": 82.132241,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 751235,
+          "videoDecodedBytes": 5275031,
+          "decodedFrames": 1177
+        },
+        {
+          "seconds": 88,
+          "currentTime": 88.135628,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 922174,
+          "videoDecodedBytes": 5706290,
+          "decodedFrames": 1421
+        },
+        {
+          "seconds": 95.55,
+          "currentTime": 95.680285,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 939886,
+          "videoDecodedBytes": 5828609,
+          "decodedFrames": 1436
+        },
+        {
+          "seconds": 96.2,
+          "currentTime": 96.334327,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 980488,
+          "videoDecodedBytes": 6160374,
+          "decodedFrames": 1491
+        },
+        {
+          "seconds": 96.8,
+          "currentTime": 96.944113,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1041613,
+          "videoDecodedBytes": 6670896,
+          "decodedFrames": 1582
+        },
+        {
+          "seconds": 98.7,
+          "currentTime": 98.829309,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1167306,
+          "videoDecodedBytes": 7351544,
+          "decodedFrames": 1786
+        },
+        {
+          "seconds": 100,
+          "currentTime": 100.140732,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1193990,
+          "videoDecodedBytes": 7389649,
+          "decodedFrames": 1819
+        },
+        {
+          "seconds": 106.5,
+          "currentTime": 106.639673,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1304090,
+          "videoDecodedBytes": 7507792,
+          "decodedFrames": 1992
+        },
+        {
+          "seconds": 108.5,
+          "currentTime": 108.630366,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1339968,
+          "videoDecodedBytes": 7831022,
+          "decodedFrames": 2035
+        },
+        {
+          "seconds": 111,
+          "currentTime": 111.136219,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1373646,
+          "videoDecodedBytes": 8012676,
+          "decodedFrames": 2085
+        },
+        {
+          "seconds": 112.5,
+          "currentTime": 112.643479,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1464943,
+          "videoDecodedBytes": 8348852,
+          "decodedFrames": 2225
+        },
+        {
+          "seconds": 114.5,
+          "currentTime": 114.630195,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1503370,
+          "videoDecodedBytes": 8709720,
+          "decodedFrames": 2280
+        },
+        {
+          "seconds": 117,
+          "currentTime": 117.133619,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1569187,
+          "videoDecodedBytes": 9108382,
+          "decodedFrames": 2384
+        },
+        {
+          "seconds": 119.5,
+          "currentTime": 119.636994,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1699246,
+          "videoDecodedBytes": 9558837,
+          "decodedFrames": 2638
+        }
+      ],
+      "metadata": {
+        "duration": 120,
+        "width": 1920,
+        "height": 1080,
+        "readyState": 4,
+        "codecSupport": "probably"
+      }
     },
     {
       "file": "tunaeye-cinematic-product-film-no-narration.mp4",
-      "status": "pending",
+      "status": "passed",
       "consoleErrors": [],
+      "consoleWarnings": [],
       "pageErrors": [],
       "failedRequests": [],
-      "seekAborts": [],
+      "seekAborts": [
+        {
+          "url": "http://127.0.0.1:54348/tunaeye-cinematic-product-film-no-narration.mp4",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "http://127.0.0.1:54348/tunaeye-cinematic-product-film-no-narration.mp4",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
       "httpErrors": [],
-      "samples": [],
-      "error": "Final export does not exist yet"
+      "samples": [
+        {
+          "seconds": 3,
+          "currentTime": 3.142089,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 111405,
+          "videoDecodedBytes": 1115658,
+          "decodedFrames": 198
+        },
+        {
+          "seconds": 8,
+          "currentTime": 8.131636,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 244820,
+          "videoDecodedBytes": 2329975,
+          "decodedFrames": 441
+        },
+        {
+          "seconds": 25.75,
+          "currentTime": 25.886402,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 345862,
+          "videoDecodedBytes": 2866418,
+          "decodedFrames": 600
+        },
+        {
+          "seconds": 49,
+          "currentTime": 49.139117,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 437446,
+          "videoDecodedBytes": 2945859,
+          "decodedFrames": 724
+        },
+        {
+          "seconds": 70,
+          "currentTime": 70.142812,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 551156,
+          "videoDecodedBytes": 4065059,
+          "decodedFrames": 888
+        },
+        {
+          "seconds": 74,
+          "currentTime": 74.132952,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 667385,
+          "videoDecodedBytes": 4969674,
+          "decodedFrames": 1042
+        },
+        {
+          "seconds": 82,
+          "currentTime": 82.132855,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 774295,
+          "videoDecodedBytes": 5271960,
+          "decodedFrames": 1176
+        },
+        {
+          "seconds": 88,
+          "currentTime": 88.14282,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 951259,
+          "videoDecodedBytes": 5703219,
+          "decodedFrames": 1420
+        },
+        {
+          "seconds": 95.55,
+          "currentTime": 95.689516,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 970918,
+          "videoDecodedBytes": 5833278,
+          "decodedFrames": 1436
+        },
+        {
+          "seconds": 96.2,
+          "currentTime": 96.329968,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1014872,
+          "videoDecodedBytes": 6157320,
+          "decodedFrames": 1490
+        },
+        {
+          "seconds": 96.8,
+          "currentTime": 96.93047,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1080467,
+          "videoDecodedBytes": 6661657,
+          "decodedFrames": 1580
+        },
+        {
+          "seconds": 98.7,
+          "currentTime": 98.841178,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1216113,
+          "videoDecodedBytes": 7345958,
+          "decodedFrames": 1785
+        },
+        {
+          "seconds": 100,
+          "currentTime": 100.135819,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1247011,
+          "videoDecodedBytes": 7389444,
+          "decodedFrames": 1818
+        },
+        {
+          "seconds": 106.5,
+          "currentTime": 106.63612,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1366449,
+          "videoDecodedBytes": 7507587,
+          "decodedFrames": 1991
+        },
+        {
+          "seconds": 108.5,
+          "currentTime": 108.632948,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1400947,
+          "videoDecodedBytes": 7831123,
+          "decodedFrames": 2035
+        },
+        {
+          "seconds": 111,
+          "currentTime": 111.128367,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1435323,
+          "videoDecodedBytes": 8019537,
+          "decodedFrames": 2084
+        },
+        {
+          "seconds": 112.5,
+          "currentTime": 112.643486,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1525885,
+          "videoDecodedBytes": 8355647,
+          "decodedFrames": 2224
+        },
+        {
+          "seconds": 114.5,
+          "currentTime": 114.636477,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1563298,
+          "videoDecodedBytes": 8731730,
+          "decodedFrames": 2280
+        },
+        {
+          "seconds": 117,
+          "currentTime": 117.129052,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1627270,
+          "videoDecodedBytes": 9127935,
+          "decodedFrames": 2383
+        },
+        {
+          "seconds": 119.5,
+          "currentTime": 119.636292,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1762901,
+          "videoDecodedBytes": 9578282,
+          "decodedFrames": 2637
+        }
+      ],
+      "metadata": {
+        "duration": 120,
+        "width": 1920,
+        "height": 1080,
+        "readyState": 4,
+        "codecSupport": "probably"
+      }
     },
     {
       "file": "tunaeye-preview.mp4",
-      "status": "pending",
+      "status": "passed",
       "consoleErrors": [],
+      "consoleWarnings": [],
       "pageErrors": [],
       "failedRequests": [],
       "seekAborts": [],
       "httpErrors": [],
-      "samples": [],
-      "error": "Final export does not exist yet"
+      "samples": [
+        {
+          "seconds": 3,
+          "currentTime": 3.139153,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 89167,
+          "videoDecodedBytes": 253789,
+          "decodedFrames": 103
+        },
+        {
+          "seconds": 8,
+          "currentTime": 8.136597,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 294136,
+          "videoDecodedBytes": 731523,
+          "decodedFrames": 352
+        },
+        {
+          "seconds": 25.75,
+          "currentTime": 25.88911,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 365708,
+          "videoDecodedBytes": 861807,
+          "decodedFrames": 434
+        },
+        {
+          "seconds": 49,
+          "currentTime": 49.135621,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 526080,
+          "videoDecodedBytes": 970053,
+          "decodedFrames": 623
+        },
+        {
+          "seconds": 70,
+          "currentTime": 70.129718,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 705516,
+          "videoDecodedBytes": 1314806,
+          "decodedFrames": 832
+        },
+        {
+          "seconds": 74,
+          "currentTime": 74.134994,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 775137,
+          "videoDecodedBytes": 1524092,
+          "decodedFrames": 911
+        },
+        {
+          "seconds": 82,
+          "currentTime": 82.142207,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 839407,
+          "videoDecodedBytes": 1625225,
+          "decodedFrames": 981
+        },
+        {
+          "seconds": 88,
+          "currentTime": 88.139384,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1054772,
+          "videoDecodedBytes": 1927626,
+          "decodedFrames": 1230
+        },
+        {
+          "seconds": 95.55,
+          "currentTime": 95.686564,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1066963,
+          "videoDecodedBytes": 1971819,
+          "decodedFrames": 1240
+        },
+        {
+          "seconds": 96.2,
+          "currentTime": 96.332496,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1095078,
+          "videoDecodedBytes": 2058152,
+          "decodedFrames": 1269
+        },
+        {
+          "seconds": 96.8,
+          "currentTime": 96.928535,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1137849,
+          "videoDecodedBytes": 2189167,
+          "decodedFrames": 1316
+        },
+        {
+          "seconds": 98.7,
+          "currentTime": 98.829741,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1227287,
+          "videoDecodedBytes": 2363315,
+          "decodedFrames": 1420
+        },
+        {
+          "seconds": 100,
+          "currentTime": 100.135712,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1348101,
+          "videoDecodedBytes": 2542670,
+          "decodedFrames": 1563
+        },
+        {
+          "seconds": 106.5,
+          "currentTime": 106.639113,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1424528,
+          "videoDecodedBytes": 2590638,
+          "decodedFrames": 1651
+        },
+        {
+          "seconds": 108.5,
+          "currentTime": 108.635639,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1449530,
+          "videoDecodedBytes": 2668432,
+          "decodedFrames": 1675
+        },
+        {
+          "seconds": 111,
+          "currentTime": 111.135826,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1534575,
+          "videoDecodedBytes": 2790892,
+          "decodedFrames": 1774
+        },
+        {
+          "seconds": 112.5,
+          "currentTime": 112.642973,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1656040,
+          "videoDecodedBytes": 2952166,
+          "decodedFrames": 1919
+        },
+        {
+          "seconds": 114.5,
+          "currentTime": 114.638393,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1684713,
+          "videoDecodedBytes": 3067967,
+          "decodedFrames": 1949
+        },
+        {
+          "seconds": 117,
+          "currentTime": 117.132117,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1733292,
+          "videoDecodedBytes": 3179364,
+          "decodedFrames": 2003
+        },
+        {
+          "seconds": 119.5,
+          "currentTime": 119.625512,
+          "readyState": 4,
+          "mediaError": null,
+          "audioDecodedBytes": 1837266,
+          "videoDecodedBytes": 3295291,
+          "decodedFrames": 2132
+        }
+      ],
+      "metadata": {
+        "duration": 120,
+        "width": 1280,
+        "height": 720,
+        "readyState": 4,
+        "codecSupport": "probably"
+      }
     }
   ]
 }

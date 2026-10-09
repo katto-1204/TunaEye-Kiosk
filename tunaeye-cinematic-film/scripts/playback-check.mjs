@@ -12,7 +12,7 @@ const exports = [
   {file:'tunaeye-cinematic-product-film-no-narration.mp4',width:1920,height:1080},
   {file:'tunaeye-preview.mp4',width:1280,height:720},
 ];
-const samples = [3,8,25.75,49,70,74,82,88,100,106.5,108.5,111,112.5,114.5,117,119.5];
+const samples = [3,8,25.75,49,70,74,82,88,95.55,96.2,96.8,98.7,100,106.5,108.5,111,112.5,114.5,117,119.5];
 const parseRange = (header, size) => {
   const match = /^bytes=(\d*)-(\d*)$/.exec(header);
   if (!match || (!match[1] && !match[2])) return null;

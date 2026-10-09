@@ -78,5 +78,15 @@ Scope: new `tunaeye-cinematic-film/` project; preserve production app and existi
 - [x] Produce eight spoken narration clips, original 128 BPM score, frame-synchronized effects and ducked mastered stems.
 - [x] Build eight editable cinematic Remotion scenes with distinct compositions, shared visual transitions and readable UI.
 - [x] Typecheck, browser verification, existing Playwright suite and critical-frame visual review.
-- [ ] Render all 7200 frames; mux narrated and narration-free finals; create preview.
-- [ ] Verify duration/frame count/resolution/audio/loudness/playback; deliver README and storyboard with evidence and limits.
+- [x] Render all 7200 frames; mux narrated and narration-free finals; create preview.
+- [x] Verify duration/frame count/resolution/audio/loudness/playback; deliver README and storyboard with evidence and limits.
+
+### Cinematic launch film review
+
+- Delivered narrated and narration-free 120-second MP4s, a full-length lightweight preview, all four requested WAV files, editable Remotion source, storyboard and README in `tunaeye-cinematic-film/`.
+- Both full exports contain exactly 7200 decoded frames at 1920x1080/60fps with H.264 video and AAC stereo 48kHz audio. Their visual streams are identical. Preview contains 3600 frames at 1280x720/30fps. Every WAV is exactly 120 seconds, stereo 48kHz PCM.
+- Narrated export measures -14.1 LUFS / -1.3 dBTP; narration-free export -13.9 / -1.1; preview -14.2 / -1.2. All 12 media checks passed with no clipping. Grade A/B/C/Invalid reveals and effects align to spoken word timestamps within one frame.
+- Actual kiosk workflow passed at 1280x800 and 1024x600 with no console errors or failed requests. Existing Playwright suite: 39 passed, 4 environment-gated skips, 0 failures and 0 flaky tests. Remotion lint/typecheck and diff whitespace checks passed.
+- All three final MP4s passed 20 real Chrome seeks each, with audio/video decoding and no console, page, HTTP or unexpected network errors. Reviewed 21 decoded final frames and full-resolution opening, grade, overview and finale screenshots; visual review passed.
+- Reports: `qa/export-verification.md`, `qa/playback-verification.json`, `qa/visual-review.md`, `qa/final-contact-sheet.jpg` and `qa/playwright-report.json` inside the new project.
+- Inference and camera fixtures are labeled demonstrations; the network is conceptual. Physical hardware, live cloud writes, paper printing, subjective audio listening and manual inspection of every frame were not tested. Production source and the earlier demo were preserved.
