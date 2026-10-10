@@ -21,8 +21,12 @@ export interface GradingRecord {
 export const RECORDS_KEY = 'tunaeye-records'
 
 export const loadRecords = (): GradingRecord[] => {
-  try { return JSON.parse(localStorage.getItem(RECORDS_KEY) ?? '[]') as GradingRecord[] }
-  catch { return [] }
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECORDS_KEY) ?? '[]')
+    return Array.isArray(saved) ? saved as GradingRecord[] : []
+  } catch {
+    return []
+  }
 }
 
 export function saveRecords(records: GradingRecord[]) {

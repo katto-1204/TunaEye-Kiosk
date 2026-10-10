@@ -18,7 +18,22 @@ const clearCapturedEvidence = () => { Object.entries(capturedEvidence).forEach((
 const existingGraders = ['Maria Santos', 'Jose Dela Cruz', 'Ana Mae Lim']
 interface AuditEntry { id: string; timestamp: number; actor: string; action: string; detail: string }
 const AUDIT_KEY = 'tunaeye-audit-log'
-const loadAudit = (): AuditEntry[] => { try { return JSON.parse(localStorage.getItem(AUDIT_KEY) ?? '[]') as AuditEntry[] } catch { return [] } }
+const loadAudit = (): AuditEntry[] => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AUDIT_KEY) ?? '[]')
+    return Array.isArray(saved) ? saved as AuditEntry[] : []
+  } catch {
+    return []
+  }
+}
+const loadGraders = (): string[] => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('tunaeye-graders') ?? 'null')
+    return Array.isArray(saved) && saved.every(grader => typeof grader === 'string') ? saved : existingGraders
+  } catch {
+    return existingGraders
+  }
+}
 const audit = (actor: string, action: string, detail: string) => { const entry = { id: createId(), timestamp: Date.now(), actor, action, detail }; localStorage.setItem(AUDIT_KEY, JSON.stringify([entry, ...loadAudit()].slice(0, 500))) }
 const getConnectionSettings = () => ({ rpiUrl: getPiSettings().apiUrl, modelName: localStorage.getItem('tunaeye-model-name') ?? 'TFLite edge model' })
 const allScreens: Screen[] = ['welcome', 'select-role', 'admin', 'admin-dashboard', 'grader', 'grader-dashboard', 'sample', 'association', 'tutorial', 'weight', 'camera', 'review', 'analysis', 'individual-result', 'overview', 'print', 'complete']
@@ -64,6 +79,7 @@ const forceBrowserFullscreen = async () => {
   }
   try { await (screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> }).lock?.('landscape') } catch { /* lock is optional after fullscreen */ }
 }
+
 function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
   switch (name) {
@@ -321,7 +337,7 @@ function AdminDashboard({ onExit, onStartGrading, onNotice }: { onExit: () => vo
   const [query, setQuery] = useState('')
   const [prices, setPrices] = useState<Record<Grade, string>>(() => Object.fromEntries(Object.entries(loadPriceSchedule()).map(([grade, value]) => [grade, String(value)])) as Record<Grade, string>)
   const [savingPrices, setSavingPrices] = useState(false)
-  const [graders, setGraders] = useState(() => JSON.parse(localStorage.getItem('tunaeye-graders') ?? JSON.stringify(existingGraders)) as string[])
+  const [graders, setGraders] = useState(loadGraders)
   const [newGrader, setNewGrader] = useState('')
   const [diagnostic, setDiagnostic] = useState('Ready to run')
   const [stationName, setStationName] = useState(() => localStorage.getItem('tunaeye-station') ?? 'TunaEye Station 01')
@@ -548,7 +564,9 @@ function AdminDevices({ rpiUrl, modelName, audit, onNotice }: { rpiUrl: string; 
       }
     } else {
       window.print()
-      setPrinterInfo('System browser print dialog test executed')
+      setPrinterInfo('System browser print dialog is ready to select a paired printer')
+      setPrinterStatus('Ready')
+      audit('Admin', 'Printer Pair', 'System print dialog opened for paired printer selection')
     }
   }
 
